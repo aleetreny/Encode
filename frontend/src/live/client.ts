@@ -19,12 +19,14 @@ export async function fetchLiveCatalog(): Promise<Catalog> {
 }
 
 export async function createLiveSession(opts?: { 
+  session_id?: string;
   scenario_id?: string; 
   sim_hour?: number; 
   speed_hours_per_sec?: number; 
   autonomy_mode?: AutonomyMode 
 }): Promise<{ session_id: string; state: LiveSessionState }> {
   const payload: any = {};
+  if (opts?.session_id) payload.session_id = opts.session_id;
   if (opts?.scenario_id) payload.scenario_id = opts.scenario_id;
   if (opts?.sim_hour !== undefined) payload.start_hour = opts.sim_hour;
   if (opts?.speed_hours_per_sec !== undefined) payload.speed_s_per_hour = 1 / opts.speed_hours_per_sec;

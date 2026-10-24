@@ -230,6 +230,9 @@ export function LiveSessionProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
   const [interpolatedSimHour, setInterpolatedSimHour] = useState(12);
   const offlineController = useRef<OfflineSessionController | null>(null);
+  // What we want to be connected to. The effect below depends on this, not on connectionMode:
+  // depending on connectionMode made every successful connection start a new one, forever.
+  const [requestedMode, setRequestedMode] = useState<'live' | 'offline'>('live');
 
   // Smooth interpolation
   const lastUpdateRef = useRef<number>(performance.now());
@@ -267,19 +270,32 @@ export function LiveSessionProvider({ children }: { children: ReactNode }) {
       try {
         setConnectionMode('connecting');
         await client.fetchLiveCatalog(); // verify backend is up
-        const { session_id } = await client.createLiveSession();
+        // Rejoin the session in the URL (?s=) so a reload keeps the room and the jury QR valid.
+        const url = new URL(window.location.href);
+        const wanted = url.searchParams.get('s');
+        // Creating a session with an existing id would reset it; the stream joins it as it is.
+        // New rooms start just before the evening peak, when a fault actually leaves homes dark.
+        const start = Number(url.searchParams.get('inicio')) || 17.5;
+        const session_id = wanted || (await client.createLiveSession({ sim_hour: start })).session_id;
         if (!mounted) return;
-        
+        if (url.searchParams.get('s') !== session_id) {
+          url.searchParams.set('s', session_id);
+          window.history.replaceState(null, '', url.toString());
+        }
+
+        let opened = false;
         cleanup = client.connectLiveStream(session_id, {
           onEvent: (ev) => dispatch(ev),
           onOpen: () => {
+            opened = true;
             if (mounted) {
               setConnected(true);
               setConnectionMode('live');
             }
           },
           onError: () => {
-            if (mounted) fallbackToOffline();
+            // Once open, EventSource reconnects on its own; only fall back if it never connected.
+            if (mounted && !opened) fallbackToOffline();
           }
         });
       } catch (err) {
@@ -296,9 +312,9 @@ export function LiveSessionProvider({ children }: { children: ReactNode }) {
       offlineController.current.start();
     }
 
-    if (connectionMode === 'live' || connectionMode === 'connecting') {
+    if (requestedMode === 'live') {
       connectLive();
-    } else if (connectionMode === 'offline') {
+    } else {
       fallbackToOffline();
     }
 
@@ -307,7 +323,7 @@ export function LiveSessionProvider({ children }: { children: ReactNode }) {
       cleanup?.();
       offlineController.current?.stop();
     };
-  }, [connectionMode]);
+  }, [requestedMode]);
 
   const actions: LiveSessionActions = {
     async setClock(cmd) {
@@ -343,10 +359,10 @@ export function LiveSessionProvider({ children }: { children: ReactNode }) {
       if (state.sessionId) await client.postDecisionCommand(state.sessionId, cmd);
     },
     switchMode(mode) {
-      setConnectionMode(mode);
+      setRequestedMode(mode);
     },
     replayOfflineDemo() {
-      setConnectionMode('offline');
+      setRequestedMode('offline');
       offlineController.current?.resetAndPlayDemo();
     },
     downloadReportUrl() {

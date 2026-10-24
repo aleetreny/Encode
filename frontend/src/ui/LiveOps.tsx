@@ -46,6 +46,7 @@ function Screen() {
   const { catalog, solution, options, countdown } = state;
   const phase = state.agent_status.phase;
   const [selected, setSelected] = useState<string | null>(null);
+  const [invite, setInvite] = useState(false);
   const [hovered, setHovered] = useState<Option | null>(null);
   const [applied, setApplied] = useState<Option | null>(null);
   const lastCandidate = useRef<string | null>(null);
@@ -256,18 +257,19 @@ function Screen() {
                     <span className={`gp-tag ${o.validation.passed ? 'is-ok' : 'is-bad'}`}>{o.validation.passed ? 'Validador ✓' : 'Validador ✗'}</span>
                   </div>
                   <h3>{o.title_es}</h3>
-                  <p>{o.rationale_es}</p>
+                  <p title={o.rationale_es}>{o.rationale_es}</p>
                   <ul className="gp-levers">
                     {o.levers.map((l, i) => (
                       <li key={i}>{LEVER_LABEL[l.type] ?? l.type} · <span>{leverTarget(l.target_id, assets, catalog.lines)}</span></li>
                     ))}
                   </ul>
+                  <div className="gp-option-foot">
                   <dl>
-                    <div><dt>Hogares reconectados</dt><dd className="is-good">+{fmt(o.metrics.households_reconnected)}</dd></div>
-                    <div><dt>Hogares que pierden luz</dt><dd className={o.metrics.households_newly_off > 0 ? 'is-bad' : ''}>{o.metrics.households_newly_off > 0 ? `−${fmt(o.metrics.households_newly_off)}` : '0'}</dd></div>
-                    <div><dt>Costo</dt><dd>{o.metrics.cost_delta_usd >= 0 ? '+' : '−'}US$ {fmt(Math.abs(o.metrics.cost_delta_usd) / 1000, 1)} mil</dd></div>
+                    <div><dt>Reconecta</dt><dd className="is-good">+{fmt(o.metrics.households_reconnected)}</dd></div>
+                    <div><dt>Pierden luz</dt><dd className={o.metrics.households_newly_off > 0 ? 'is-bad' : ''}>{o.metrics.households_newly_off > 0 ? `−${fmt(o.metrics.households_newly_off)}` : '0'}</dd></div>
+                    <div><dt>Costo US$</dt><dd>{o.metrics.cost_delta_usd >= 0 ? '+' : '−'}{fmt(Math.abs(o.metrics.cost_delta_usd) / 1000)} mil</dd></div>
                     <div><dt>CO₂</dt><dd>{o.metrics.co2_delta_t >= 0 ? '+' : '−'}{fmt(Math.abs(o.metrics.co2_delta_t))} t</dd></div>
-                    <div><dt>Carga máx. de línea</dt><dd className={o.metrics.max_line_loading_pct >= 98 ? 'is-warn' : ''}>{fmt(o.metrics.max_line_loading_pct)} %</dd></div>
+                    <div><dt>Carga máx. línea</dt><dd className={o.metrics.max_line_loading_pct >= 98 ? 'is-warn' : ''}>{fmt(o.metrics.max_line_loading_pct)} %</dd></div>
                   </dl>
                   <div className="gp-option-actions">
                     {rec && countdown?.active ? (
@@ -276,8 +278,9 @@ function Screen() {
                         <button className="gp-btn is-ghost" onClick={() => decide(o, 'veto')}>Vetar</button>
                       </>
                     ) : (
-                      <button className="gp-btn" onClick={() => decide(o, 'apply')}>Aplicar este plan</button>
+                      <button className="gp-btn" onClick={() => decide(o, 'apply')}>Aplicar</button>
                     )}
+                  </div>
                   </div>
                 </article>
               );
@@ -317,6 +320,24 @@ function Screen() {
         </div>
       )}
 
+      {invite && (
+        <div className="gp-invite" onClick={() => setInvite(false)}>
+          <div className="gp-invite-card" onClick={(e) => e.stopPropagation()}>
+            <small>Jurado · escanea con tu celular</small>
+            <h2>Intenta botar la red</h2>
+            {connectionMode === 'live' && state.sessionId ? (
+              <>
+                <img src={`${API_BASE}/live/sessions/${encodeURIComponent(state.sessionId)}/qr.svg`} alt="Código QR de la página del jurado" />
+                <code>{`${window.location.origin}/jurado?s=${state.sessionId}`}</code>
+              </>
+            ) : (
+              <p>El jurado necesita el backend en vivo. Ahora mismo se está reproduciendo una sesión grabada.</p>
+            )}
+            <button className="gp-btn" onClick={() => setInvite(false)}>Listo</button>
+          </div>
+        </div>
+      )}
+
       <footer className="gp-controls">
         <button className="gp-btn is-ghost" onClick={() => actions.setClock({ action: state.clock.running ? 'pause' : 'play' })}>{state.clock.running ? 'Pausa' : 'Reanudar'}</button>
         <label className={`gp-switch${state.clock.autonomy_mode ? ' is-on' : ''}${connectionMode !== 'live' ? ' is-disabled' : ''}`}>
@@ -324,7 +345,7 @@ function Screen() {
           <span /> Modo autónomo
         </label>
         {connectionMode === 'offline' && <button className="gp-btn is-ghost" onClick={() => actions.replayOfflineDemo()}>Repetir sesión</button>}
-        <a className="gp-link" href="/jurado" target="_blank" rel="noreferrer">Página del jurado ↗</a>
+        <button className="gp-btn is-ghost" onClick={() => setInvite(true)}>Invitar al jurado</button>
         <span className="gp-hint">Toca una central o una línea para ver su detalle o provocar una falla.</span>
       </footer>
     </div>
