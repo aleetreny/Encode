@@ -3,10 +3,13 @@ import contextlib
 import hashlib
 import json
 import logging
+import os
 import secrets
+import time
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
+import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -205,13 +208,39 @@ def create_app(settings=None):
             raise RequestValidationError(exc.errors()) from None
 
     @app.get("/api/health")
-    async def health():
+    async def health(probe_gemini: bool = False):
         adapters = {
             "agent": available(settings.agent_callable),
             "solver": available(settings.solve_callable),
             "validator": available(settings.validate_callable),
         }
         credentials_configured = gemini_configured()
+
+        gemini_probe = {
+            "probed": False,
+            "ok": credentials_configured,
+            "latency_ms": None,
+        }
+        if probe_gemini and credentials_configured:
+            t0 = time.perf_counter()
+            ok = False
+            try:
+                api_key = (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or "").strip()
+                async with httpx.AsyncClient(timeout=3.0) as client:
+                    resp = await client.get(
+                        "https://generativelanguage.googleapis.com/v1beta/models",
+                        params={"key": api_key, "pageSize": 1},
+                    )
+                    ok = (resp.status_code == 200)
+            except Exception:
+                ok = False
+            latency_ms = round((time.perf_counter() - t0) * 1000, 1)
+            gemini_probe = {
+                "probed": True,
+                "ok": ok,
+                "latency_ms": latency_ms,
+            }
+
         return dict(
             status="ok",
             schema_version="2.0.0",
@@ -231,6 +260,11 @@ def create_app(settings=None):
             auth_required=bool(settings.api_token),
             worker_enabled=app.state.worker_task is not None and not app.state.worker_task.done(),
             readiness_scope="Local adapters and fixtures; provider connectivity is not probed",
+            mode="live" if credentials_configured and all(adapters.values()) else "offline",
+            solver_ok=bool(adapters.get("solver") and adapters.get("validator")),
+            gemini_model_agent=os.environ.get("GRIDPILOT_MODEL_AGENT", "gemini-4-argon"),
+            gemini_model_fast=os.environ.get("GRIDPILOT_MODEL_FAST", "gemini-2.5-flash"),
+            gemini_probe=gemini_probe,
         )
 
     @app.get("/api/ready")
