@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.live.agent_loop import has_digits
+from backend.live.agent_loop import OPERATIONAL_LEVER_TYPES, has_digits, is_tag_truthful
 from backend.live.engine import LiveSession
 from backend.live.report import render_session_report
 
@@ -191,6 +191,23 @@ async def run_twenty_random_incidents() -> list[dict[str, Any]]:
         tag_0 = opts[0]["tradeoff_tag"]
         tag_1 = opts[1]["tradeoff_tag"]
         assert tag_0 != tag_1, f"Duplicate tradeoff_tag in incident {i+1} ({asset}@{hour}): {tag_0} == {tag_1}"
+        assert is_tag_truthful(tag_0, opts[0]["metrics"], opts[1]["metrics"]), (
+            f"Untruthful tag_0 {tag_0} in incident {i+1} ({asset}@{hour})"
+        )
+        assert is_tag_truthful(tag_1, opts[1]["metrics"], opts[0]["metrics"]), (
+            f"Untruthful tag_1 {tag_1} in incident {i+1} ({asset}@{hour})"
+        )
+        for opt in opts:
+            for lv in opt["levers"]:
+                assert lv["type"] in OPERATIONAL_LEVER_TYPES, f"Non-operational lever {lv['type']} in crisis"
+
+        hh_0 = float(opts[0]["metrics"]["households_reconnected"])
+        hh_1 = float(opts[1]["metrics"]["households_reconnected"])
+        rec_opt = next((o for o in opts if o["option_id"] == options_ev["recommended_id"]), opts[0])
+        if max(hh_0, hh_1) > 0:
+            assert float(rec_opt["metrics"]["households_reconnected"]) > 0
+        else:
+            assert "ninguna maniobra" in options_ev["diagnosis_es"].lower()
 
         results.append(
             {

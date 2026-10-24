@@ -14,14 +14,7 @@ function parseDemoStream(): LiveEvent[] {
 const offlineEvents = parseDemoStream();
 const snapshotEvent = offlineEvents.find(e => e.type === 'session.snapshot') as Extract<LiveEvent, { type: 'session.snapshot' }>;
 
-export const OFFLINE_CATALOG: Catalog = {
-  ...snapshotEvent.catalog,
-  batteries: [
-    ...snapshotEvent.catalog.batteries,
-    { id: 'b_reserve_ng', name: 'BESS Reserva Norte Grande', node_id: 'n_norte_grande', power_mw: 50, energy_mwh: 100, standby: true },
-    { id: 'b_reserve_centro', name: 'BESS Reserva Centro', node_id: 'n_centro', power_mw: 100, energy_mwh: 200, standby: true }
-  ]
-};
+export const OFFLINE_CATALOG: Catalog = snapshotEvent.catalog;
 
 export const LIBRARY_HOURS = [9, 12, 13, 18, 19, 20];
 
@@ -34,10 +27,13 @@ export class OfflineSessionController {
   private simHour = 12.0;
   private running = true;
   private speedSPerHour = 4.0;
-  private currentSeq = 0;
+  private currentSeq = 0; // sequence of events sent to the reducer (ticks included)
+  private cursor = 0; // next recorded event to replay
+  private holding = false; // paused at a recorded operator decision, waiting for a real click
+  private skipApplied = false; // drop the recorded plan (and its solution) after a veto or a different choice
   private autonomy = false;
   private isVetoed = false;
-  private lastOptionsReady: Extract<LiveEvent, { type: 'options.ready' }> | null = null;
+  private lastOptions: Extract<LiveEvent, { type: 'options.ready' }> | null = null;
 
   constructor(onEvent: (ev: LiveEvent) => void) {
     this.onEvent = onEvent;
@@ -50,8 +46,11 @@ export class OfflineSessionController {
       this.running = snapshot.clock.running;
       this.speedSPerHour = snapshot.clock.speed_s_per_hour;
       this.autonomy = snapshot.autonomy ?? false;
+      this.holding = false;
+      this.skipApplied = false;
       this.onEvent({ ...snapshot, catalog: OFFLINE_CATALOG });
       this.currentSeq = snapshot.seq;
+      this.cursor = this.events.indexOf(snapshot) + 1;
     }
     
     this.startClock();
@@ -103,15 +102,28 @@ export class OfflineSessionController {
   }
 
   private emitPendingEvents() {
-    const nextEvents = this.events.filter(e => 
-      e.seq > this.currentSeq && e.hour <= this.simHour
-    );
-    
-    for (const ev of nextEvents) {
-      this.onEvent(ev);
-      this.currentSeq = ev.seq;
+    // Replay recorded events in order once the clock reaches their hour. Each one gets a fresh
+    // sequence number, so the clock ticks sent in between never make the reducer drop them.
+    while (this.cursor < this.events.length && this.events[this.cursor].hour <= this.simHour) {
+      const ev = this.events[this.cursor];
+      if (ev.type === 'plan.applied' && ev.by === 'operator' && !this.skipApplied) {
+        // The recording contains the operator's click; wait for the real one instead.
+        this.holding = true;
+        this.running = false;
+        break;
+      }
+      this.cursor++;
+      if (ev.type === 'session.snapshot') continue;
+      if (this.skipApplied && (ev.type === 'plan.applied' || ev.type === 'autonomy.countdown')) continue;
+      if (this.skipApplied && ev.type === 'solution.updated' && ev.reason === 'plan_applied') {
+        this.skipApplied = false;
+        continue;
+      }
+      if (ev.type === 'options.ready') this.lastOptions = ev;
+      this.onEvent({ ...ev, seq: ++this.currentSeq } as LiveEvent);
     }
 
+    // Always emit clock tick to keep UI interpolated smooth sync
     this.currentSeq++;
     this.onEvent({
       seq: this.currentSeq,
@@ -126,6 +138,9 @@ export class OfflineSessionController {
   resetAndPlayDemo() {
     this.cancelCountdown();
     this.currentSeq = 0;
+    this.cursor = 0;
+    this.holding = false;
+    this.skipApplied = false;
     this.events = parseDemoStream();
     this.start();
   }
@@ -163,6 +178,7 @@ export class OfflineSessionController {
 
       this.cancelCountdown();
       this.isVetoed = false;
+      this.holding = false;
 
       // Replay incident events into onEvent up to options.ready
       for (const ev of libraryEvents) {
@@ -184,43 +200,44 @@ export class OfflineSessionController {
             ...stamped.model_execution,
             cached: true,
           };
-          this.lastOptionsReady = stamped;
+          this.lastOptions = stamped;
         }
 
         this.onEvent(stamped);
 
-        if (stamped.type === 'options.ready' && this.autonomy) {
-          this.startAutonomyCountdown(stamped.incident_id, stamped.recommended_id);
+        if (stamped.type === 'options.ready') {
+          if (this.autonomy) {
+            const recOpt = stamped.options.find(o => o.option_id === stamped.recommended_id) ?? stamped.options[0];
+            if (recOpt && recOpt.metrics.households_reconnected > 0 && recOpt.metrics.unserved_mwh_avoided > 0) {
+              this.startAutonomyCountdown(stamped.incident_id, stamped.recommended_id);
+            } else {
+              this.currentSeq++;
+              this.onEvent({
+                seq: this.currentSeq,
+                session_id: 'offline',
+                hour: this.simHour,
+                ts_utc: new Date().toISOString(),
+                type: 'agent.note',
+                text_es: 'Modo autónomo en espera: ninguna maniobra operativa disponible reduce el déficit residencial actual, por lo que no se aplica ningún plan automáticamente.',
+              });
+            }
+          } else {
+            this.running = false;
+          }
         }
       }
     } catch {
-      // Fallback: replay the crisis segment from demo-stream.jsonl
       this.cancelCountdown();
-      this.isVetoed = false;
-      const crisisEvents = parseDemoStream().filter(
-        e => e.seq >= 3 && e.type !== 'plan.applied' && !(e.type === 'solution.updated' && e.reason === 'plan_applied')
-      );
-      for (const ev of crisisEvents) {
-        this.currentSeq++;
-        const stamped: LiveEvent = {
-          ...ev,
-          seq: this.currentSeq,
-          session_id: 'offline',
-          hour: this.simHour,
-          ts_utc: new Date().toISOString(),
-        };
-        if (stamped.type === 'options.ready') {
-          stamped.model_execution = {
-            ...stamped.model_execution,
-            cached: true,
-          };
-          this.lastOptionsReady = stamped;
-        }
-        this.onEvent(stamped);
-        if (stamped.type === 'options.ready' && this.autonomy) {
-          this.startAutonomyCountdown(stamped.incident_id, stamped.recommended_id);
-        }
-      }
+      this.currentSeq++;
+      this.onEvent({
+        seq: this.currentSeq,
+        session_id: 'offline',
+        hour: this.simHour,
+        ts_utc: new Date().toISOString(),
+        type: 'error',
+        code: 'INCIDENT_NOT_FOUND',
+        message_es: `No se encontró el archivo precalculado de contingencia para el activo ${assetId} en la biblioteca offline.`,
+      });
     }
   }
 
@@ -263,47 +280,43 @@ export class OfflineSessionController {
 
   async postDecisionCommand(sessionId: string, cmd: DecideCommandRequest): Promise<void> {
     this.cancelCountdown();
-    this.currentSeq++;
-    
+    const base = { session_id: 'offline', hour: this.simHour, ts_utc: new Date().toISOString() };
+    const chosen =
+      this.lastOptions?.options.find((o) => o.option_id === cmd.option_id) ??
+      this.lastOptions?.options.find((o) => o.option_id === this.lastOptions?.recommended_id) ??
+      this.lastOptions?.options[0];
+
+    // Whatever the operator does, the recorded plan no longer applies.
+    this.skipApplied = true;
+    if (this.holding && this.events[this.cursor]?.type === 'plan.applied') this.cursor++;
+    this.holding = false;
+    this.running = true;
+
     if (cmd.decision === 'veto') {
       this.isVetoed = true;
-      this.onEvent({
-        seq: this.currentSeq,
-        session_id: 'offline',
-        hour: this.simHour,
-        ts_utc: new Date().toISOString(),
-        type: 'plan.vetoed',
-        incident_id: cmd.incident_id,
-        option_id: cmd.option_id
-      });
-    } else {
-      this.onEvent({
-        seq: this.currentSeq,
-        session_id: 'offline',
-        hour: this.simHour,
-        ts_utc: new Date().toISOString(),
-        type: 'plan.applied',
-        incident_id: cmd.incident_id,
-        option_id: cmd.option_id,
-        by: this.autonomy ? 'gemini_autonomous' : 'operator'
-      });
+      this.onEvent({ ...base, seq: ++this.currentSeq, type: 'plan.vetoed', incident_id: cmd.incident_id, option_id: cmd.option_id });
+      return;
+    }
 
-      const opt = this.lastOptionsReady?.options?.find(o => o.option_id === cmd.option_id)
-        || this.lastOptionsReady?.options?.[0];
+    this.onEvent({
+      ...base,
+      seq: ++this.currentSeq,
+      type: 'plan.applied',
+      incident_id: cmd.incident_id,
+      option_id: chosen?.option_id ?? cmd.option_id,
+      by: this.autonomy ? 'gemini_autonomous' : 'operator'
+    });
 
-      if (opt?.solution) {
-        this.currentSeq++;
-        this.onEvent({
-          seq: this.currentSeq,
-          session_id: 'offline',
-          hour: this.simHour,
-          ts_utc: new Date().toISOString(),
-          type: 'solution.updated',
-          reason: 'plan_applied',
-          solution: opt.solution,
-          grid_state: 'normal',
-        });
-      }
+    if (chosen?.solution) {
+      // Show the solution the solver computed for the option that was actually chosen.
+      this.onEvent({
+        ...base,
+        seq: ++this.currentSeq,
+        type: 'solution.updated',
+        reason: 'plan_applied',
+        solution: chosen.solution,
+        grid_state: 'recuperacion',
+      });
     }
   }
 }

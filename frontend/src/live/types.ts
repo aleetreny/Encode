@@ -307,6 +307,9 @@ export interface LiveSessionState {
   thoughts: { text_es: string; ts_utc: string; sim_hour: number }[];
   tool_calls: Extract<LiveEvent, { type: 'agent.tool_call' }>[];
   options: [Option, Option] | null;
+  model_execution?: ModelExecution | null;
+  applied_by?: 'operator' | 'gemini_autonomous' | null;
+  by?: 'operator' | 'gemini_autonomous' | null;
   countdown: { candidate_id: string; seconds_left: number; active: boolean } | null;
   notes: { text_es: string; ts_utc: string; sim_hour: number }[];
 }

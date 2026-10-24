@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useReducer, useRef, useState, ReactNode } from 'react';
 import { 
-  Catalog, LiveEvent, Solution, Disruption, GridState, Option, 
+  Catalog, LiveEvent, Solution, Disruption, GridState, Option, ModelExecution,
   ClockCommandRequest, DisruptCommandRequest, JuryDisruptCommandRequest, DecideCommandRequest 
 } from './types';
 import * as client from './client';
@@ -30,6 +30,9 @@ export interface LiveSessionState {
   thoughts: { text_es: string; ts_utc: string; sim_hour: number }[];
   tool_calls: Extract<LiveEvent, { type: 'agent.tool_call' }>[];
   options: [Option, Option] | null;
+  model_execution?: ModelExecution | null;
+  applied_by?: 'operator' | 'gemini_autonomous' | null;
+  by?: 'operator' | 'gemini_autonomous' | null;
   countdown: { candidate_id: string; seconds_left: number; active: boolean } | null;
   notes: { text_es: string; ts_utc: string; sim_hour: number }[];
 }
@@ -58,6 +61,9 @@ export function createInitialLiveState(sessionId?: string): LiveSessionState {
     thoughts: [],
     tool_calls: [],
     options: null,
+    model_execution: null,
+    applied_by: null,
+    by: null,
     countdown: null,
     notes: [],
   };
@@ -107,6 +113,8 @@ export function liveReducer(state: LiveSessionState, event: LiveEvent): LiveSess
         ...newState,
         active_incidents: [...newState.active_incidents, event.disruption],
         clock: { ...newState.clock, sim_hour: event.hour },
+        applied_by: null,
+        by: null,
         agent_status: { ...newState.agent_status, phase: 'analyzing' },
       };
     }
@@ -136,6 +144,7 @@ export function liveReducer(state: LiveSessionState, event: LiveEvent): LiveSess
       return {
         ...newState,
         options: event.options,
+        model_execution: event.model_execution,
         agent_status: { ...newState.agent_status, phase: 'awaiting_operator' },
         countdown: { candidate_id: event.recommended_id, seconds_left: 0, active: false }
       };
@@ -150,6 +159,8 @@ export function liveReducer(state: LiveSessionState, event: LiveEvent): LiveSess
       return {
         ...newState,
         countdown: null,
+        applied_by: event.by,
+        by: event.by,
         agent_status: { ...newState.agent_status, phase: 'executing' }
       };
     }
@@ -157,7 +168,9 @@ export function liveReducer(state: LiveSessionState, event: LiveEvent): LiveSess
       return {
         ...newState,
         countdown: null,
-        agent_status: { ...newState.agent_status, phase: 'idle' } // or whatever makes sense
+        applied_by: null,
+        by: null,
+        agent_status: { ...newState.agent_status, phase: 'idle' }
       };
     }
     case 'event.ended': {

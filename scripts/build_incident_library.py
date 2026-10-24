@@ -37,7 +37,12 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from backend.live.agent_loop import has_digits, sanitize_no_digits
+from backend.live.agent_loop import (
+    OPERATIONAL_LEVER_TYPES,
+    has_digits,
+    is_tag_truthful,
+    sanitize_no_digits,
+)
 from backend.live.catalog import build_catalog
 from backend.live.engine import LiveSession
 
@@ -121,6 +126,7 @@ def enforce_digit_free_and_cached(events: list[dict[str, Any]], asset_key: str, 
 
             # Ensure options validation and digit-free prose
             opts = ev.get("options", [])
+            assert len(opts) == 2, f"Expected 2 options in {asset_key}_{hour}"
             for opt in opts:
                 raw_t = opt.get("title_es", "")
                 if has_digits(raw_t):
@@ -131,6 +137,33 @@ def enforce_digit_free_and_cached(events: list[dict[str, Any]], asset_key: str, 
                 if has_digits(raw_r):
                     opt["rationale_es"] = sanitize_no_digits(raw_r)
                 assert not has_digits(opt["rationale_es"]), f"Digit in option rationale: {opt['rationale_es']}"
+
+                for lv in opt.get("levers", []):
+                    assert lv.get("type") in OPERATIONAL_LEVER_TYPES, (
+                        f"Non-operational lever {lv.get('type')} in {asset_key}_{hour}"
+                    )
+
+            opt_a, opt_b = opts[0], opts[1]
+            assert opt_a["tradeoff_tag"] != opt_b["tradeoff_tag"], f"Duplicate tags in {asset_key}_{hour}"
+            assert is_tag_truthful(opt_a["tradeoff_tag"], opt_a["metrics"], opt_b["metrics"]), (
+                f"Untruthful tag_a {opt_a['tradeoff_tag']} in {asset_key}_{hour}: {opt_a['metrics']} vs {opt_b['metrics']}"
+            )
+            assert is_tag_truthful(opt_b["tradeoff_tag"], opt_b["metrics"], opt_a["metrics"]), (
+                f"Untruthful tag_b {opt_b['tradeoff_tag']} in {asset_key}_{hour}: {opt_b['metrics']} vs {opt_a['metrics']}"
+            )
+
+            hh_a = float(opt_a["metrics"]["households_reconnected"])
+            hh_b = float(opt_b["metrics"]["households_reconnected"])
+            rec_id = ev.get("recommended_id")
+            rec_opt = next((o for o in opts if o["option_id"] == rec_id), opts[0])
+            if max(hh_a, hh_b) > 0:
+                assert float(rec_opt["metrics"]["households_reconnected"]) > 0, (
+                    f"Recommended 0-reconnected option in {asset_key}_{hour} when improvement > 0 exists"
+                )
+            else:
+                assert "ninguna maniobra" in ev["diagnosis_es"].lower(), (
+                    f"Missing zero-improvement notice in diagnosis_es for {asset_key}_{hour}"
+                )
 
 
 def generate_single_incident(
