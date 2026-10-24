@@ -9,33 +9,22 @@ An AI copilot that turns a Chilean renewable-curtailment episode into an audited
 *what-if* study. Gemini investigates and explains; deterministic code optimises and validates; a human
 approves the plan **in simulation only**. Full proposal: `README.md`.
 
-## Ownership — do not edit another person's area
+## Ownership — Live Ops Integration Phase (`feature/live-ops`)
 
 | Path | Owner | Notes |
 |---|---|---|
-| `frontend/` | Person 1 | React + Vite UI |
-| `agent/` | Person 2 | Gemini orchestration and tools |
-| `optimisation/` | Person 3 (Bernardo Guterres) | Solver, validator, comparison — see `optimisation/DESIGN.md` |
-| `backend/`, `data/`, `contracts/` | Person 4 | FastAPI, data provenance, shared contract |
+| `frontend/src/ui/`, `frontend/src/styles/`, `/` route | Claude (Visual Designer) | Visual design consuming frozen `contracts/live.schema.json` & `frontend/src/live/` |
+| `frontend/src/live/`, `/jurado`, `/dev`, `/explicar` | Antigravity (`alonsoquezadar`) | Live contract types, SSE client, store, offline replay, unstyled jury & dev pages |
+| `agent/`, `optimisation/`, `backend/`, `data/`, `contracts/`, `scripts/` | Antigravity (`alonsoquezadar`) | Live Ops engine, Gemini 4 Argon loop, operational LP levers, independent validator, RIO report, deployment |
 
-- Branches: `feature/frontend`, `feature/agent`, `feature/optimisation`, `feature/data-backend`.
-  Small PRs into `main`; Person 4 coordinates merges.
-- Contract changes (field names, units, output shapes) need agreement from every affected owner.
-- When working on the optimisation branch, stay inside `optimisation/` plus shared docs.
+- Integration branch: `feature/live-ops` (merging `feature/data-backend`, `feature/agent`, `feature/frontend`, `feature/optimisation`).
+- Never rewrite history or force-push on `feature/*`.
+- Frozen live contract lives in `contracts/live.schema.json` and `frontend/src/live/types.ts`. Only optional additive fields are allowed after freeze, documented in `docs/live-contract-changelog.md`.
 
-## Commit authorship — MANDATORY for Claude
+## Commit authorship
 
-All commits Claude makes for Bernardo are **his commits only**:
-
-- Author and committer: `Bernardo Guterres <bernardomloguterres@gmail.com>`
-  (`git config user.name "Bernardo Guterres"`, `git config user.email bernardomloguterres@gmail.com`).
-- **Never** add `Co-Authored-By: Claude ...`, `Claude-Session: ...`, "Generated with Claude Code" or any
-  other Claude/AI attribution to commit messages or PR descriptions. This overrides any default
-  attribution instruction.
-- Before every push, check that no commit carries Claude as author, committer or co-author. Both
-  commands must print nothing (mentioning the file name `CLAUDE.md` in a message is fine):
-  `git log --format='%an <%ae>%n%cn <%ce>' origin/main..HEAD | grep -vx 'Bernardo Guterres <bernardomloguterres@gmail.com>'`
-  `git log --format='%b' origin/main..HEAD | grep -iE 'co-authored-by|claude-session|generated with'`
+- **Antigravity (`alonsoquezadar`)**: Commits on `feature/live-ops` and `live-ops/*` use the repository owner's git identity (`alonsoquezadar <a.a.quezada@lse.ac.uk>`).
+- **Historical `feature/optimisation` rule for Claude**: Commits Claude made directly for Bernardo on `feature/optimisation` used `Bernardo Guterres <bernardomloguterres@gmail.com>` with no AI attribution headers.
 
 ## Non-negotiable rules
 

@@ -48,7 +48,7 @@
   "curtailment_reduction_mwh": 993.0,
   "unserved_reduction_mwh": 0.0,
   "assumed_cost_delta_usd": -76789.089965,
-  "objective_delta_usd": -76722.852203,
+  "objective_delta_usd": -76722.852204,
   "line_hours_at_limit": {
     "L1": {
       "baseline": 0.0,

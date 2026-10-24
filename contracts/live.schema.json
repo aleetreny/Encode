@@ -1,0 +1,564 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gridpilot.encode.london/contracts/live.schema.json",
+  "title": "GridPilot Live Ops Contract",
+  "description": "Frozen contract for GridPilot Live Ops SSE events, catalog, solution, options, and REST commands.",
+  "$defs": {
+    "Provenance": {
+      "type": "string",
+      "enum": ["observed", "derived", "synthetic", "assumption"]
+    },
+    "GridState": {
+      "type": "string",
+      "enum": ["normal", "alerta", "emergencia", "recuperacion"]
+    },
+    "ValidationSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "violations", "max_residual_mw"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "violations": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "max_residual_mw": { "type": "number" }
+      }
+    },
+    "Catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "generators", "batteries", "lines", "levers", "provenance"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "lat", "lon", "households_total", "households_per_mw"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "lat": { "type": "number" },
+              "lon": { "type": "number" },
+              "households_total": { "type": "number" },
+              "households_per_mw": { "type": "number" }
+            }
+          }
+        },
+        "generators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "node_id", "technology", "capacity_mw", "disruptable"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "node_id": { "type": "string" },
+              "technology": {
+                "type": "string",
+                "enum": ["solar", "wind", "hydro", "gas", "coal", "diesel"]
+              },
+              "capacity_mw": { "type": "number" },
+              "disruptable": { "type": "boolean" }
+            }
+          }
+        },
+        "batteries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "node_id", "power_mw", "energy_mwh", "standby"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "node_id": { "type": "string" },
+              "power_mw": { "type": "number" },
+              "energy_mwh": { "type": "number" },
+              "standby": { "type": "boolean" }
+            }
+          }
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "from", "to", "capacity_mw", "disruptable"],
+            "properties": {
+              "id": { "type": "string" },
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "capacity_mw": { "type": "number" },
+              "disruptable": { "type": "boolean" }
+            }
+          }
+        },
+        "levers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "label_es", "description_es"],
+            "properties": {
+              "type": { "type": "string" },
+              "label_es": { "type": "string" },
+              "description_es": { "type": "string" }
+            }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/Provenance" }
+        }
+      }
+    },
+    "HourlyMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "number" }
+      }
+    },
+    "Solution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "solution_id",
+        "generation_mw",
+        "available_mw",
+        "line_flow_mw",
+        "line_capacity_mw",
+        "battery_flow_mw",
+        "battery_soc_mwh",
+        "demand_mw",
+        "unserved_mw",
+        "demand_response_mw",
+        "curtailment_mw",
+        "households_off",
+        "cost_proxy_usd",
+        "co2_t",
+        "status",
+        "validation"
+      ],
+      "properties": {
+        "solution_id": { "type": "string" },
+        "generation_mw": { "$ref": "#/$defs/HourlyMap" },
+        "available_mw": { "$ref": "#/$defs/HourlyMap" },
+        "line_flow_mw": { "$ref": "#/$defs/HourlyMap" },
+        "line_capacity_mw": { "$ref": "#/$defs/HourlyMap" },
+        "battery_flow_mw": { "$ref": "#/$defs/HourlyMap" },
+        "battery_soc_mwh": { "$ref": "#/$defs/HourlyMap" },
+        "demand_mw": { "$ref": "#/$defs/HourlyMap" },
+        "unserved_mw": { "$ref": "#/$defs/HourlyMap" },
+        "demand_response_mw": { "$ref": "#/$defs/HourlyMap" },
+        "curtailment_mw": { "$ref": "#/$defs/HourlyMap" },
+        "households_off": { "$ref": "#/$defs/HourlyMap" },
+        "cost_proxy_usd": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "co2_t": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["optimal", "infeasible", "error"]
+        },
+        "validation": { "$ref": "#/$defs/ValidationSummary" }
+      }
+    },
+    "Disruption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "type", "asset_id", "from_hour", "to_hour", "source"],
+      "properties": {
+        "event_id": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["generator_outage", "line_outage", "battery_outage"]
+        },
+        "asset_id": { "type": "string" },
+        "from_hour": { "type": "number" },
+        "to_hour": { "type": "number" },
+        "source": {
+          "type": "string",
+          "enum": ["operator", "jury", "script"]
+        },
+        "jury_name": { "type": "string" }
+      }
+    },
+    "Lever": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target_id", "params", "from_hour", "to_hour"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "emergency_rating",
+            "demand_response",
+            "activate_reserve_bess",
+            "hydro_reserve_release",
+            "start_peaker",
+            "add_battery",
+            "uprate_line"
+          ]
+        },
+        "target_id": { "type": "string" },
+        "params": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "from_hour": { "type": "number" },
+        "to_hour": { "type": "number" }
+      }
+    },
+    "OptionMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "households_reconnected",
+        "households_newly_off",
+        "unserved_mwh_avoided",
+        "cost_delta_usd",
+        "co2_delta_t",
+        "curtailment_delta_mwh",
+        "max_line_loading_pct",
+        "hours_to_zero_unserved"
+      ],
+      "properties": {
+        "households_reconnected": { "type": "number" },
+        "households_newly_off": { "type": "number" },
+        "unserved_mwh_avoided": { "type": "number" },
+        "cost_delta_usd": { "type": "number" },
+        "co2_delta_t": { "type": "number" },
+        "curtailment_delta_mwh": { "type": "number" },
+        "max_line_loading_pct": { "type": "number" },
+        "hours_to_zero_unserved": {
+          "anyOf": [{ "type": "number" }, { "type": "null" }]
+        }
+      }
+    },
+    "Option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "option_id",
+        "title_es",
+        "levers",
+        "rationale_es",
+        "tradeoff_tag",
+        "metrics",
+        "validation",
+        "solution"
+      ],
+      "properties": {
+        "option_id": { "type": "string" },
+        "title_es": { "type": "string" },
+        "levers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Lever" }
+        },
+        "rationale_es": { "type": "string" },
+        "tradeoff_tag": {
+          "type": "string",
+          "enum": ["max_hogares", "min_costo", "min_co2", "min_riesgo_red"]
+        },
+        "metrics": { "$ref": "#/$defs/OptionMetrics" },
+        "validation": { "$ref": "#/$defs/ValidationSummary" },
+        "solution": { "$ref": "#/$defs/Solution" }
+      }
+    },
+    "ModelExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "role", "status", "latency_ms", "cached"],
+      "properties": {
+        "model": { "type": "string" },
+        "role": { "type": "string", "const": "decider" },
+        "status": { "type": "string", "enum": ["ok", "timeout", "error"] },
+        "latency_ms": { "type": "number" },
+        "response_id": { "type": "string" },
+        "cached": { "type": "boolean" },
+        "cached_at_utc": { "type": "string" }
+      }
+    },
+    "EventEnvelope": {
+      "type": "object",
+      "required": ["seq", "session_id", "hour", "ts_utc", "type"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 0 },
+        "session_id": { "type": "string" },
+        "hour": { "type": "number", "minimum": 0, "maximum": 24 },
+        "ts_utc": { "type": "string" },
+        "type": { "type": "string" }
+      }
+    },
+    "SessionSnapshotEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "catalog", "solution", "grid_state", "active_events", "autonomy", "clock"],
+          "properties": {
+            "type": { "const": "session.snapshot" },
+            "catalog": { "$ref": "#/$defs/Catalog" },
+            "solution": { "$ref": "#/$defs/Solution" },
+            "grid_state": { "$ref": "#/$defs/GridState" },
+            "active_events": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/Disruption" }
+            },
+            "autonomy": { "type": "boolean" },
+            "clock": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["hour", "running", "speed_s_per_hour"],
+              "properties": {
+                "hour": { "type": "number" },
+                "running": { "type": "boolean" },
+                "speed_s_per_hour": { "type": "number" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ClockTickEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "running"],
+          "properties": {
+            "type": { "const": "clock.tick" },
+            "running": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "IncidentDetectedEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "incident_id", "disruption", "impact"],
+          "properties": {
+            "type": { "const": "incident.detected" },
+            "incident_id": { "type": "string" },
+            "disruption": { "$ref": "#/$defs/Disruption" },
+            "impact": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["unserved_mw_peak", "households_off_peak", "nodes_affected", "lines_overloaded"],
+              "properties": {
+                "unserved_mw_peak": { "type": "number" },
+                "households_off_peak": { "type": "number" },
+                "nodes_affected": { "type": "array", "items": { "type": "string" } },
+                "lines_overloaded": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SolutionUpdatedEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "reason", "solution", "grid_state"],
+          "properties": {
+            "type": { "const": "solution.updated" },
+            "reason": {
+              "type": "string",
+              "enum": ["incident", "plan_applied", "event_ended", "reset"]
+            },
+            "solution": { "$ref": "#/$defs/Solution" },
+            "grid_state": { "$ref": "#/$defs/GridState" }
+          }
+        }
+      ]
+    },
+    "AgentThoughtEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "incident_id", "delta"],
+          "properties": {
+            "type": { "const": "agent.thought" },
+            "incident_id": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+            "delta": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "AgentToolCallEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "incident_id", "call_id", "tool", "args_summary_es", "status"],
+          "properties": {
+            "type": { "const": "agent.tool_call" },
+            "incident_id": { "type": "string" },
+            "call_id": { "type": "string" },
+            "tool": { "type": "string" },
+            "args_summary_es": { "type": "string" },
+            "status": {
+              "type": "string",
+              "enum": ["running", "pass", "fail", "infeasible"]
+            },
+            "duration_ms": { "type": "number" },
+            "result_summary": {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [{ "type": "number" }, { "type": "string" }, { "type": "boolean" }]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "OptionsReadyEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "incident_id",
+            "diagnosis_es",
+            "options",
+            "recommended_id",
+            "candidates_evaluated",
+            "candidates_passed",
+            "model_execution"
+          ],
+          "properties": {
+            "type": { "const": "options.ready" },
+            "incident_id": { "type": "string" },
+            "diagnosis_es": { "type": "string" },
+            "options": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": { "$ref": "#/$defs/Option" }
+            },
+            "recommended_id": { "type": "string" },
+            "candidates_evaluated": { "type": "integer" },
+            "candidates_passed": { "type": "integer" },
+            "model_execution": { "$ref": "#/$defs/ModelExecution" }
+          }
+        }
+      ]
+    },
+    "AutonomyCountdownEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "incident_id", "option_id", "seconds_left"],
+          "properties": {
+            "type": { "const": "autonomy.countdown" },
+            "incident_id": { "type": "string" },
+            "option_id": { "type": "string" },
+            "seconds_left": { "type": "number" }
+          }
+        }
+      ]
+    },
+    "PlanAppliedEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "incident_id", "option_id", "by"],
+          "properties": {
+            "type": { "const": "plan.applied" },
+            "incident_id": { "type": "string" },
+            "option_id": { "type": "string" },
+            "by": { "type": "string", "enum": ["operator", "gemini_autonomous"] }
+          }
+        }
+      ]
+    },
+    "PlanVetoedEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "incident_id", "option_id"],
+          "properties": {
+            "type": { "const": "plan.vetoed" },
+            "incident_id": { "type": "string" },
+            "option_id": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "EventEndedEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "event_id"],
+          "properties": {
+            "type": { "const": "event.ended" },
+            "event_id": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "AgentNoteEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "text_es"],
+          "properties": {
+            "type": { "const": "agent.note" },
+            "text_es": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "ErrorEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/EventEnvelope" },
+        {
+          "type": "object",
+          "required": ["type", "code", "message_es"],
+          "properties": {
+            "type": { "const": "error" },
+            "code": { "type": "string" },
+            "message_es": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "LiveEvent": {
+      "oneOf": [
+        { "$ref": "#/$defs/SessionSnapshotEvent" },
+        { "$ref": "#/$defs/ClockTickEvent" },
+        { "$ref": "#/$defs/IncidentDetectedEvent" },
+        { "$ref": "#/$defs/SolutionUpdatedEvent" },
+        { "$ref": "#/$defs/AgentThoughtEvent" },
+        { "$ref": "#/$defs/AgentToolCallEvent" },
+        { "$ref": "#/$defs/OptionsReadyEvent" },
+        { "$ref": "#/$defs/AutonomyCountdownEvent" },
+        { "$ref": "#/$defs/PlanAppliedEvent" },
+        { "$ref": "#/$defs/PlanVetoedEvent" },
+        { "$ref": "#/$defs/EventEndedEvent" },
+        { "$ref": "#/$defs/AgentNoteEvent" },
+        { "$ref": "#/$defs/ErrorEvent" }
+      ]
+    }
+  },
+  "$ref": "#/$defs/LiveEvent"
+}

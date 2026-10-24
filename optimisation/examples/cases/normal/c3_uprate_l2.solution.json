@@ -51,12 +51,12 @@
     "solves": 1
   },
   "objective": {
-    "total_usd": 1588894.052674,
+    "total_usd": 1588894.052673,
     "terms": {
       "dispatchable_cost_usd": 1588573.909965,
       "unserved_penalty_usd": 0.0,
       "curtailment_penalty_usd": 0.0,
-      "battery_throughput_cost_usd": 110.515224,
+      "battery_throughput_cost_usd": 110.515223,
       "transmission_tiebreak_usd": 209.627485,
       "emergency_runback_penalty_usd": 0.0
     }
