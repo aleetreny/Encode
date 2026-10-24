@@ -17,7 +17,7 @@ export const uv = (u: number, v: number, base: [number, number] = [0, 0]): k.Poi
 
 // North → south runs left to right with a gentle slope, like a maquette of Chile lying on a
 // table. Each zone has a hub (substation) with its plants behind it and its neighbourhood in front.
-const hubAt = (i: number) => uv(-330 + i * 165, -70 + i * 48);
+const hubAt = (i: number) => uv(-350 + i * 175, -70 + i * 48);
 export const ZONES: Record<string, { hub: k.Point3; label: string; short: string }> = {
   n_norte_grande: { hub: hubAt(0), label: 'Norte Grande', short: 'NG' },
   n_norte_chico: { hub: hubAt(1), label: 'Norte Chico', short: 'NC' },
@@ -28,18 +28,18 @@ export const ZONES: Record<string, { hub: k.Point3; label: string; short: string
 
 // Where each modelled asset sits relative to its zone hub, as (u, v). Unknown ids get a free slot.
 const SLOTS: Record<string, [number, number]> = {
-  solar_ng: [-50, -78],
-  gas_ng: [36, -96],
+  solar_ng: [-52, -122],
+  gas_ng: [36, -140],
   b_reserve_ng: [70, 22],
-  solar_nc: [-46, -80],
-  wind_nc: [44, -100],
-  gas_centro: [-62, -86],
-  diesel_centro: [20, -112],
-  b_centro: [78, -60],
+  solar_nc: [-48, -124],
+  wind_nc: [44, -142],
+  gas_centro: [-62, -130],
+  diesel_centro: [22, -152],
+  b_centro: [80, -104],
   b_reserve_centro: [84, 24],
-  coal_cs: [-10, -96],
-  hydro_sur: [-44, -92],
-  wind_sur: [48, -108],
+  coal_cs: [-12, -140],
+  hydro_sur: [-46, -134],
+  wind_sur: [48, -148],
 };
 const FREE: [number, number][] = [[70, -70], [-80, -30], [80, 10]];
 
@@ -66,7 +66,7 @@ export const GEMINI: k.Point3 = [g[0], g[1], 70];
 const anchors: k.Point3[] = [];
 for (const z of Object.values(ZONES)) {
   const b: [number, number] = [z.hub[0], z.hub[1]];
-  anchors.push(uv(-85, -140, b), uv(90, -140, b), uv(-60, 105, b), uv(90, 95, b));
+  anchors.push(uv(-85, -185, b), uv(90, -185, b), uv(-60, 105, b), uv(90, 95, b));
 }
 anchors.push([GEMINI[0], GEMINI[1], GEMINI[2] + 40]);
 

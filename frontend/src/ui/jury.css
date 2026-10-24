@@ -41,3 +41,27 @@
 .jr-btn:active { transform: scale(.98); }
 .jr-btn:disabled { background: #e4e4e0; color: var(--ink-3); cursor: not-allowed; }
 .jr-foot { margin-top: 22px; font: 10.5px/1.5 var(--mono); color: var(--ink-3); }
+.jr-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.jr-kpis div { background: #f6f6f3; border-radius: 12px; padding: 8px 10px; }
+.jr-kpis span { display: block; font: 10px var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; }
+.jr-kpis b { font: 800 19px var(--mono); font-variant-numeric: tabular-nums; }
+.jr-kpis .is-hot { background: #fdeeee; } .jr-kpis .is-hot b { color: var(--red); }
+.jr-live { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.jr-live li { font-size: 13px; padding: 6px 10px; border-radius: 10px; background: #fff3f3; border-left: 3px solid var(--red); }
+.jr-name.is-required input { border-color: var(--red); box-shadow: 0 0 0 3px rgba(229,72,77,.12); }
+.jr-name.is-required span { color: var(--red); }
+.jr-card { border-top: 4px solid var(--c, var(--line)); }
+.jr-risk { margin: 2px 0 10px; flex: 1; }
+.jr-risk b { display: block; font: 800 24px var(--mono); letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.jr-risk span { font: 10px var(--mono); color: var(--ink-3); }
+.jr-out { color: var(--red) !important; font-weight: 700; }
+.jr-sheet { position: fixed; inset: 0; background: rgba(24,24,27,.35); display: flex; align-items: flex-end; justify-content: center; z-index: 10; animation: jr-fade .2s ease; }
+.jr-sheet-card { width: 100%; max-width: 560px; background: #fff; border-radius: 22px 22px 0 0; padding: 18px 18px 26px; display: flex; flex-direction: column; gap: 8px; animation: jr-up .28s cubic-bezier(.32,.72,0,1); }
+.jr-sheet-card small { font: 11px var(--mono); color: var(--ink-3); }
+.jr-sheet-card h3 { margin: 0; font-size: 19px; }
+.jr-sheet-card p { margin: 0 0 6px; font-size: 13px; color: var(--ink-2); }
+.jr-impact b { display: block; font: 800 46px var(--mono); color: var(--red); letter-spacing: -.02em; }
+.jr-impact span { font: 11px var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+.jr-btn.is-ghost { background: #f2f2ef; color: var(--ink); }
+@keyframes jr-fade { from { opacity: 0; } }
+@keyframes jr-up { from { transform: translateY(40px); opacity: 0; } }

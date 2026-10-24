@@ -302,3 +302,43 @@
 .gp-invite-card img { width: 280px; height: 280px; display: block; margin: 0 auto 10px; image-rendering: pixelated; }
 .gp-invite-card code { display: block; font: 12px var(--mono); color: var(--ink-2); margin-bottom: 14px; word-break: break-all; }
 .gp-invite-card p { color: var(--ink-2); }
+.gp-pad { fill-opacity: 0.14; stroke-opacity: 0.55; stroke-width: 1; }
+.gp-asset-dot { width: 8px; height: 8px; border-radius: 2px; align-self: center; }
+.gp-hub-alarm { fill: rgba(229, 72, 77, 0.12); stroke: var(--red); stroke-width: 1.6; animation: gp-blink 1s steps(2) infinite; }
+.gp-pylon { stroke: #a1a1aa; stroke-width: 1; }
+.gp-pylon-top { fill: #fff; stroke: #52525b; stroke-width: 1; }
+.gp-trunk-glow { fill: none; stroke: var(--blue); opacity: 0.12; stroke-linecap: round; }
+.gp-trunk-core { fill: none; stroke: var(--blue); stroke-linecap: round; }
+.gp-trunk-packet { fill: #fff; stroke: var(--blue); stroke-width: 1.4; }
+.gp-trunk-pill { fill: #fff; stroke: #c9d4f6; }
+.gp-trunk-text { font: 700 9.5px var(--mono); fill: var(--blue); letter-spacing: 0.04em; }
+.gp-trunk-line.is-hot .gp-trunk-glow, .gp-trunk-line.is-hot .gp-trunk-core { stroke: var(--amber); }
+.gp-trunk-line.is-hot .gp-trunk-glow { opacity: 0.22; }
+.gp-trunk-line.is-hot .gp-trunk-packet { stroke: var(--amber); }
+.gp-trunk-line.is-hot .gp-trunk-pill { fill: #fff8ec; stroke: #f2d6a6; }
+.gp-trunk-line.is-hot .gp-trunk-text { fill: #b86e00; }
+.gp-trunk-line.is-tripped .gp-trunk-glow { stroke: var(--red); opacity: 0.25; animation: gp-blink 1s steps(2) infinite; }
+.gp-trunk-line.is-tripped .gp-trunk-core { stroke: var(--red); stroke-dasharray: 6 5; }
+.gp-trunk-break { fill: none; stroke: var(--red); stroke-width: 2.6; stroke-linecap: round; animation: gp-blink 0.8s steps(2) infinite; }
+.gp-trunk-line.is-tripped .gp-trunk-pill { fill: var(--red); stroke: var(--red); }
+.gp-trunk-line.is-tripped .gp-trunk-text { fill: #fff; }
+/* legend */
+.gp-legend { position: absolute; left: 22px; top: 76px; z-index: 5; width: 168px; background: rgba(255,255,255,.92); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; font: 11px var(--mono); }
+.gp-legend b { display: block; font-size: 9.5px; letter-spacing: .12em; color: var(--ink-3); margin: 6px 0 3px; }
+.gp-legend b:first-child { margin-top: 0; }
+.gp-legend div { display: flex; align-items: center; gap: 7px; margin: 2px 0; color: var(--ink-2); }
+.gp-legend .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.gp-legend .ln { width: 22px; border-top: 3px solid; flex: none; }
+.gp-legend .ln.is-cut { border-top-style: dashed; animation: gp-blink 1s steps(2) infinite; }
+.gp-legend .win { width: 10px; height: 10px; border-radius: 2px; flex: none; background: #fde68a; border: 1px solid #d99a06; }
+.gp-legend .win.is-dark { background: #27272a; border-color: #18181b; }
+.gp-sheet { left: 206px; }
+.gp-scene { left: 150px; }
+/* attack pop-up */
+.gp-attack { position: absolute; left: 50%; top: 34%; transform: translate(-50%, -50%); z-index: 9; width: 420px; background: #fff; border-radius: 22px; border: 2px solid var(--red); padding: 18px 22px; text-align: center; box-shadow: 0 40px 90px -30px rgba(229,72,77,.55); animation: gp-attack 6s cubic-bezier(.32,.72,0,1) forwards; pointer-events: none; }
+.gp-attack small { font: 800 10px var(--mono); letter-spacing: .16em; color: #fff; background: var(--red); padding: 4px 9px; border-radius: 7px; }
+.gp-attack h2 { margin: 10px 0 2px; font-size: 22px; }
+.gp-attack p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.gp-attack .gp-attack-n { display: block; margin-top: 10px; font: 800 44px var(--mono); color: var(--red); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.gp-attack .gp-attack-u { font: 11px var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: .1em; }
+@keyframes gp-attack { 0% { opacity: 0; transform: translate(-50%, -46%) scale(.94); } 6%, 82% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -54%) scale(.98); } }

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { LiveSessionProvider, useLiveSession } from '../live/store';
 import type { Option, Solution } from '../live/types';
-import { GridScene, assetTitle, at, buildAssets } from './GridScene';
+import { GridScene, TECH_COLOR, TECH_LABEL, assetTitle, at, buildAssets } from './GridScene';
 import { ZONES } from './layout';
 import './ui.css';
 
@@ -69,18 +69,24 @@ function Screen() {
     if (state.active_incidents.length === 0) setApplied(null);
   }, [state.active_incidents.length]);
 
-  // Big announcements: a new fault (and who caused it), and a plan going live (and who decided).
+  // Big announcement of each new fault: who did it, what fell, and the damage the engine computed.
+  const [attack, setAttack] = useState<{ who: string; what: string; homes: number; mw: number; key: string } | null>(null);
   useEffect(() => {
-    if (!catalog) return;
-    for (const d of state.active_incidents) {
-      if (seenIncidents.current.has(d.event_id)) continue;
-      seenIncidents.current.add(d.event_id);
-      const g = catalog.generators.find((x) => x.id === d.asset_id);
-      const what = d.type === 'line_outage' ? `Línea ${d.asset_id} cortada` : g ? `${assetTitle(buildAssets(catalog).find((a) => a.id === g.id)!)} fuera de servicio` : `${d.asset_id} fuera de servicio`;
-      const who = d.source === 'jury' ? `Provocada por el jurado${d.jury_name ? ` · ${d.jury_name}` : ''}` : d.source === 'operator' ? 'Provocada por el operador' : 'Falla repentina';
-      setToast({ kind: 'fault', title: what, sub: who, key: Date.now() });
-    }
-  }, [state.active_incidents, catalog]);
+    const ev = state.last_incident;
+    if (!catalog || !ev || seenIncidents.current.has(ev.incident_id)) return;
+    seenIncidents.current.add(ev.incident_id);
+    const d = ev.disruption;
+    const a = buildAssets(catalog).find((x) => x.id === d.asset_id);
+    const line = catalog.lines.find((l) => l.id === d.asset_id);
+    const what = line ? `cortó la línea ${line.id} (${ZONES[line.from]?.label} → ${ZONES[line.to]?.label})` : a ? `botó ${assetTitle(a)}` : `botó ${d.asset_id}`;
+    const who = d.source === 'jury' ? d.jury_name || 'Alguien del jurado' : d.source === 'operator' ? 'El operador' : 'Una falla repentina';
+    setAttack({ who, what, homes: ev.impact.households_off_peak, mw: ev.impact.unserved_mw_peak, key: ev.incident_id });
+  }, [state.last_incident, catalog]);
+  useEffect(() => {
+    if (!attack) return;
+    const id = window.setTimeout(() => setAttack(null), 6000);
+    return () => window.clearTimeout(id);
+  }, [attack]);
   useEffect(() => {
     if (countdown?.active) wasCountingDown.current = true;
   }, [countdown?.active]);
@@ -190,6 +196,39 @@ function Screen() {
         selected={selected}
         onSelect={setSelected}
       />
+
+      {attack && (
+        <div key={attack.key} className="gp-attack">
+          <small>{attack.who === 'El operador' || attack.who === 'Una falla repentina' ? 'FALLA EN LA RED' : 'ATAQUE DEL JURADO'}</small>
+          <h2>{attack.who}</h2>
+          <p>{attack.what}</p>
+          {attack.homes > 0 ? (
+            <>
+              <span className="gp-attack-n">−{fmt(attack.homes)}</span>
+              <span className="gp-attack-u">hogares sin luz en el peor momento · {fmt(attack.mw)} MW de déficit</span>
+            </>
+          ) : (
+            <>
+              <span className="gp-attack-n" style={{ color: 'var(--green)' }}>0</span>
+              <span className="gp-attack-u">hogares afectados · la red lo absorbe</span>
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="gp-legend">
+        <b>Producción</b>
+        {['solar', 'wind', 'hydro', 'gas', 'coal', 'diesel', 'battery'].map((t) => (
+          <div key={t}><i className="sw" style={{ background: TECH_COLOR[t] }} />{TECH_LABEL[t]}</div>
+        ))}
+        <b>Transmisión</b>
+        <div><i className="ln" style={{ borderColor: 'var(--blue)' }} />Normal</div>
+        <div><i className="ln" style={{ borderColor: 'var(--amber)' }} />Saturada ≥95 %</div>
+        <div><i className="ln is-cut" style={{ borderColor: 'var(--red)' }} />Cortada</div>
+        <b>Hogares</b>
+        <div><i className="win" />Con luz</div>
+        <div><i className="win is-dark" />Sin luz</div>
+      </div>
 
       {toast && (
         <div key={toast.key} className={`gp-toast is-${toast.kind}`}>

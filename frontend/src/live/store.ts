@@ -30,6 +30,8 @@ export interface LiveSessionState {
   thoughts: { text_es: string; ts_utc: string; sim_hour: number }[];
   tool_calls: Extract<LiveEvent, { type: 'agent.tool_call' }>[];
   options: [Option, Option] | null;
+  // Latest fault with the impact the engine computed for it (incident.detected.impact).
+  last_incident?: Extract<LiveEvent, { type: 'incident.detected' }> | null;
   model_execution?: ModelExecution | null;
   applied_by?: 'operator' | 'gemini_autonomous' | null;
   by?: 'operator' | 'gemini_autonomous' | null;
@@ -112,6 +114,7 @@ export function liveReducer(state: LiveSessionState, event: LiveEvent): LiveSess
       return {
         ...newState,
         active_incidents: [...newState.active_incidents, event.disruption],
+        last_incident: event,
         clock: { ...newState.clock, sim_hour: event.hour },
         applied_by: null,
         by: null,

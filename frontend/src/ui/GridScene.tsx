@@ -16,7 +16,11 @@ export interface Asset {
   at: k.Point3;
 }
 
-const TECH_LABEL: Record<string, string> = {
+// One colour per technology, used as a ground pad under each plant and in the legend.
+export const TECH_COLOR: Record<string, string> = {
+  solar: '#f5b301', wind: '#38bdf8', hydro: '#2563eb', gas: '#f97316', coal: '#6b7280', diesel: '#be185d', battery: '#8b5cf6',
+};
+export const TECH_LABEL: Record<string, string> = {
   solar: 'Solar', wind: 'Eólica', hydro: 'Hidro', gas: 'Gas', coal: 'Carbón', diesel: 'Diésel', battery: 'Batería',
 };
 export const assetTitle = (a: Asset) =>
@@ -109,6 +113,52 @@ function PowerWire({ from, to, mw, cap, state, lift = 14, label }: {
   );
 }
 
+// Trunk lines ride above everything else: thick, coloured by state, with a pill label.
+function TrunkLine({ from, to, mw, cap, state, label, lift = 26 }: {
+  from: k.Point3; to: k.Point3; mw: number; cap: number; state: 'ok' | 'hot' | 'tripped'; label: string; lift?: number;
+}) {
+  const mid: k.Point3 = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2, lift * 0.8];
+  const pts = [k.iso([from[0], from[1], lift], P), k.iso(mid, P), k.iso([to[0], to[1], lift], P)];
+  const d = k.pathOf(pts);
+  const load = cap > 0 ? Math.min(1, Math.abs(mw) / cap) : 0;
+  const width = state === 'tripped' ? 3.2 : 1.8 + load * 2.8;
+  const n = state === 'tripped' || Math.abs(mw) < 3 ? 0 : 3 + Math.round(load * 4);
+  const dur = 4.6 - load * 3;
+  const [lx, ly] = along(pts, 0.5);
+  const tw = label.length * 6.1 + 16;
+  // A break in the middle of a cut line
+  const [b0x, b0y] = along(pts, 0.46), [b1x, b1y] = along(pts, 0.54);
+  return (
+    <g className={`gp-trunk-line is-${state}`}>
+      {[pts[0], pts[2]].map(([x, y], i) => (
+        <g key={i}>
+          <line x1={x} y1={y} x2={x} y2={k.iso([i ? to[0] : from[0], i ? to[1] : from[1], 0], P)[1]} className="gp-pylon" />
+          <circle cx={x} cy={y} r="2.6" className="gp-pylon-top" />
+        </g>
+      ))}
+      <path d={d} className="gp-trunk-glow" style={{ strokeWidth: width + 7 }} />
+      {state === 'tripped' ? (
+        <>
+          <path d={k.pathOf([pts[0], [b0x, b0y]])} className="gp-trunk-core" style={{ strokeWidth: width }} />
+          <path d={k.pathOf([[b1x, b1y], pts[2]])} className="gp-trunk-core" style={{ strokeWidth: width }} />
+          <path d={`M${b0x - 4},${b0y - 7}l5,7l-5,7M${b1x + 4},${b1y - 7}l-5,7l5,7`} className="gp-trunk-break" />
+        </>
+      ) : (
+        <path d={d} className="gp-trunk-core" style={{ strokeWidth: width }} />
+      )}
+      {Array.from({ length: n }).map((_, i) => (
+        <circle key={`${i}-${n}-${mw < 0}`} r={2.2 + load * 1.4} className="gp-trunk-packet">
+          <animateMotion dur={`${dur}s`} begin={`${(-i * dur) / n}s`} repeatCount="indefinite" path={d} keyPoints={mw < 0 ? '1;0' : '0;1'} keyTimes="0;1" calcMode="linear" />
+        </circle>
+      ))}
+      <g transform={`translate(${lx},${ly - 16})`}>
+        <rect x={-tw / 2} y={-9} width={tw} height={17} rx={8.5} className="gp-trunk-pill" />
+        <text y={3} textAnchor="middle" className="gp-trunk-text">{label}</text>
+      </g>
+    </g>
+  );
+}
+
 export const GridScene = memo(function GridScene({ catalog, solution, hour, incidents, boosted, phase, focus, selected, onSelect }: Props) {
   const assets = useMemo(() => buildAssets(catalog), [catalog]);
   const tripped = useMemo(() => new Set(incidents.filter((d) => active(d, hour)).map((d) => d.asset_id)), [incidents, hour]);
@@ -146,6 +196,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
       y: screen(a.at)[1],
       node: (
         <g key={a.id} className={`gp-asset${selected === a.id ? ' is-selected' : ''}${s === 'standby' ? ' is-standby' : ''}`} onClick={(e) => { e.stopPropagation(); onSelect(selected === a.id ? null : a.id); }}>
+          <path d={k.ring(a.at[0], a.at[1], a.technology === 'wind' ? 30 : 34, 0.1, P, 44)} className="gp-pad" style={{ fill: TECH_COLOR[a.technology], stroke: TECH_COLOR[a.technology] }} />
           {body}
           {s === 'tripped' && <TripMark at={a.at} />}
           {s === 'boost' && <BoostMark at={a.at} />}
@@ -153,13 +204,14 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
       ),
     });
   }
+  const alarmHubs = new Set(catalog.lines.filter((l) => tripped.has(l.id)).flatMap((l) => [l.from, l.to]));
   for (const n of catalog.nodes) {
     const z = ZONES[n.id];
     if (!z) continue;
     const off = at(solution.households_off[n.id], hour);
     const count = n.households_total > 2_000_000 ? 12 : n.households_total > 900_000 ? 9 : 6;
     const dark = off > 1 ? Math.max(1, Math.round((off / n.households_total) * count)) : 0;
-    drawables.push({ y: screen(z.hub)[1], node: <g key={`hub-${n.id}`}><Hub at={z.hub} lit={focus.includes(n.id)} /></g> });
+    drawables.push({ y: screen(z.hub)[1], node: <g key={`hub-${n.id}`}>{alarmHubs.has(n.id) && <path d={k.ring(z.hub[0], z.hub[1], 26, 0.3, P, 40)} className="gp-hub-alarm" />}<Hub at={z.hub} lit={focus.includes(n.id)} /></g> });
     drawables.push({ y: screen(housesOf(n.id))[1], node: <g key={`hh-${n.id}`}><Neighbourhood at={housesOf(n.id)} count={count} dark={dark} highlight={focus.includes(n.id)} /></g> });
   }
   drawables.sort((p, q) => p.y - q.y);
@@ -171,11 +223,14 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     const mw = at(solution.line_flow_mw[l.id], hour);
     const cap = at(solution.line_capacity_mw[l.id], hour) || l.capacity_mw;
     const isTripped = tripped.has(l.id);
-    const hot = !isTripped && Math.abs(mw) >= cap * 0.97;
+    const hot = !isTripped && Math.abs(mw) >= cap * 0.95;
+    const who = incidents.find((d) => d.asset_id === l.id && active(d, hour));
+    const label = isTripped
+      ? `${l.id} CORTADA${who?.jury_name ? ` · ${who.jury_name}` : who?.source === 'jury' ? ' · jurado' : ''}`
+      : `${l.id} · ${Math.round((Math.abs(mw) / cap) * 100)} %${hot ? ' ⚠' : ''}`;
     return (
       <g key={l.id} className="gp-asset" onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}>
-        <PowerWire from={from} to={to} mw={mw} cap={cap} state={isTripped ? 'tripped' : hot ? 'hot' : 'ok'} lift={22} label={`${l.id} · ${isTripped ? 'CORTADA' : `${Math.round(Math.abs(mw))}/${Math.round(cap)} MW`}`} />
-        {isTripped && <TripMark at={[(from[0] + to[0]) / 2, (from[1] + to[1]) / 2, 0]} radius={14} height={30} />}
+        <TrunkLine from={from} to={to} mw={mw} cap={cap} state={isTripped ? 'tripped' : hot ? 'hot' : 'ok'} label={label} />
       </g>
     );
   });
@@ -220,8 +275,8 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
           </radialGradient>
         </defs>
         <g className="gp-feeders">{feeders}</g>
-        <g className="gp-trunk">{wires}</g>
         <g>{drawables.map((d) => d.node)}</g>
+        <g className="gp-trunk">{wires}</g>
         <g className="gp-beams">
           {targets.map((p, i) => {
             const [x, y] = screen([p[0], p[1], 10]);
@@ -247,6 +302,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
           if (s === 'standby' && selected !== a.id) return null; // reserve units stay quiet until used
           return (
             <div key={a.id} className={`gp-asset-label is-${s}${selected === a.id ? ' is-selected' : ''}`} style={pct([a.at[0], a.at[1], a.technology === 'wind' ? 62 : a.technology === 'coal' ? 64 : a.technology === 'gas' || a.technology === 'diesel' ? 46 : 30])}>
+              <i className="gp-asset-dot" style={{ background: TECH_COLOR[a.technology] }} />
               <span className="gp-asset-name">{TECH_LABEL[a.technology] ?? a.technology}</span>
               <span className="gp-asset-mw">
                 {s === 'tripped' ? 'FUERA' : s === 'standby' ? 'reserva' : `${Math.round(Math.abs(out))} MW${a.kind === 'battery' ? (out < -0.5 ? ' ↓' : out > 0.5 ? ' ↑' : '') : ''}`}
