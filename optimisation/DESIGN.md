@@ -126,6 +126,9 @@ Demo topology: a 5-node north–south chain (Norte Grande → Norte Chico → Ce
 
 Rules enforced at load time (violations → `status: "error"`):
 - `T ≥ 1`; every time-series has exactly `T` finite values; `time_step_hours > 0`.
+- `timestamps_utc` are timezone-aware ISO 8601 strings exactly `time_step_hours` apart.
+- A generator whose `technology` is `solar` or `wind` must have an availability profile (otherwise it
+  would silently run at full capacity day and night).
 - All ids unique per type; every `node_id`/`from`/`to` exists; no self-loops; no topology loops.
 - Generators **with** an entry in `renewable_availability_mw_by_generator` are *renewable*
   (curtailable; availability must be within `[0, capacity_mw]`). Generators without one are
@@ -271,7 +274,7 @@ A reserve requirement is a stretch goal (section 11).
 
 ---
 
-## 8. `validate(scenario, solution)` — independent checker
+## 8. `validate(scenario, solution, options=None)` — independent checker
 
 The validator **does not import the solver**. It rebuilds the effective scenario (same input
 normalisation in `scenario.py`, which is data handling, not physics) and re-checks every rule from
@@ -293,7 +296,9 @@ the raw numbers with NumPy:
 | `metrics_recomputed` | every reported metric and objective term matches recomputation |
 
 Returns `{"passed", "checks_run", "violations": [{"check","id","hour","magnitude","detail"}],
-"violation_count", "max_residual_mw"}` (at most 200 violations listed). It also checks that every outage
+"violation_count", "max_residual_mw"}` (at most 200 violations listed). If the caller passes the
+`options` it gave `solve`, a solution solved with different options (e.g. unserved demand allowed when
+strict mode was requested) fails `options_consistent`. It also checks that every outage
 defined in the scenario is present in the solution (`events_consistent`) and that the time axis matches. Tolerances: 1e-4 MW for flows/balances, 1e-3 MWh/USD-relative for metrics.
 
 "No hindsight" for sudden outages (pre-event hours identical to the plan) is proven by tests.
@@ -392,7 +397,7 @@ Implemented in this package (all milestones M0–M4; stretch goals not started).
 
 ```bash
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q          # 104 tests
+pytest optimisation/tests -q          # 110 tests
 python -m optimisation.demo --write   # prints the table below and refreshes optimisation/examples/
 ```
 

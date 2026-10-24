@@ -69,6 +69,8 @@ class _LP:
         )
         if self.integer:
             h.setOptionValue("mip_rel_gap", 1e-9)
+            # tight integrality so a "binary" of 1e-6 cannot leave both charge and discharge open
+            h.setOptionValue("mip_feasibility_tolerance", 1e-9)
             h.changeColsIntegrality(
                 len(self.integer), np.array(self.integer, dtype=np.int32),
                 np.full(len(self.integer), highspy.HighsVarType.kInteger),

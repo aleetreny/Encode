@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import json
 import math
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -41,6 +42,7 @@ DEFAULT_OPTIONS = {"allow_unserved": True, "time_limit_s": 30.0}
 
 EVENT_TYPES = ("generator_outage", "line_outage")
 EVENT_MODES = ("planned", "sudden")
+WEATHER_DRIVEN = ("solar", "wind")  # must come with an hourly availability profile
 
 
 class ScenarioError(ValueError):
@@ -327,6 +329,23 @@ def normalise_options(options: Any) -> dict:
 # ---------------------------------------------------------------- grid
 
 
+def _check_time_axis(stamps: list[str], dt: float) -> None:
+    """Timestamps must be timezone-aware ISO 8601, exactly ``dt`` hours apart."""
+    times = []
+    for i, s in enumerate(stamps):
+        try:
+            t = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        except ValueError:
+            _fail(f"timestamps_utc[{i}] = {s!r} is not an ISO 8601 timestamp")
+        if t.tzinfo is None:
+            _fail(f"timestamps_utc[{i}] = {s!r} has no timezone; use UTC, e.g. 2026-10-01T03:00:00Z")
+        times.append(t)
+    step = timedelta(hours=dt)
+    for i in range(1, len(times)):
+        if abs(times[i] - times[i - 1] - step) > timedelta(seconds=1):
+            _fail(f"timestamps_utc[{i}] is not {dt:g} h after timestamps_utc[{i - 1}]")
+
+
 def _check_radial(node_ids: list[str], lines: list[dict]) -> None:
     parent = {n: n for n in node_ids}
 
@@ -371,6 +390,7 @@ def build_grid(
     if not isinstance(stamps, list) or not stamps or not all(isinstance(s, str) for s in stamps):
         _fail("timestamps_utc must be a non-empty list of ISO 8601 strings")
     T = len(stamps)
+    _check_time_axis(stamps, dt)
 
     nodes = scen.get("nodes") or []
     if not isinstance(nodes, list) or not nodes:
@@ -410,6 +430,11 @@ def build_grid(
         cap = _num(g.get("capacity_mw"), f"generator {gid}.capacity_mw", lo=0.0)
         cost = _num(g.get("variable_cost_usd_per_mwh", 0.0), f"generator {gid}.variable_cost_usd_per_mwh", lo=0.0)
         renewable = gid in avail_raw
+        if not renewable and str(g.get("technology", "")).lower() in WEATHER_DRIVEN:
+            _fail(
+                f"generator {gid} is {g['technology']} but has no entry in "
+                "renewable_availability_mw_by_generator; without it, it would run at full capacity day and night"
+            )
         ramp = g.get("ramp_rate_mw_per_h")
         if ramp is not None:
             if renewable:

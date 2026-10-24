@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -202,6 +203,10 @@ def test_modification_menu(scen):
         (lambda s: s["renewable_availability_mw_by_generator"].update(pv=[0, 300, 0, 0]), "exceeds capacity"),
         (lambda s: s["demand_mw_by_node"].update(b=[1, 2, float("nan"), 3]), "finite"),
         (lambda s: s.update(objective={"made_up": 1}), "unknown field"),
+        (lambda s: s["renewable_availability_mw_by_generator"].pop("pv"), "full capacity day and night"),
+        (lambda s: s["timestamps_utc"].__setitem__(1, "banana"), "not an ISO 8601"),
+        (lambda s: s["timestamps_utc"].__setitem__(2, "2026-10-01T05:00:00Z"), "not 1 h after"),
+        (lambda s: s.update(timestamps_utc=[t.rstrip("Z") for t in s["timestamps_utc"]]), "no timezone"),
     ],
 )
 def test_bad_input_returns_error(mutate, msg):
@@ -446,9 +451,12 @@ def _random_radial(rng: np.random.Generator) -> dict:
             bats.append({"id": f"b{i}", "node_id": f"n{i}", "power_capacity_mw": float(rng.uniform(1, 100)),
                          "energy_capacity_mwh": E, "initial_soc_mwh": float(rng.uniform(0, E)),
                          "charge_efficiency": float(rng.uniform(0.8, 1)), "discharge_efficiency": float(rng.uniform(0.8, 1))})
+    dt = float(rng.choice([0.5, 1.0, 2.0]))
+    start = datetime(2026, 10, 1, 3, tzinfo=timezone.utc)
     s = {
-        "scenario_id": "random", "time_step_hours": float(rng.choice([0.5, 1.0, 2.0])),
-        "timestamps_utc": [f"t{t}" for t in range(T)], "nodes": nodes, "lines": lines,
+        "scenario_id": "random", "time_step_hours": dt,
+        "timestamps_utc": [(start + timedelta(hours=dt * t)).strftime("%Y-%m-%dT%H:%M:%SZ") for t in range(T)],
+        "nodes": nodes, "lines": lines,
         "generators": gens, "batteries": bats,
         "demand_mw_by_node": {f"n{i}": [float(rng.uniform(0, 150)) for _ in range(T)] for i in range(n)},
         "renewable_availability_mw_by_generator": prof,
@@ -498,3 +506,29 @@ def test_curtailment_penalty_cannot_buy_battery_cycling():
 
 def test_plain_lp_when_no_cycling_incentive(base):
     assert base["solver"]["method"] == "LP"
+
+
+def test_validate_rejects_solution_solved_with_other_options():
+    s = tiny_scenario(demand_mw_by_node={"a": [10, 10, 10, 10], "b": [60, 80, 400, 70]})
+    lax = solve(s)  # default allows unserved demand
+    assert validate(s, lax)["passed"]
+    assert validate(s, lax, {"allow_unserved": True})["passed"]
+    strict = validate(s, lax, {"allow_unserved": False})
+    assert not strict["passed"]
+    assert "options_consistent" in {v["check"] for v in strict["violations"]}
+
+
+def test_examples_match_current_code():
+    """optimisation/examples/*.json must be regenerated whenever outputs change."""
+    import contextlib
+    import io
+
+    from optimisation import demo
+
+    with contextlib.redirect_stdout(io.StringIO()):
+        results = demo.run(write=False)
+    for name, data in results.items():
+        if name.startswith("solution_"):
+            data = {**data, "solver": {**data["solver"], "solve_time_s": 0.0}}
+        stored = json.loads((demo.EXAMPLES / f"{name}.json").read_text())
+        assert stored == json.loads(json.dumps(data)), f"examples/{name}.json is stale: run python -m optimisation.demo --write"

@@ -119,7 +119,7 @@ can explain, and every number behind it is computed and checked.
 ```bash
 python -m venv .venv && . .venv/bin/activate
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q            # 104 tests, ~1 s
+pytest optimisation/tests -q            # 110 tests, ~1 s
 python -m optimisation.demo             # the story above
 python -m optimisation.demo --write     # also regenerate examples/*.json
 ```
@@ -150,7 +150,7 @@ All functions take and return plain JSON-style dicts and never raise on bad inpu
 
 | Teammate | What they need |
 |---|---|
-| **Person 2 (agent)** | Wrap `solve`, `validate`, `compare` as Gemini tools; put `modification_menu(scenario)` in the prompt; never recommend a candidate whose `validate()["passed"]` is false; quote numbers only from these outputs. |
+| **Person 2 (agent)** | Wrap `solve`, `validate`, `compare` as Gemini tools; put `modification_menu(scenario)` in the prompt; call `validate(scenario, solution, options)` with the same options given to `solve`; never recommend a candidate whose `validate()["passed"]` is false; quote numbers only from these outputs. |
 | **Person 4 (backend)** | `POST /api/optimise` → `solve()`, `POST /api/validate` → `validate()`; scenarios use the format in `DESIGN.md` §4. |
 | **Person 1 (frontend)** | Build charts from `examples/solution_*.json`: `timeseries` (hourly values), `metrics` (totals), `binding_constraints` (what to highlight in red). |
 
@@ -180,6 +180,7 @@ Hours are step indices 0–23; `timestamps_utc[i]` gives the UTC start time of h
   line flows as standard DC power flow).
 - Hourly only: nothing about the first seconds after a trip (frequency, inertia).
 - No reserve requirement, no on/off decisions for plants, no investment cost of batteries or lines.
+- Hydro is treated like any other dispatchable plant: no daily water (energy) budget.
 - It never controls anything real.
 
 ## 10. Files
@@ -193,5 +194,5 @@ Hours are step indices 0–23; `timestamps_utc[i]` gives the UTC start time of h
 | `demo.py` | The end-to-end demo story |
 | `fixtures/` | Synthetic demo scenario and the script that generates it |
 | `examples/` | Saved outputs for teammates to code against |
-| `tests/` | 104 automated tests |
+| `tests/` | 110 automated tests |
 | `DESIGN.md` | Full technical specification |

@@ -13,7 +13,7 @@ from typing import Any
 
 import numpy as np
 
-from .scenario import Grid, ScenarioError, build_grid
+from .scenario import Grid, ScenarioError, build_grid, normalise_options
 
 TOL_MW = 1e-4  # power / energy balance tolerance (MW or MWh)
 TOL_REL = 1e-6  # relative tolerance for reported metrics
@@ -94,8 +94,12 @@ def _rebuild(scenario: dict, solution: dict) -> Grid:
     )
 
 
-def validate(scenario: dict, solution: dict) -> dict:
-    """Check a ``solve()`` output against the scenario. Returns a pass/fail report."""
+def validate(scenario: dict, solution: dict, options: dict | None = None) -> dict:
+    """Check a ``solve()`` output against the scenario. Returns a pass/fail report.
+
+    Pass ``options`` (the ones the caller asked ``solve`` to use) to also reject a solution that
+    claims different options, e.g. one that allowed unserved demand when strict mode was requested.
+    """
     rep = _Report()
     rep.check("status")
     if not isinstance(solution, dict):
@@ -112,6 +116,17 @@ def validate(scenario: dict, solution: dict) -> dict:
     except ScenarioError as exc:
         rep.fail("inputs", None, None, 0.0, f"cannot rebuild the scenario this solution claims: {exc}")
         return rep.result()
+
+    if options is not None:
+        rep.check("options_consistent")
+        try:
+            expected = normalise_options(options)
+        except ScenarioError as exc:
+            rep.fail("inputs", None, None, 0.0, str(exc))
+            return rep.result()
+        if expected != grid.options:
+            rep.fail("options_consistent", None, None, 0.0,
+                     f"solution was solved with options {grid.options}, expected {expected}")
 
     rep.check("events_consistent")
     try:

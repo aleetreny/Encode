@@ -60,7 +60,7 @@ python -m optimisation.demo --write       # also refresh optimisation/examples/*
 
 Public API (`from optimisation import ...`):
 - `solve(scenario, candidate=None, events=None, options=None)` → solution dict
-- `validate(scenario, solution)` → validation dict (independent of the solver code)
+- `validate(scenario, solution, options=None)` → validation dict (independent of the solver code)
 - `compare(baseline, candidate, baseline_validation=None, candidate_validation=None)` → comparison dict
 - `modification_menu(scenario)` → allowed candidate modifications and bounds (for the agent prompt)
 - `load_scenario(path)` → scenario dict

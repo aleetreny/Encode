@@ -101,7 +101,7 @@ GridPilot does not treat regulation as decorative text: each row below names the
   3. **Crisis Stress-Test:** Automatically subject baseline and winning candidates to a sudden generator trip (`gas_centro` outage hours 18–22), quantify household impact (`unserved_mwh` & equivalent households reconnected), and recommend the most resilient compliant plan.
 
 ### Person 3 — Energy Optimisation, Crisis Redispatch & Independent Validation
-**Owns:** everything in **`optimisation/`** (`feature/optimisation`, Bernardo Guterres); the deterministic mathematical core (HiGHS via `highspy`, `NumPy`, `pytest`). **Status: M0–M4 implemented and verified with 104 passing tests; integrated and verified against Person 4's backend bridge (see `optimisation/README.md` for a plain-language guide and `optimisation/DESIGN.md` for the specification).**
+**Owns:** everything in **`optimisation/`** (`feature/optimisation`, Bernardo Guterres); the deterministic mathematical core (HiGHS via `highspy`, `NumPy`, `pytest`). **Status: M0–M4 implemented and verified with 110 passing tests; integrated and verified against Person 4's backend bridge (see `optimisation/README.md` for a plain-language guide and `optimisation/DESIGN.md` for the specification).**
 
 **Built & Maintained:**
 - **5-node Chilean radial backbone (`DC-equivalent transport model`)** with renewable (`solar`, `wind`) and dispatchable (`hydro`, `gas`, `coal`, `diesel`) generators, transmission lines (`L1`–`L4`), and batteries (`BESS`).
@@ -257,7 +257,7 @@ Encode/
 │   ├── compare.py             # Baseline vs candidate & crisis delta calculator
 │   ├── fixtures/              # 5-node Chilean corridor scenario
 │   ├── examples/              # Pre-computed validated JSON outputs for P1, P2, P4
-│   └── tests/                 # 104 deterministic pytest tests
+│   └── tests/                 # 110 deterministic pytest tests
 ├── backend/                   # Person 4 — FastAPI routes & service integration
 └── data/                      # Person 4 — CEN historical datasets & provenance
 ```
