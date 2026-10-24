@@ -35,3 +35,20 @@
   - `/opt/anaconda3/bin/python3 -m pytest -q` (215 passed)
   - `cd frontend && npm run build`
   - `./scripts/demo.sh --check-only`
+
+## Ola C · Motor en Vivo, Bucle de Gemini 4 Argon, Transporte SSE/Comandos (W7) e Informe RIO (W8)
+- **Fase 2 — Motor en vivo y bucle de Gemini 4 Argon** (`f4619d8`):
+  - **Modelo**: Gemini 4 Argon · High (Orquestador)
+  - **Qué entró**:
+    - `backend/live/agent_loop.py`: Guardarraíl estricto sin dígitos (`sanitize_no_digits`, `has_digits`), generación de hasta 40 candidatos de palancas operacionales individuales y pares, evaluación y validación paralela con HiGHS (`ThreadPoolExecutor`), cálculo de frente de Pareto 4D, selección garantizada de 2 opciones con `tradeoff_tag` distinto, bucle de function-calling de Gemini 4 Argon (`inspect_node`, `simulate_plan` ≤ 3 llamadas extra, `propose_options`) con timeout de 12 s, y moderación de nombres del jurado (`moderate_jury_name`).
+    - `backend/live/engine.py`: `LiveSession` y `SessionManager` en memoria con detección de falla en `< 300 ms` (`incident.detected` + `solution.updated`), reloj simulado a 1 Hz con expiración automática de eventos (`event.ended`), cuenta regresiva autónoma 5→0 (`autonomy.countdown`) cancelable mediante `veto`, y notas periódicas cada 3 h simuladas (`agent.note`).
+    - Eliminación de `solver_fallback` de `agent/tools.py` en la ruta nativa.
+- **W7 — Transporte SSE, endpoints REST, límites del jurado y QR SVG** (`live-ops/w7`, commit `f8dc383` + `19ef130`):
+  - **Modelo**: `pro` (Gemini 4 Argon / Pro)
+  - **Qué entró**: `backend/live/router.py` (`/api/live/catalog`, `/api/live/sessions`, `/stream`, `/clock`, `/disrupt`, `/jury/disrupt` con enfriamiento de 30 s por dispositivo y máx. 2 eventos activos, `/decide`, `/autonomy`, `/reset`, `/qr.svg`, `/report`), generador QR SVG ISO/IEC 18004 escaneable en Python puro (`backend/live/qr.py`), montaje en `backend/main.py` y tests en `tests/test_live_api.py`.
+- **W8 — Generador de Informe Regulatorio RIO (`md` y `html`)** (`live-ops/w8`, commit `32c0052`):
+  - **Modelo**: `flash` (Gemini 3.8 Flash)
+  - **Qué entró**: `backend/live/report.py` (`render_session_report(session, fmt='md'|'html')`) con línea de tiempo de incidentes, tabla de decisiones con autoría (`operator` vs `gemini_autonomous` y `veto`), métricas verificadas, resultados del validador independiente, procedencia/supuestos (`households_per_mw = 1000`) y citas legales de `agent/regulatory.py`, más tests en `tests/test_live_report.py`.
+- **Cómo probar la Ola C completa**:
+  - `pytest tests/test_live_api.py tests/test_live_report.py -q`
+  - `pytest -q` (224 passed)
