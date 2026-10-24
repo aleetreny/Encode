@@ -317,7 +317,13 @@ the raw numbers with NumPy:
 Returns `{"passed", "checks_run", "violations": [{"check","id","hour","magnitude","detail"}],
 "violation_count", "max_residual_mw"}` (at most 200 violations listed). If the caller passes the
 `options` it gave `solve`, a solution solved with different options (e.g. unserved demand allowed when
-strict mode was requested) fails `options_consistent`. It also checks that every outage
+strict mode was requested) fails `options_consistent`.
+
+**Backward compatibility.** Output fields added after the first release (`emergency_runback_mwh`,
+`emergency_runback_penalty_usd`) may be missing from solutions saved by older versions (e.g. the
+backend's cached replay). A missing field is read as 0, so such a solution passes only if the
+recomputed value really is 0; a solution that ran a plant back cannot hide it by omitting the field.
+Any future output field must follow the same rule (add it to `ADDED_LATER` in `validate.py`). It also checks that every outage
 defined in the scenario is present in the solution (`events_consistent`) and that the time axis matches. Tolerances: 1e-4 MW for flows/balances, 1e-3 MWh/USD-relative for metrics.
 
 "No hindsight" for sudden outages (pre-event hours identical to the plan) is proven by tests.
@@ -426,7 +432,7 @@ explanation and the developer guide (architecture, invariants, how to extend, te
 
 ```bash
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q          # 113 tests
+pytest optimisation/tests -q          # 114 tests
 python -m optimisation.demo --write   # prints the table below and refreshes optimisation/examples/
 python -m optimisation.stress         # full outage sweep, all checks must pass
 ```
@@ -466,3 +472,12 @@ and `/api/validate` return `optimal` and pass **both** this validator and the ba
 every bundled scenario and option set. The backend's v1 scenarios are a different, smaller fixed-asset
 network (scenario id `chile-demo-001`); this package's 5-node demo is `chile-sen-5node-demo`.
 Candidates and outages are not yet exposed through the backend contract.
+
+**Update (24 Oct, evening).** The backend (`feature/data-backend`, commit `a089c47`) now exposes the
+5-node native workflow (candidates, crisis events, no-hindsight checks). It vendors an older copy of
+this package. Verified by overlaying the current `optimisation/` on that branch: the backend's full
+test suite passes (after the backward-compatibility fix above), and `scripts/smoke.py` passes twice
+in `replay` and twice in `deterministic` mode over HTTP, reproducing −631.6 MWh curtailment,
+−74 229.8 USD and −391.9 MWh crisis unserved energy. To test future changes the same way:
+`git worktree add ../integ origin/feature/data-backend`, copy `optimisation/` over it, install
+`requirements-dev.txt` and `optimisation/requirements.txt`, run `pytest` and `scripts/smoke.py`.

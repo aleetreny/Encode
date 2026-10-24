@@ -207,7 +207,7 @@ Hours are step indices 0–23; `timestamps_utc[i]` gives the UTC start time of h
 ```bash
 python -m venv .venv && . .venv/bin/activate
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q            # 113 tests, ~5 s (includes a reduced outage sweep)
+pytest optimisation/tests -q            # 114 tests, ~5 s (includes a reduced outage sweep)
 python -m optimisation.demo             # the story in section 5
 python -m optimisation.demo --write     # also regenerate examples/*.json
 python -m optimisation.stress           # full outage sweep: 532 cases, ~2 000 solves, ~20 s
@@ -350,5 +350,9 @@ git log --format='%b' origin/main..HEAD | grep -iE 'co-authored-by|claude-sessio
   instantly); recovery afterwards ramps up from 0; hour 0 is unconstrained.
 - **Timestamps** must be timezone-aware ISO 8601, exactly `time_step_hours` apart.
 - **Solar/wind without a profile** is rejected on purpose: otherwise it would run at night.
+- **New output fields must stay backward compatible.** The backend replays solutions saved by older
+  versions. If you add a metric or objective term, add its name to `ADDED_LATER` in `validate.py`
+  (missing → read as 0) and add a test like `test_validator_accepts_older_solutions_without_runback_fields`.
+  Run the backend's test suite against your change before pushing (see `optimisation/DESIGN.md` §14).
 - **Scenario ids**: this module's demo is `chile-sen-5node-demo`; the backend's own small fixtures
   use `chile-demo-001` — they are different scenarios.

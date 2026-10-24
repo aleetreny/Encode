@@ -19,6 +19,10 @@ TOL_MW = 1e-4  # power / energy balance tolerance (MW or MWh)
 TOL_REL = 1e-6  # relative tolerance for reported metrics
 TOL_ABS_METRIC = 1e-3
 
+# Fields added after the first released output format. A solution produced before they existed
+# omits them; that is accepted only when the recomputed value is 0 (nothing was hidden).
+ADDED_LATER = {"emergency_runback_mwh", "emergency_runback_penalty_usd"}
+
 
 class _Report:
     def __init__(self) -> None:
@@ -288,7 +292,7 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
         "assumed_cost_proxy_usd": cost,
     }
     for key, val in expected.items():
-        got = m.get(key)
+        got = m.get(key, 0.0 if key in ADDED_LATER else None)
         if not isinstance(got, (int, float)) or not math.isfinite(got) or not _close(float(got), val):
             rep.fail("metrics_recomputed", key, None, abs((got or 0) - val) if isinstance(got, (int, float)) else val,
                      f"reported {key}={got!r}, recomputed {val:.6f}")
@@ -317,7 +321,7 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
         "emergency_runback_penalty_usd": runback * obj["emergency_runback_penalty_usd_per_mwh"],
     }
     for key, val in exp_terms.items():
-        got = terms.get(key)
+        got = terms.get(key, 0.0 if key in ADDED_LATER else None)
         if not isinstance(got, (int, float)) or not _close(float(got), val):
             rep.fail("metrics_recomputed", key, None, val, f"objective term {key}={got!r}, recomputed {val:.6f}")
     total = o.get("total_usd")
