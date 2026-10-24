@@ -594,3 +594,37 @@ def test_validator_accepts_older_solutions_without_runback_fields(scen, base):
     bad = validate(scen, hidden)
     assert not bad["passed"]
     assert {"emergency_runback_mwh", "emergency_runback_penalty_usd"} <= {v["id"] for v in bad["violations"]}
+
+
+def test_five_operational_levers(scen):
+    # Setup standby battery
+    scen["batteries"].append({
+        "id": "bat_standby", "node_id": "n_centro", "power_capacity_mw": 50, "energy_capacity_mwh": 100,
+        "charge_efficiency": 0.95, "discharge_efficiency": 0.95, "initial_soc_mwh": 100, "standby": True
+    })
+    scen["emission_factors_t_per_mwh"] = {"gas": 0.40, "diesel": 0.75}
+    scen["modification_limits"] = {"max_modifications": 5}
+
+    levers_cand = {
+        "candidate_id": "all_5_levers",
+        "modifications": [
+            {"type": "emergency_rating", "line_id": "L2", "factor": 1.1, "from_hour": 17, "to_hour": 21},
+            {"type": "demand_response", "node_id": "n_centro", "max_mw": 50, "from_hour": 17, "to_hour": 21},
+            {"type": "hydro_reserve_release", "generator_id": "hydro_sur", "extra_mw": 50, "from_hour": 17, "to_hour": 21},
+            {"type": "start_peaker", "generator_id": "diesel_centro", "from_hour": 17, "to_hour": 21},
+            {"type": "activate_reserve_bess", "battery_id": "bat_standby", "from_hour": 17, "to_hour": 21},
+        ]
+    }
+    
+    sol = solve(scen, levers_cand)
+    assert sol["status"] == "optimal", sol["message"]
+    
+    # Check CO2 metrics
+    assert "co2_t" in sol["metrics"]
+    assert "co2_t_by_hour" in sol["metrics"]
+    assert sol["metrics"]["co2_t"] >= 0
+    
+    # Check DR
+    assert "demand_response_mwh" in sol["metrics"]
+    assert "demand_response_cost_usd" in sol["objective"]["terms"]
+    assert "demand_response_mw" in sol["timeseries"]

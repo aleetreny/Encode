@@ -25,6 +25,15 @@ DEFAULT_OBJECTIVE = {
     "emergency_runback_penalty_usd_per_mwh": 1000.0,
 }
 
+DEFAULT_EMISSION_FACTORS = {
+    "gas": 0.40,
+    "coal": 0.95,
+    "diesel": 0.75,
+    "solar": 0.0,
+    "wind": 0.0,
+    "hydro": 0.0,
+}
+
 DEFAULT_LIMITS = {
     "max_modifications": 2,
     "add_battery": {
@@ -37,6 +46,10 @@ DEFAULT_LIMITS = {
         "discharge_efficiency": 0.95,
     },
     "uprate_line": {"max_factor": 1.5},
+    "emergency_rating": {"max_factor": 1.20, "max_window_hours": 4},
+    "demand_response": {"max_mw": 200.0, "default_cost_usd_per_mwh": 300.0},
+    "hydro_reserve_release": {"max_extra_mw": 150.0, "default_water_value_usd_per_mwh": 120.0},
+    "start_peaker": {"overdrive_factor": 1.5, "startup_delay_hours": 1},
 }
 
 DEFAULT_OPTIONS = {"allow_unserved": True, "time_limit_s": 30.0}
@@ -66,6 +79,10 @@ class Grid:
     avail: np.ndarray  # (G, T) MW, 0 during outages
     gen_online: np.ndarray  # (G, T) bool
     line_cap: np.ndarray  # (L, T) MW, 0 during outages
+    gen_cost: np.ndarray  # (G, T) float
+    dr_cap: np.ndarray  # (N, T) float
+    dr_cost: np.ndarray  # (N, T) float
+    emission_factors: dict[str, float]
     runback_hours: set[int]  # hours where a sudden event starts: units may drop faster than ramp
     objective: dict
     options: dict
@@ -164,6 +181,25 @@ def modification_menu(scenario: dict) -> dict:
                 for ln in base.lines
             ]
         },
+        "emergency_rating": {
+            "max_factor": limits["emergency_rating"]["max_factor"],
+            "max_window_hours": limits["emergency_rating"]["max_window_hours"],
+        },
+        "demand_response": {
+            "max_mw": limits["demand_response"]["max_mw"],
+            "default_cost_usd_per_mwh": limits["demand_response"]["default_cost_usd_per_mwh"],
+        },
+        "activate_reserve_bess": {
+            "description": "Activate a battery on standby",
+        },
+        "hydro_reserve_release": {
+            "max_extra_mw": limits["hydro_reserve_release"]["max_extra_mw"],
+            "default_water_value_usd_per_mwh": limits["hydro_reserve_release"]["default_water_value_usd_per_mwh"],
+        },
+        "start_peaker": {
+            "overdrive_factor": limits["start_peaker"]["overdrive_factor"],
+            "startup_delay_hours": limits["start_peaker"]["startup_delay_hours"],
+        },
         "events": {
             "types": list(EVENT_TYPES),
             "modes": list(EVENT_MODES),
@@ -259,8 +295,81 @@ def apply_candidate(scenario: dict, candidate: dict | None) -> tuple[dict, str, 
             normalised.append(
                 {"type": "uprate_line", "line_id": lid, "previous_capacity_mw": current, "new_capacity_mw": new}
             )
+        elif kind in ("emergency_rating", "demand_response", "activate_reserve_bess", "hydro_reserve_release", "start_peaker"):
+            T = len(scenario.get("timestamps_utc") or [])
+            if T <= 0:
+                _fail("scenario timestamps_utc must not be empty")
+            from_hour = mod.get("from_hour", 0)
+            to_hour = mod.get("to_hour", T)
+            if not isinstance(from_hour, int) or isinstance(from_hour, bool) or not isinstance(to_hour, int) or isinstance(to_hour, bool):
+                _fail(f"{where}.from_hour and to_hour must be integers")
+            if not (0 <= from_hour < to_hour <= T):
+                _fail(f"{where}: need 0 <= from_hour < to_hour <= {T}")
+            
+            if kind == "emergency_rating":
+                extra = set(mod) - {"type", "line_id", "factor", "from_hour", "to_hour"}
+                if extra: _fail(f"{where} has unknown fields")
+                lid = mod.get("line_id")
+                if lid not in lines: _fail(f"{where}.line_id not found")
+                factor = _num(mod.get("factor"), f"{where}.factor", lo=1.000001, hi=limits["emergency_rating"]["max_factor"])
+                if to_hour - from_hour > limits["emergency_rating"]["max_window_hours"]:
+                    _fail(f"{where} window too large")
+                normalised.append({"type": "emergency_rating", "line_id": lid, "factor": factor, "from_hour": from_hour, "to_hour": to_hour})
+            elif kind == "demand_response":
+                extra = set(mod) - {"type", "node_id", "max_mw", "from_hour", "to_hour", "cost_usd_per_mwh"}
+                if extra: _fail(f"{where} has unknown fields")
+                nid = mod.get("node_id")
+                if nid not in node_ids: _fail(f"{where}.node_id not found")
+                max_mw = _num(mod.get("max_mw"), f"{where}.max_mw", lo=1e-6, hi=limits["demand_response"]["max_mw"])
+                cost_usd = _num(mod.get("cost_usd_per_mwh", limits["demand_response"]["default_cost_usd_per_mwh"]), f"{where}.cost_usd_per_mwh", lo=0.0, hi=5000.0)
+                normalised.append({"type": "demand_response", "node_id": nid, "max_mw": max_mw, "from_hour": from_hour, "to_hour": to_hour, "cost_usd_per_mwh": cost_usd})
+            elif kind == "activate_reserve_bess":
+                extra = set(mod) - {"type", "battery_id", "from_hour", "to_hour"}
+                if extra: _fail(f"{where} has unknown fields")
+                bid = mod.get("battery_id")
+                found = None
+                for b in out["batteries"]:
+                    if b.get("id") == bid:
+                        found = b
+                        break
+                if not found or not found.get("standby"):
+                    _fail(f"{where}.battery_id {bid!r} is not a standby battery")
+                found["standby"] = False
+                found["active_from_hour"] = from_hour
+                found["active_to_hour"] = to_hour
+                found["final_soc_mwh"] = float(found.get("min_soc_mwh", 0.0))
+                found["added_by_candidate"] = cid
+                normalised.append({"type": "activate_reserve_bess", "battery_id": bid, "from_hour": from_hour, "to_hour": to_hour})
+            elif kind == "hydro_reserve_release":
+                extra = set(mod) - {"type", "generator_id", "extra_mw", "from_hour", "to_hour", "water_value_usd_per_mwh"}
+                if extra: _fail(f"{where} has unknown fields")
+                gid = mod.get("generator_id")
+                found = False
+                for g in out.get("generators", []):
+                    if g.get("id") == gid and str(g.get("technology", "")).lower() == "hydro":
+                        found = True
+                        break
+                if not found:
+                    _fail(f"{where}.generator_id {gid!r} is not a hydro generator")
+                extra_mw = _num(mod.get("extra_mw"), f"{where}.extra_mw", lo=1e-6, hi=limits["hydro_reserve_release"]["max_extra_mw"])
+                water_val = _num(mod.get("water_value_usd_per_mwh", limits["hydro_reserve_release"]["default_water_value_usd_per_mwh"]), f"{where}.water_value_usd_per_mwh", lo=0.0, hi=5000.0)
+                normalised.append({"type": "hydro_reserve_release", "generator_id": gid, "extra_mw": extra_mw, "from_hour": from_hour, "to_hour": to_hour, "water_value_usd_per_mwh": water_val})
+            elif kind == "start_peaker":
+                extra = set(mod) - {"type", "generator_id", "from_hour", "to_hour"}
+                if extra: _fail(f"{where} has unknown fields")
+                gid = mod.get("generator_id")
+                found = False
+                for g in out.get("generators", []):
+                    if g.get("id") == gid and str(g.get("technology", "")).lower() == "diesel":
+                        found = True
+                        break
+                if not found:
+                    _fail(f"{where}.generator_id {gid!r} is not a diesel generator")
+                if to_hour - from_hour < 2:
+                    _fail(f"{where} needs at least 2 hours window")
+                normalised.append({"type": "start_peaker", "generator_id": gid, "from_hour": from_hour, "to_hour": to_hour})
         else:
-            _fail(f"{where}.type must be 'add_battery' or 'uprate_line', got {kind!r}")
+            _fail(f"{where}.type must be one of the allowed types, got {kind!r}")
     return out, cid, normalised
 
 
@@ -477,10 +586,14 @@ def build_grid(
             eta_c = eta_d = math.sqrt(rte)
         else:
             _fail(f"battery {bid} needs charge_efficiency and discharge_efficiency")
+        if b.get("standby") is True:
+            continue
         batteries.append(
             {"id": bid, "node_id": b["node_id"], "power_capacity_mw": P, "energy_capacity_mwh": E,
              "min_soc_mwh": smin, "initial_soc_mwh": s0, "final_soc_mwh": s_end, "charge_efficiency": eta_c,
-             "discharge_efficiency": eta_d, "added_by_candidate": b.get("added_by_candidate")}
+             "discharge_efficiency": eta_d, "added_by_candidate": b.get("added_by_candidate"),
+             "active_from_hour": int(b.get("active_from_hour", 0)),
+             "active_to_hour": int(b.get("active_to_hour", T))}
         )
 
     dem_raw = scen.get("demand_mw_by_node") or {}
@@ -503,11 +616,20 @@ def build_grid(
     raw_events = merge_events(scen, events) if include_scenario_events else (events or [])
     evs = normalise_events(raw_events, T, set(gen_ids), {ln["id"] for ln in lines})
 
+    emission_factors = dict(DEFAULT_EMISSION_FACTORS)
+    for k, v in (scen.get("emission_factors_t_per_mwh") or {}).items():
+        emission_factors[k.lower()] = _num(v, f"emission_factors_t_per_mwh.{k}", lo=0.0)
+
     avail = np.array(avail_rows, dtype=float).reshape(len(generators), T)
     gen_online = np.ones_like(avail, dtype=bool)
     line_cap = np.array([[ln["capacity_mw"]] * T for ln in lines], dtype=float).reshape(len(lines), T)
+    gen_cost = np.array([[g["variable_cost_usd_per_mwh"]] * T for g in generators], dtype=float).reshape(len(generators), T)
+    dr_cap = np.zeros((len(node_ids), T), dtype=float)
+    dr_cost = np.full((len(node_ids), T), 300.0, dtype=float)
     g_idx = {g["id"]: i for i, g in enumerate(generators)}
     l_idx = {ln["id"]: i for i, ln in enumerate(lines)}
+    n_idx = {n: i for i, n in enumerate(node_ids)}
+    
     for ev in evs:
         sl = slice(ev["from_hour"], ev["to_hour"])
         if ev["type"] == "generator_outage":
@@ -516,10 +638,45 @@ def build_grid(
         else:
             line_cap[l_idx[ev["id"]], sl] = 0.0
 
+    limits = _limits(scenario)
+    for mod in mods:
+        kind = mod.get("type")
+        from_hour = mod.get("from_hour", 0)
+        to_hour = mod.get("to_hour", T)
+        if kind == "emergency_rating":
+            lid = mod["line_id"]
+            factor = mod["factor"]
+            for t in range(from_hour, to_hour):
+                if line_cap[l_idx[lid], t] > 0:
+                    line_cap[l_idx[lid], t] = lines[l_idx[lid]]["capacity_mw"] * factor
+        elif kind == "demand_response":
+            node_idx = n_idx[mod["node_id"]]
+            max_mw = mod["max_mw"]
+            cost_usd = mod.get("cost_usd_per_mwh", limits["demand_response"]["default_cost_usd_per_mwh"])
+            for t in range(from_hour, to_hour):
+                dr_cap[node_idx, t] = min(demand[node_idx, t], dr_cap[node_idx, t] + max_mw)
+                dr_cost[node_idx, t] = cost_usd
+        elif kind == "hydro_reserve_release":
+            gid = mod["generator_id"]
+            extra_mw = mod["extra_mw"]
+            water_val = mod.get("water_value_usd_per_mwh", limits["hydro_reserve_release"]["default_water_value_usd_per_mwh"])
+            for t in range(from_hour, to_hour):
+                if gen_online[g_idx[gid], t]:
+                    avail[g_idx[gid], t] += extra_mw
+                    gen_cost[g_idx[gid], t] = water_val
+        elif kind == "start_peaker":
+            gid = mod["generator_id"]
+            for t in range(from_hour, to_hour):
+                if t == from_hour:
+                    avail[g_idx[gid], t] = 0.0
+                elif gen_online[g_idx[gid], t]:
+                    avail[g_idx[gid], t] = generators[g_idx[gid]]["capacity_mw"] * limits["start_peaker"]["overdrive_factor"]
+
     return Grid(
         scenario_id=sid, T=T, dt=dt, timestamps=list(stamps), node_ids=node_ids, lines=lines,
         generators=generators, batteries=batteries, demand=demand, avail=avail,
-        gen_online=gen_online, line_cap=line_cap, objective=objective,
+        gen_online=gen_online, line_cap=line_cap, gen_cost=gen_cost, dr_cap=dr_cap, dr_cost=dr_cost, emission_factors=emission_factors,
+        objective=objective,
         runback_hours={ev["from_hour"] for ev in evs if ev["mode"] == "sudden" and ev["from_hour"] > 0},
         options=normalise_options(options), candidate_id=cid, modifications=mods, events=evs,
     )
