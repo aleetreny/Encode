@@ -56,7 +56,7 @@ def run(write: bool = False) -> dict:
         sol = solve(scen, cand)
         val = validate(scen, sol)
         cmp = compare(base, sol, base_v, val)
-        print(_row(cand["candidate_id"], sol, val) + f" | curtailment reduction {cmp['curtailment_reduction_mwh']} MWh")
+        print(_row(cand["candidate_id"], sol, val) + f" | curtailment reduction {cmp['curtailment_reduction_mwh']:.1f} MWh")
         if cand is CANDIDATES[0]:
             results.update(solution_candidate=sol, validation_candidate=val, comparison=cmp)
         if cmp["comparable"] and (best is None or cmp["curtailment_reduction_mwh"] > best[1]["curtailment_reduction_mwh"]):
@@ -70,7 +70,7 @@ def run(write: bool = False) -> dict:
         sol = solve(scen, cand, [SUDDEN_TRIP])
         val = validate(scen, sol)
         cmp = compare(trip_base, sol, trip_base_v, val)
-        print(_row(cand["candidate_id"] + " + trip", sol, val) + f" | unserved reduction {cmp['unserved_reduction_mwh']} MWh")
+        print(_row(cand["candidate_id"] + " + trip", sol, val) + f" | unserved reduction {cmp['unserved_reduction_mwh']:.1f} MWh")
         if cand is CANDIDATES[0]:
             results.update(solution_sudden_outage=sol, comparison_sudden_outage=cmp)
     results.update(solution_baseline_sudden_outage=trip_base)
@@ -81,7 +81,7 @@ def run(write: bool = False) -> dict:
 
     if best:
         print(f"\nLargest verified curtailment reduction: {best[0]['candidate_id']} "
-              f"({best[1]['curtailment_reduction_mwh']} MWh; investment cost not modelled)")
+              f"({best[1]['curtailment_reduction_mwh']:.1f} MWh; investment cost not modelled)")
 
     if write:
         EXAMPLES.mkdir(exist_ok=True)

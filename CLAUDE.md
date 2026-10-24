@@ -70,6 +70,7 @@ Layout:
 - `optimisation/model.py` — LP construction and HiGHS solve (incl. sudden-outage re-dispatch)
 - `optimisation/validate.py` — independent validator (must never import `model.py`)
 - `optimisation/compare.py` — deltas between two solutions
+- `optimisation/README.md` — plain-language explanation of the module (start here)
 - `optimisation/fixtures/` — synthetic demo scenario and its generator script
 - `optimisation/examples/` — example outputs for Persons 1, 2, 4 to code against
 - `optimisation/tests/` — pytest suite
