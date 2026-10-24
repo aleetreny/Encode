@@ -233,3 +233,50 @@ def test_validator_rejects_tampered_dispatch_and_redacts_secrets() -> None:
     )
     assert val["passed"] is False
     assert len(val["violations"]) >= 1
+
+
+def test_native_v2_worker_contract_chile_sen_5node_demo() -> None:
+    """Verify `run_investigation` satisfies Person 4's `native_worker.py` v2 contract on `chile-sen-5node-demo`."""
+    res = run_investigation(
+        "chile-sen-5node-demo",
+        {
+            "selection_objective": "curtailment_first",
+            "options": {"allow_unserved": True, "time_limit_s": 20.0},
+        },
+    )
+
+    assert "baseline" in res
+    assert "candidate" in res
+    assert "candidate_definition" in res
+    assert "tool_trace" in res
+    assert "operator_report" in res
+    assert "model_execution" in res
+
+    # Provider attestation
+    me = res["model_execution"]
+    assert me["provider"] == "google"
+    assert me["model"] == "gemini-4-argon"
+    assert me["response_id"].startswith("resp-")
+
+    # Tool trace contract (<= 100 events, all 6 required tools succeeded)
+    trace = res["tool_trace"]
+    assert len(trace) <= 100
+    successful_tools = {ev["tool"] for ev in trace if ev["status"] == "success"}
+    assert set(REQUIRED_TOOL_NAMES).issubset(successful_tools)
+
+    # Native v2 baseline & candidate solutions
+    base = res["baseline"]
+    cand = res["candidate"]
+    cand_def = res["candidate_definition"]
+
+    assert base["status"] == "optimal"
+    assert cand["status"] == "optimal"
+    assert base["options"] == {"allow_unserved": True, "time_limit_s": 20.0}
+    assert cand["options"] == {"allow_unserved": True, "time_limit_s": 20.0}
+    assert cand["candidate_id"] == "north_bess"
+    assert cand_def["candidate_id"] == "north_bess"
+
+    # Exact curtailment reduction matches Person 3 & Person 4's native demo (631.578947 MWh)
+    curt_red = base["metrics"]["curtailment_mwh"] - cand["metrics"]["curtailment_mwh"]
+    assert round(curt_red, 3) == 631.579
+

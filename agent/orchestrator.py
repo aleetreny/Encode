@@ -321,6 +321,267 @@ class GridPilotAgent:
             "regulatory_compliance": regulatory_compliance,
         }
 
+    def execute_native_v2_investigation(
+        self,
+        scenario_id: str = "chile-sen-5node-demo",
+        settings: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Run native v2 two-stage SCED + sudden crisis investigation for `backend/native_worker.py`."""
+        cfg = dict(settings or {})
+        scenario = self.toolkit.load_scenario(scenario_id)
+        evidence = self.toolkit.inspect_evidence(
+            scenario_id=scenario_id,
+            source_id=scenario.get("source_id"),
+        )
+
+        raw_opts = cfg.get("options") or {}
+        options = {
+            "allow_unserved": bool(raw_opts.get("allow_unserved", True)),
+            "time_limit_s": float(raw_opts.get("time_limit_s", 20.0)),
+        }
+        candidates = list(
+            cfg.get("candidates")
+            or [
+                {
+                    "candidate_id": "north_bess",
+                    "modifications": [
+                        {
+                            "type": "add_battery",
+                            "node_id": "n_norte_grande",
+                            "power_mw": 150,
+                            "energy_mwh": 600,
+                        }
+                    ],
+                },
+                {
+                    "candidate_id": "south_bess",
+                    "modifications": [
+                        {
+                            "type": "add_battery",
+                            "node_id": "n_sur",
+                            "power_mw": 150,
+                            "energy_mwh": 600,
+                        }
+                    ],
+                },
+                {
+                    "candidate_id": "uprate_l2",
+                    "modifications": [
+                        {"type": "uprate_line", "line_id": "L2", "new_capacity_mw": 600}
+                    ],
+                },
+            ]
+        )
+        crisis_events = list(
+            cfg.get("crisis_events")
+            or [
+                {
+                    "type": "generator_outage",
+                    "id": "gas_centro",
+                    "from_hour": 18,
+                    "to_hour": 22,
+                    "mode": "sudden",
+                }
+            ]
+        )
+
+        baseline_normal = self.toolkit.run_native_optimisation(
+            scenario,
+            candidate=None,
+            events=[],
+            options=options,
+            run_label="baseline_normal",
+        )
+        val_base_normal = self.toolkit.validate_native_candidate(
+            scenario,
+            baseline_normal,
+            candidate=None,
+            events=[],
+            options=options,
+            run_label="validate_baseline_normal",
+        )
+
+        strict_crisis = self.toolkit.run_native_optimisation(
+            scenario,
+            candidate=None,
+            events=crisis_events,
+            options={**options, "allow_unserved": False},
+            run_label="crisis_strict_zero_shedding",
+        )
+        if strict_crisis.get("status") != "optimal":
+            self.recorder.retry(
+                "run_optimisation",
+                {
+                    "scenario_id": scenario_id,
+                    "reason": (
+                        "Strict zero-shedding crisis dispatch infeasible; enabling CNE NTSyCS EDAC "
+                        "controlled emergency load-shedding and candidate recovery."
+                    ),
+                },
+            )
+
+        crisis_baseline = self.toolkit.run_native_optimisation(
+            scenario,
+            candidate=None,
+            events=crisis_events,
+            options=options,
+            run_label="baseline_crisis",
+        )
+        val_crisis_base = self.toolkit.validate_native_candidate(
+            scenario,
+            crisis_baseline,
+            candidate=None,
+            events=crisis_events,
+            options=options,
+            run_label="validate_baseline_crisis",
+        )
+
+        evaluated: list[dict[str, Any]] = []
+        for cand_def in candidates:
+            cid = cand_def["candidate_id"]
+            sol_norm = self.toolkit.run_native_optimisation(
+                scenario,
+                candidate=cand_def,
+                events=[],
+                options=options,
+                run_label=f"{cid}_normal",
+            )
+            val_norm = self.toolkit.validate_native_candidate(
+                scenario,
+                sol_norm,
+                candidate=cand_def,
+                events=[],
+                options=options,
+                run_label=f"validate_{cid}_normal",
+            )
+            comp_norm = self.toolkit.compare_native_results(
+                baseline_normal,
+                sol_norm,
+                val_base_normal,
+                val_norm,
+                run_label=f"compare_{cid}_normal",
+            )
+
+            sol_cris = self.toolkit.run_native_optimisation(
+                scenario,
+                candidate=cand_def,
+                events=crisis_events,
+                options=options,
+                run_label=f"{cid}_crisis",
+            )
+            val_cris = self.toolkit.validate_native_candidate(
+                scenario,
+                sol_cris,
+                candidate=cand_def,
+                events=crisis_events,
+                options=options,
+                run_label=f"validate_{cid}_crisis",
+            )
+            comp_cris = self.toolkit.compare_native_results(
+                crisis_baseline,
+                sol_cris,
+                val_crisis_base,
+                val_cris,
+                run_label=f"compare_{cid}_crisis",
+            )
+            if val_norm.get("passed") and val_cris.get("passed"):
+                evaluated.append(
+                    {
+                        "candidate_definition": cand_def,
+                        "normal_solution": sol_norm,
+                        "normal_validation": val_norm,
+                        "normal_comparison": comp_norm,
+                        "crisis_solution": sol_cris,
+                        "crisis_validation": val_cris,
+                        "crisis_comparison": comp_cris,
+                    }
+                )
+
+        if not evaluated:
+            raise ValueError("No candidate passed independent native physics validation.")
+
+        selection_objective = str(cfg.get("selection_objective", "crisis_first"))
+        if selection_objective == "normal_first":
+            winner = max(
+                evaluated,
+                key=lambda item: (
+                    float(item["normal_comparison"].get("curtailment_reduction_mwh", 0.0)),
+                    float(item["crisis_comparison"].get("unserved_reduction_mwh", 0.0)),
+                    -float((item["normal_solution"].get("objective") or {}).get("total_usd", 0.0)),
+                ),
+            )
+        else:
+            winner = max(
+                evaluated,
+                key=lambda item: (
+                    float(item["crisis_comparison"].get("unserved_reduction_mwh", 0.0)),
+                    float(item["normal_comparison"].get("curtailment_reduction_mwh", 0.0)),
+                    -float((item["crisis_solution"].get("objective") or {}).get("total_usd", 0.0)),
+                ),
+            )
+
+        dt = float(scenario.get("time_step_hours", 1.0))
+        b_shed = (crisis_baseline.get("timeseries") or {}).get("unserved_mw") or {}
+        c_shed = (winner["crisis_solution"].get("timeseries") or {}).get("unserved_mw") or {}
+        hh_impact = estimate_affected_households(
+            unserved_mw_by_node_before=b_shed,
+            unserved_mw_by_node_after=c_shed,
+            time_step_hours=dt,
+        )
+        crisis_summary = {
+            "event": crisis_events[0] if crisis_events else None,
+            "event_description": (
+                f"Sudden {crisis_events[0]['type']} on `{crisis_events[0]['id']}` "
+                f"(hours [{crisis_events[0]['from_hour']}..{crisis_events[0]['to_hour']}))"
+                if crisis_events
+                else "Sudden N-1 contingency"
+            ),
+            "strict_zero_shedding_status": strict_crisis.get("status"),
+            "crisis_unserved_mwh": hh_impact["total_unserved_mwh_before"],
+            "mitigated_unserved_mwh": hh_impact["total_unserved_mwh_after"],
+            "energy_restored_mwh": hh_impact["total_energy_restored_mwh"],
+            "households_disconnected_peak": hh_impact["total_households_affected_before"],
+            "households_reconnected": hh_impact["total_households_reconnected"],
+            "reconnection_rate_pct": hh_impact["reconnection_rate_pct"],
+            "recommended_reconfiguration": winner["candidate_definition"]["candidate_id"],
+        }
+
+        norm_comp_for_report = {
+            "both_valid": True,
+            "curtailment_reduction_mwh": winner["normal_comparison"].get(
+                "curtailment_reduction_mwh", 0.0
+            ),
+            "assumed_cost_delta_usd": winner["normal_comparison"].get(
+                "cost_delta_usd",
+                winner["normal_comparison"].get("assumed_cost_delta_usd", 0.0),
+            ),
+            "baseline_metrics": baseline_normal.get("metrics") or {},
+            "candidate_metrics": winner["normal_solution"].get("metrics") or {},
+        }
+        gemini_narrative, model_execution = self.gemini.synthesise_investigation(
+            scenario=scenario,
+            evidence=evidence,
+            comparison=norm_comp_for_report,
+            crisis_analysis=crisis_summary,
+        )
+        operator_report = self.toolkit.generate_operator_report(
+            scenario=scenario,
+            evidence=evidence,
+            comparison=norm_comp_for_report,
+            candidate_validation=winner["normal_validation"],
+            crisis_analysis=crisis_summary,
+            gemini_narrative=gemini_narrative,
+        )
+
+        return {
+            "baseline": baseline_normal,
+            "candidate": winner["normal_solution"],
+            "candidate_definition": winner["candidate_definition"],
+            "tool_trace": self.recorder.events[:100],
+            "operator_report": operator_report,
+            "model_execution": model_execution,
+        }
+
 
 def run_investigation(
     scenario_id: str = "chile-demo-001",
@@ -328,12 +589,21 @@ def run_investigation(
 ) -> AwaitableDict:
     """Primary entrypoint required by Person 4's backend worker (`agent:run_investigation`).
 
-    Returns an `AwaitableDict` matching `backend.models.AgentResult` (`baseline`, `candidate`,
-    `tool_trace`, `operator_report`, `model_execution`). Can be called either synchronously
-    (`res = run_investigation(...)`) or asynchronously (`res = await run_investigation(...)`).
+    Supports both:
+    - v1 `backend/worker.py` (`chile-demo-001`, `synthetic-demo-001`) -> strict 5-key `AgentResult`
+    - v2 `backend/native_worker.py` (`chile-sen-5node-demo` / `schema_version == '2.0.0'`) -> native v2 bundle
+    Can be called either synchronously (`res = run_investigation(...)`) or via `await`.
     """
+    cfg = dict(settings or {})
     agent = GridPilotAgent()
-    full_dossier = agent.execute_investigation(scenario_id=scenario_id, settings=settings)
+    is_native_v2 = scenario_id.endswith("-demo") or any(
+        k in cfg for k in ("candidates", "crisis_events", "selection_objective", "options")
+    )
+    if is_native_v2:
+        return AwaitableDict(
+            agent.execute_native_v2_investigation(scenario_id=scenario_id, settings=cfg)
+        )
+    full_dossier = agent.execute_investigation(scenario_id=scenario_id, settings=cfg)
     return AwaitableDict(full_dossier["agent_result"])
 
 

@@ -200,6 +200,7 @@ class AgentToolkit:
         repo_root = Path(__file__).resolve().parent.parent
         candidates = [
             repo_root / "data" / "demo" / f"{scenario_id}.scenario.json",
+            repo_root / "data" / "demo" / f"{scenario_id}.native-scenario.json",
             repo_root / "data" / "processed" / "scenarios" / f"{scenario_id}.scenario.json",
             repo_root / "data" / "fallback" / "scenarios" / f"{scenario_id}.scenario.json",
             FIXTURES_DIR / f"{scenario_id}.scenario.json",
@@ -673,5 +674,186 @@ class AgentToolkit:
                 "generate_operator_report",
                 {"error": str(exc)},
                 scope="operator_report",
+            )
+            raise
+
+    # ------------------------------------------------------------------
+    # Native v2 Helpers (Person 3 / Person 4 `native_worker.py` contract)
+    # ------------------------------------------------------------------
+    def run_native_optimisation(
+        self,
+        scenario: dict[str, Any],
+        candidate: dict[str, Any] | None = None,
+        events: list[dict[str, Any]] | None = None,
+        options: dict[str, Any] | None = None,
+        run_label: str | None = None,
+    ) -> dict[str, Any]:
+        """Run native v2 LP dispatch (`optimisation.solve` or `solve_native`) and record `run_optimisation`."""
+        cand_id = (candidate or {}).get("candidate_id", "baseline")
+        label = run_label or cand_id
+        opts = dict(options or {"allow_unserved": True, "time_limit_s": 20.0})
+        self.recorder.start(
+            "run_optimisation",
+            {
+                "scenario_id": scenario.get("scenario_id", "unknown"),
+                "candidate_id": cand_id,
+                "events_count": len(events or []),
+                "allow_unserved": opts.get("allow_unserved", True),
+            },
+            scope=label,
+        )
+        try:
+            try:
+                from optimisation import solve as p3_solve  # type: ignore
+
+                native = p3_solve(scenario, candidate=candidate, events=events, options=opts)
+            except Exception:
+                native = solve_native(scenario, candidate=candidate, events=events, options=opts)
+
+            status = native.get("status", "error")
+            metrics = native.get("metrics") or {}
+            detail = {
+                "scenario_id": scenario.get("scenario_id", "unknown"),
+                "candidate_id": cand_id,
+                "status": status,
+                "curtailment_mwh": metrics.get("curtailment_mwh"),
+                "unserved_mwh": metrics.get("unserved_mwh"),
+            }
+            if status == "optimal":
+                self.recorder.succeed(
+                    "run_optimisation",
+                    detail,
+                    scope=label,
+                    note=f"Optimal native dispatch for `{label}`.",
+                )
+            else:
+                detail["message"] = native.get("message")
+                self.recorder.fail(
+                    "run_optimisation",
+                    detail,
+                    scope=label,
+                    note=f"Native dispatch `{label}` returned status={status!r}.",
+                )
+            return native
+        except Exception as exc:
+            self.recorder.fail(
+                "run_optimisation",
+                {"scenario_id": scenario.get("scenario_id", "unknown"), "error": str(exc)},
+                scope=label,
+            )
+            raise
+
+    def validate_native_candidate(
+        self,
+        scenario: dict[str, Any],
+        solution: dict[str, Any],
+        candidate: dict[str, Any] | None = None,
+        events: list[dict[str, Any]] | None = None,
+        options: dict[str, Any] | None = None,
+        run_label: str = "candidate",
+    ) -> dict[str, Any]:
+        """Validate native v2 solution and record `validate_candidate`."""
+        self.recorder.start(
+            "validate_candidate",
+            {
+                "scenario_id": scenario.get("scenario_id", "unknown"),
+                "candidate_id": solution.get("candidate_id", "baseline"),
+                "run_label": run_label,
+            },
+            scope=run_label,
+        )
+        try:
+            try:
+                from backend.native_service import check_solution  # type: ignore
+
+                validation = check_solution(scenario, solution, candidate, events, options)
+            except Exception:
+                try:
+                    from optimisation import validate as p3_validate  # type: ignore
+
+                    validation = p3_validate(scenario, solution)
+                except Exception:
+                    validation = validate_solution(
+                        scenario,
+                        solution,
+                        options=options or solution.get("options") or {"allow_unserved": True},
+                    )
+
+            passed = bool(validation.get("passed", False))
+            detail = {
+                "scenario_id": scenario.get("scenario_id", "unknown"),
+                "run_label": run_label,
+                "passed": passed,
+                "max_residual_mw": validation.get("max_residual_mw", 0.0),
+            }
+            if passed:
+                self.recorder.succeed(
+                    "validate_candidate",
+                    detail,
+                    scope=run_label,
+                    note=f"Native validation passed for `{run_label}`.",
+                )
+            else:
+                self.recorder.fail(
+                    "validate_candidate",
+                    detail,
+                    scope=run_label,
+                    note=f"Native validation rejected `{run_label}`.",
+                )
+            return validation
+        except Exception as exc:
+            self.recorder.fail(
+                "validate_candidate",
+                {"scenario_id": scenario.get("scenario_id", "unknown"), "error": str(exc)},
+                scope=run_label,
+            )
+            raise
+
+    def compare_native_results(
+        self,
+        baseline: dict[str, Any],
+        candidate: dict[str, Any],
+        baseline_validation: dict[str, Any] | None = None,
+        candidate_validation: dict[str, Any] | None = None,
+        run_label: str = "baseline_vs_candidate",
+    ) -> dict[str, Any]:
+        """Compare two native v2 solutions and record `compare_results`."""
+        self.recorder.start(
+            "compare_results",
+            {
+                "baseline_id": baseline.get("candidate_id", "baseline"),
+                "candidate_id": candidate.get("candidate_id", "candidate"),
+            },
+            scope=run_label,
+        )
+        try:
+            try:
+                from optimisation import compare as p3_compare  # type: ignore
+
+                comp = p3_compare(baseline, candidate, baseline_validation, candidate_validation)
+            except Exception:
+                comp = compare_solutions(
+                    baseline,
+                    candidate,
+                    baseline_validation=baseline_validation,
+                    candidate_validation=candidate_validation,
+                )
+            self.recorder.succeed(
+                "compare_results",
+                {
+                    "comparable": comp.get("comparable", True),
+                    "curtailment_reduction_mwh": comp.get("curtailment_reduction_mwh"),
+                    "unserved_reduction_mwh": comp.get("unserved_reduction_mwh"),
+                    "cost_delta_usd": comp.get("cost_delta_usd", comp.get("assumed_cost_delta_usd")),
+                },
+                scope=run_label,
+                note=f"Compared `{baseline.get('candidate_id')}` vs `{candidate.get('candidate_id')}`.",
+            )
+            return comp
+        except Exception as exc:
+            self.recorder.fail(
+                "compare_results",
+                {"error": str(exc)},
+                scope=run_label,
             )
             raise
