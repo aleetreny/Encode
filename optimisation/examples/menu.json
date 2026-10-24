@@ -52,6 +52,25 @@
       }
     ]
   },
+  "emergency_rating": {
+    "max_factor": 1.2,
+    "max_window_hours": 4
+  },
+  "demand_response": {
+    "max_mw": 200.0,
+    "default_cost_usd_per_mwh": 300.0
+  },
+  "activate_reserve_bess": {
+    "description": "Activate a battery on standby"
+  },
+  "hydro_reserve_release": {
+    "max_extra_mw": 150.0,
+    "default_water_value_usd_per_mwh": 120.0
+  },
+  "start_peaker": {
+    "overdrive_factor": 1.5,
+    "startup_delay_hours": 1
+  },
   "events": {
     "types": [
       "generator_outage",

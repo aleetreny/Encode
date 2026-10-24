@@ -81,7 +81,9 @@
         "initial_soc_mwh": 30.0,
         "final_soc_mwh": null,
         "charge_efficiency": 0.95,
-        "discharge_efficiency": 0.95
+        "discharge_efficiency": 0.95,
+        "active_from_hour": 0,
+        "active_to_hour": 24
       },
       {
         "id": "c2_battery_sur_bat1",
@@ -93,7 +95,9 @@
         "final_soc_mwh": null,
         "charge_efficiency": 0.95,
         "discharge_efficiency": 0.95,
-        "added_by_candidate": "c2_battery_sur"
+        "added_by_candidate": "c2_battery_sur",
+        "active_from_hour": 0,
+        "active_to_hour": 24
       }
     ],
     "lines": [
@@ -1134,7 +1138,34 @@
       "L2": 8.0,
       "L3": 0.0,
       "L4": 0.0
-    }
+    },
+    "co2_t": 12230.787368,
+    "co2_t_by_hour": [
+      569.66,
+      563.3,
+      557.26,
+      552.46,
+      549.7,
+      549.1,
+      551.1,
+      527.7,
+      449.9,
+      377.06,
+      336.86,
+      351.94,
+      364.86,
+      432.34,
+      378.967368,
+      432.54,
+      410.02,
+      511.02,
+      585.0,
+      585.0,
+      585.0,
+      585.0,
+      685.0,
+      740.0
+    ]
   },
   "binding_constraints": [
     {

@@ -81,7 +81,9 @@
         "initial_soc_mwh": 30.0,
         "final_soc_mwh": null,
         "charge_efficiency": 0.95,
-        "discharge_efficiency": 0.95
+        "discharge_efficiency": 0.95,
+        "active_from_hour": 0,
+        "active_to_hour": 24
       },
       {
         "id": "c1_battery_norte_grande_bat1",
@@ -93,7 +95,9 @@
         "final_soc_mwh": null,
         "charge_efficiency": 0.95,
         "discharge_efficiency": 0.95,
-        "added_by_candidate": "c1_battery_norte_grande"
+        "added_by_candidate": "c1_battery_norte_grande",
+        "active_from_hour": 0,
+        "active_to_hour": 24
       }
     ],
     "lines": [
@@ -1134,7 +1138,34 @@
       "L2": 8.0,
       "L3": 0.0,
       "L4": 0.0
-    }
+    },
+    "co2_t": 11978.7565,
+    "co2_t_by_hour": [
+      501.1765,
+      563.3,
+      503.26,
+      552.46,
+      549.7,
+      549.1,
+      551.1,
+      527.7,
+      449.9,
+      377.06,
+      336.86,
+      351.94,
+      364.86,
+      372.34,
+      373.1,
+      368.86,
+      410.02,
+      511.02,
+      585.0,
+      585.0,
+      585.0,
+      585.0,
+      685.0,
+      740.0
+    ]
   },
   "binding_constraints": [
     {
