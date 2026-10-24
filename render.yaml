@@ -5,7 +5,7 @@ services:
     name: gridpilot-api
     runtime: docker
     plan: free
-    branch: feature/data-backend
+    branch: feature/live-ops
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/ready?mode=replay
     envVars:
@@ -18,4 +18,10 @@ services:
       - key: GRIDPILOT_API_TOKEN
         generateValue: true
       - key: CORS_ORIGINS
+        sync: false
+      - key: GRIDPILOT_MODEL_AGENT
+        value: gemini-4-argon
+      - key: GRIDPILOT_MODEL_FAST
+        value: gemini-2.5-flash
+      - key: GEMINI_API_KEY
         sync: false
