@@ -40,41 +40,66 @@
       "batteries",
       "demand_mw_by_node",
       "renewable_availability_mw_by_generator",
-      "objective"
+      "objective",
+      "emission_factors_t_per_mwh",
+      "households_per_mw"
     ],
     "historical_event_date": null,
     "notes": "Fully synthetic demo day shaped like the Chilean pattern (midday solar surplus in the north, congested north-south corridor, evening peak in the centre). Not a verified historical event; to be anchored to CEN-observed profiles by Person 4."
   },
+  "emission_factors_t_per_mwh": {
+    "gas": 0.4,
+    "coal": 0.95,
+    "diesel": 0.75,
+    "solar": 0.0,
+    "wind": 0.0,
+    "hydro": 0.0
+  },
   "nodes": [
     {
       "id": "n_norte_grande",
-      "label": "Norte Grande (illustrative)",
-      "lat": -23.6,
-      "lon": -70.4
+      "label": "Norte Grande (Crucero)",
+      "substation": "S/E Crucero 220 kV",
+      "lat": -22.3,
+      "lon": -69.55,
+      "households_per_mw": 1000,
+      "households_total": 320000
     },
     {
       "id": "n_norte_chico",
-      "label": "Norte Chico (illustrative)",
-      "lat": -29.9,
-      "lon": -71.3
+      "label": "Norte Chico (Cardones)",
+      "substation": "S/E Cardones 500 kV",
+      "lat": -27.45,
+      "lon": -70.3,
+      "households_per_mw": 1000,
+      "households_total": 280000
     },
     {
       "id": "n_centro",
-      "label": "Centro (illustrative)",
-      "lat": -33.4,
-      "lon": -70.6
+      "label": "Centro (Polpaico)",
+      "substation": "S/E Polpaico 500 kV",
+      "lat": -33.15,
+      "lon": -70.85,
+      "households_per_mw": 1000,
+      "households_total": 2400000
     },
     {
       "id": "n_centro_sur",
-      "label": "Centro-Sur (illustrative)",
-      "lat": -36.8,
-      "lon": -73.0
+      "label": "Centro-Sur (Charr\u00faa)",
+      "substation": "S/E Charr\u00faa 500 kV",
+      "lat": -36.9,
+      "lon": -72.2,
+      "households_per_mw": 1000,
+      "households_total": 1100000
     },
     {
       "id": "n_sur",
-      "label": "Sur (illustrative)",
-      "lat": -41.5,
-      "lon": -72.9
+      "label": "Sur (Puerto Montt)",
+      "substation": "S/E Puerto Montt 220 kV",
+      "lat": -41.45,
+      "lon": -72.95,
+      "households_per_mw": 1000,
+      "households_total": 650000
     }
   ],
   "lines": [
@@ -182,6 +207,28 @@
       "initial_soc_mwh": 30,
       "charge_efficiency": 0.95,
       "discharge_efficiency": 0.95
+    },
+    {
+      "id": "b_reserve_ng",
+      "node_id": "n_norte_grande",
+      "power_capacity_mw": 150,
+      "energy_capacity_mwh": 600,
+      "min_soc_mwh": 0,
+      "initial_soc_mwh": 450,
+      "charge_efficiency": 0.95,
+      "discharge_efficiency": 0.95,
+      "standby": true
+    },
+    {
+      "id": "b_reserve_centro",
+      "node_id": "n_centro",
+      "power_capacity_mw": 80,
+      "energy_capacity_mwh": 240,
+      "min_soc_mwh": 0,
+      "initial_soc_mwh": 180,
+      "charge_efficiency": 0.95,
+      "discharge_efficiency": 0.95,
+      "standby": true
     }
   ],
   "demand_mw_by_node": {
