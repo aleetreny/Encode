@@ -1,0 +1,58 @@
+{
+  "status": "infeasible",
+  "message": "re-dispatch after sudden generator outage of gas_centro at hour 18: hour 18: demand 1507.0 MW at ['n_centro', 'n_centro_sur', 'n_norte_chico', 'n_norte_grande', 'n_sur'] exceeds maximum possible supply 1294.8 MW; hour 19: demand 1650.4 MW at ['n_centro', 'n_centro_sur', 'n_norte_chico', 'n_norte_grande', 'n_sur'] exceeds maximum possible supply 1230.3 MW; hour 20: demand 1769.0 MW at ['n_centro', 'n_centro_sur', 'n_norte_chico', 'n_norte_grande', 'n_sur'] exceeds maximum possible supply 1237.0 MW; hour 21: demand 1764.0 MW at ['n_centro', 'n_centro_sur', 'n_norte_chico', 'n_norte_grande', 'n_sur'] exceeds maximum possible supply 1241.4 MW",
+  "scenario_id": "chile-demo-001",
+  "candidate_id": "baseline",
+  "modifications": [],
+  "events": [
+    {
+      "type": "generator_outage",
+      "id": "gas_centro",
+      "from_hour": 18,
+      "to_hour": 22,
+      "mode": "sudden"
+    }
+  ],
+  "options": {
+    "allow_unserved": false,
+    "time_limit_s": 30.0
+  },
+  "time_step_hours": 1.0,
+  "timestamps_utc": [
+    "2026-10-01T03:00:00Z",
+    "2026-10-01T04:00:00Z",
+    "2026-10-01T05:00:00Z",
+    "2026-10-01T06:00:00Z",
+    "2026-10-01T07:00:00Z",
+    "2026-10-01T08:00:00Z",
+    "2026-10-01T09:00:00Z",
+    "2026-10-01T10:00:00Z",
+    "2026-10-01T11:00:00Z",
+    "2026-10-01T12:00:00Z",
+    "2026-10-01T13:00:00Z",
+    "2026-10-01T14:00:00Z",
+    "2026-10-01T15:00:00Z",
+    "2026-10-01T16:00:00Z",
+    "2026-10-01T17:00:00Z",
+    "2026-10-01T18:00:00Z",
+    "2026-10-01T19:00:00Z",
+    "2026-10-01T20:00:00Z",
+    "2026-10-01T21:00:00Z",
+    "2026-10-01T22:00:00Z",
+    "2026-10-01T23:00:00Z",
+    "2026-10-02T00:00:00Z",
+    "2026-10-02T01:00:00Z",
+    "2026-10-02T02:00:00Z"
+  ],
+  "solver": {
+    "name": "HiGHS",
+    "version": "1.15.1",
+    "solve_time_s": 0.0,
+    "solves": 2
+  },
+  "objective": null,
+  "assets": null,
+  "timeseries": null,
+  "metrics": null,
+  "binding_constraints": null
+}
