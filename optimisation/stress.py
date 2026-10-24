@@ -166,6 +166,29 @@ def run(quick: bool = False, verbose: bool = True) -> dict:
             tag = f"combined {[e['id'] for e in evs]} ({cand['candidate_id'] if cand else 'baseline'})"
             if sweep.check(sol["status"] == "optimal", f"{tag}: {sol['status']} {sol['message']}"):
                 sweep.check(validate(scen, sol)["passed"], f"{tag}: validation failed")
+                
+    # 5 new operational levers on evening peak GAS_TRIP
+    if not quick:
+        scen_standby = dict(scen)
+        scen_standby["batteries"] = list(scen.get("batteries", [])) + [{
+            "id": "bat_standby", "node_id": "n_centro", "power_capacity_mw": 50, "energy_capacity_mwh": 100,
+            "charge_efficiency": 0.95, "discharge_efficiency": 0.95, "initial_soc_mwh": 100, "standby": True
+        }]
+        
+        levers_cand = {
+            "candidate_id": "all_5_levers",
+            "modifications": [
+                {"type": "emergency_rating", "line_id": "L2", "factor": 1.1, "from_hour": 17, "to_hour": 21},
+                {"type": "demand_response", "node_id": "n_centro", "max_mw": 50, "from_hour": 17, "to_hour": 21},
+                {"type": "hydro_reserve_release", "generator_id": "hydro_sur", "extra_mw": 50, "from_hour": 17, "to_hour": 21},
+                {"type": "start_peaker", "generator_id": "diesel_centro", "from_hour": 17, "to_hour": 21},
+                {"type": "activate_reserve_bess", "battery_id": "bat_standby", "from_hour": 17, "to_hour": 21},
+            ]
+        }
+        sol = solve(scen_standby, levers_cand, [{"type": "generator_outage", "id": "gas_centro", "from_hour": 17, "to_hour": 21, "mode": "sudden"}])
+        sweep.cases += 1
+        sweep.solves += sol["solver"]["solves"]
+        sweep.check(sol["status"] == "optimal", f"5 new levers: status {sol['status']} ({sol['message']})")
 
     elapsed = time.perf_counter() - t0
     summary = {

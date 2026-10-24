@@ -125,17 +125,19 @@ def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until
 
     P = np.zeros((G, T), dtype=int)
     for g, gen in enumerate(grid.generators):
-        cost = dt * (-c_curt if gen["renewable"] else gen["variable_cost_usd_per_mwh"])
         for t in range(T):
+            cost = dt * (-c_curt if gen["renewable"] else grid.gen_cost[g, t])
             P[g, t] = lp.var(*bounds("p", g, t, 0.0, grid.avail[g, t]), cost)
     CH = np.zeros((B, T), dtype=int)
     DIS = np.zeros((B, T), dtype=int)
     SOC = np.zeros((B, T + 1), dtype=int)
     for b, bat in enumerate(grid.batteries):
         pmax = bat["power_capacity_mw"]
+        af, at = bat.get("active_from_hour", 0), bat.get("active_to_hour", T)
         for t in range(T):
-            CH[b, t] = lp.var(*bounds("ch", b, t, 0.0, pmax), dt * c_thr)
-            DIS[b, t] = lp.var(*bounds("dis", b, t, 0.0, pmax), dt * c_thr)
+            p_ub = pmax if (af <= t < at) else 0.0
+            CH[b, t] = lp.var(*bounds("ch", b, t, 0.0, p_ub), dt * c_thr)
+            DIS[b, t] = lp.var(*bounds("dis", b, t, 0.0, p_ub), dt * c_thr)
         s0 = bat["initial_soc_mwh"]
         SOC[b, 0] = lp.var(s0, s0)
         for t in range(1, T):
@@ -163,10 +165,12 @@ def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until
             FN[l, t] = lp.var(0.0, cap, dt * c_tx)
             lp.row([F[l, t], FP[l, t], FN[l, t]], [1.0, -1.0, 1.0], 0.0, 0.0)
     U = np.zeros((N, T), dtype=int)
+    DR = np.zeros((N, T), dtype=int)
     for n in range(N):
         for t in range(T):
             hi = grid.demand[n, t] if allow_u else 0.0
             U[n, t] = lp.var(*bounds("u", n, t, 0.0, hi), dt * voll)
+            DR[n, t] = lp.var(*bounds("dr", n, t, 0.0, grid.dr_cap[n, t]), dt * grid.dr_cost[n, t])
 
     # nodal balance
     for n, node in enumerate(grid.node_ids):
@@ -177,8 +181,8 @@ def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until
         for t in range(T):
             idx = [P[g, t] for g in gens] + [DIS[b, t] for b in bats] + [CH[b, t] for b in bats]
             val = [1.0] * len(gens) + [1.0] * len(bats) + [-1.0] * len(bats)
-            idx += [F[l, t] for l in inn] + [F[l, t] for l in out] + [U[n, t]]
-            val += [1.0] * len(inn) + [-1.0] * len(out) + [1.0]
+            idx += [F[l, t] for l in inn] + [F[l, t] for l in out] + [DR[n, t], U[n, t]]
+            val += [1.0] * len(inn) + [-1.0] * len(out) + [1.0, 1.0]
             lp.row(idx, val, grid.demand[n, t], grid.demand[n, t])
     # state of charge dynamics
     for b, bat in enumerate(grid.batteries):
@@ -210,7 +214,7 @@ def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until
     if x is None:
         return status, None
     return status, {
-        "p": x[P], "ch": x[CH], "dis": x[DIS], "soc": x[SOC], "f": x[F], "u": x[U],
+        "p": x[P], "ch": x[CH], "dis": x[DIS], "soc": x[SOC], "f": x[F], "u": x[U], "dr": x[DR],
     }
 
 
@@ -283,6 +287,9 @@ def _binding(grid: Grid, ts: dict) -> list[dict]:
                     f"output cut faster than the {ramp:g} MW/h ramp limit right after a sudden event")
     for n, node in enumerate(grid.node_ids):
         add("unserved_energy", node, np.array(ts["unserved_mw"][node]) > BIND_TOL, "demand not served")
+    if "demand_response_mw" in ts:
+        for n, node in enumerate(grid.node_ids):
+            add("demand_response", node, np.array(ts["demand_response_mw"][node]) > BIND_TOL, "voluntary demand response active")
     return out
 
 
@@ -307,8 +314,28 @@ def _metrics(grid: Grid, ts: dict) -> tuple[dict, dict]:
     uns_by = {n: _r(sum(ts["unserved_mw"][n]) * dt) for n in grid.node_ids}
     ren_used = sum(sum(ts["generation_mw"][g["id"]]) for g in grid.generators if g["renewable"]) * dt
     disp = sum(sum(ts["generation_mw"][g["id"]]) for g in grid.generators if not g["renewable"]) * dt
-    cost = sum(sum(ts["generation_mw"][g["id"]]) * g["variable_cost_usd_per_mwh"]
-               for g in grid.generators if not g["renewable"]) * dt
+    
+    cost = sum(
+        sum(ts["generation_mw"][g["id"]][t] * grid.gen_cost[i, t] for t in range(grid.T))
+        for i, g in enumerate(grid.generators) if not g["renewable"]
+    ) * dt
+    
+    dr_ts = ts.get("demand_response_mw") or {n: [0.0] * grid.T for n in grid.node_ids}
+    dr_mwh = sum(sum(dr_ts[n]) for n in grid.node_ids) * dt
+    dr_cost_usd = sum(
+        sum(dr_ts[n][t] * grid.dr_cost[i, t] for t in range(grid.T))
+        for i, n in enumerate(grid.node_ids)
+    ) * dt
+    
+    co2_by_hour = [
+        sum(
+            ts["generation_mw"][g["id"]][t] * grid.emission_factors.get(g["technology"].lower(), 0.0)
+            for g in grid.generators
+        ) * dt
+        for t in range(grid.T)
+    ]
+    co2_t = sum(co2_by_hour)
+
     ch_tot = sum(sum(ts["battery_charge_mw"][b["id"]]) for b in grid.batteries) * dt
     dis_tot = sum(sum(ts["battery_discharge_mw"][b["id"]]) for b in grid.batteries) * dt
     losses = sum(
@@ -332,7 +359,12 @@ def _metrics(grid: Grid, ts: dict) -> tuple[dict, dict]:
         "assumed_cost_proxy_usd": _r(cost),
         "emergency_runback_mwh": _r(runback),
         "line_hours_at_limit": at_limit,
+        "co2_t": _r(co2_t),
+        "co2_t_by_hour": _rlist(np.array(co2_by_hour, dtype=float)),
     }
+    if dr_mwh > 0 or grid.dr_cap.max(initial=0.0) > 0:
+        metrics["demand_response_mwh"] = _r(dr_mwh)
+    
     terms = {
         "dispatchable_cost_usd": _r(cost),
         "unserved_penalty_usd": _r(uns * obj["unserved_energy_penalty_usd_per_mwh"]),
@@ -344,13 +376,16 @@ def _metrics(grid: Grid, ts: dict) -> tuple[dict, dict]:
         ),
         "emergency_runback_penalty_usd": _r(runback * obj["emergency_runback_penalty_usd_per_mwh"]),
     }
+    if dr_mwh > 0 or grid.dr_cap.max(initial=0.0) > 0:
+        terms["demand_response_cost_usd"] = _r(dr_cost_usd)
+        
     return metrics, {"total_usd": _r(sum(terms.values())), "terms": terms}
 
 
 def _timeseries(grid: Grid, raw: dict) -> dict:
     gens, bats, lines = grid.generators, grid.batteries, grid.lines
     gen_mw = {g["id"]: _rlist(np.clip(raw["p"][i], 0, grid.avail[i])) for i, g in enumerate(gens)}
-    return {
+    ts = {
         "generation_mw": gen_mw,
         "available_mw": {g["id"]: _rlist(grid.avail[i]) for i, g in enumerate(gens)},
         "curtailment_mw": {
@@ -363,6 +398,9 @@ def _timeseries(grid: Grid, raw: dict) -> dict:
         "line_flow_mw": {ln["id"]: _rlist(raw["f"][i]) for i, ln in enumerate(lines)},
         "unserved_mw": {n: _rlist(np.maximum(raw["u"][i], 0)) for i, n in enumerate(grid.node_ids)},
     }
+    if grid.dr_cap.max(initial=0.0) > 0:
+        ts["demand_response_mw"] = {n: _rlist(np.maximum(raw["dr"][i], 0)) for i, n in enumerate(grid.node_ids)}
+    return ts
 
 
 def _infeasibility_reason(grid: Grid) -> str:
