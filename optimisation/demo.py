@@ -1,7 +1,8 @@
 """End-to-end demo of the optimisation core (no LLM involved).
 
 Runs the investigation the agent is expected to run: baseline -> validate ->
-several candidates -> validate -> compare -> stress-test with a sudden outage.
+several candidates -> validate -> compare -> stress-test with a sudden plant trip,
+the same outage as planned maintenance, and a sudden line trip that islands a node.
 
     python -m optimisation.demo            # print results
     python -m optimisation.demo --write    # also refresh optimisation/examples/*.json
@@ -28,6 +29,8 @@ CANDIDATES = [
      "modifications": [{"type": "uprate_line", "line_id": "L2", "new_capacity_mw": 600}]},
 ]
 SUDDEN_TRIP = {"type": "generator_outage", "id": "gas_centro", "from_hour": 18, "to_hour": 22, "mode": "sudden"}
+PLANNED_MAINTENANCE = {**SUDDEN_TRIP, "mode": "planned"}
+SUDDEN_LINE_TRIP = {"type": "line_outage", "id": "L1", "from_hour": 6, "to_hour": 10, "mode": "sudden"}
 
 
 def _row(name: str, sol: dict, val: dict) -> str:
@@ -75,7 +78,25 @@ def run(write: bool = False) -> dict:
             results.update(solution_sudden_outage=sol, comparison_sudden_outage=cmp)
     results.update(solution_baseline_sudden_outage=trip_base)
 
-    strict = solve(scen, events=[SUDDEN_TRIP], options={"allow_unserved": False})
+    print("\nPlanned maintenance: the same gas_centro outage, known from the start of the day")
+    maint_base = solve(scen, events=[PLANNED_MAINTENANCE])
+    maint_base_v = validate(scen, maint_base)
+    print(_row("baseline + maintenance", maint_base, maint_base_v)
+          + f" | vs sudden: {trip_base['metrics']['unserved_mwh'] - maint_base['metrics']['unserved_mwh']:.1f} MWh less unserved")
+    for cand in CANDIDATES:
+        sol = solve(scen, cand, [PLANNED_MAINTENANCE])
+        val = validate(scen, sol)
+        cmp = compare(maint_base, sol, maint_base_v, val)
+        print(_row(cand["candidate_id"] + " + maint.", sol, val) + f" | unserved reduction {cmp['unserved_reduction_mwh']:.1f} MWh")
+    results.update(solution_planned_maintenance=maint_base)
+
+    print("\nSudden line trip: L1 opens at hour 6 and islands Norte Grande while it is exporting")
+    line_trip = solve(scen, events=[SUDDEN_LINE_TRIP])
+    print(_row("baseline + L1 trip", line_trip, validate(scen, line_trip))
+          + f" | emergency runback {line_trip['metrics']['emergency_runback_mwh']:.1f} MWh")
+    results.update(solution_sudden_line_trip=line_trip)
+
+    strict =solve(scen, events=[SUDDEN_TRIP], options={"allow_unserved": False})
     print(f"\nStrict mode (no unserved demand allowed) with the trip: {strict['status']} - {strict['message']}")
     results.update(solution_infeasible=strict, validation_infeasible=validate(scen, strict))
 

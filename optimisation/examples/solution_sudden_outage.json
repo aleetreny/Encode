@@ -1,7 +1,7 @@
 {
   "status": "optimal",
   "message": null,
-  "scenario_id": "chile-demo-001",
+  "scenario_id": "chile-sen-5node-demo",
   "candidate_id": "c1_battery_norte_grande",
   "modifications": [
     {
@@ -55,6 +55,7 @@
   "solver": {
     "name": "HiGHS",
     "version": "1.15.1",
+    "method": "LP",
     "solve_time_s": 0.0,
     "solves": 2
   },
@@ -65,7 +66,8 @@
       "unserved_penalty_usd": 15300500.0,
       "curtailment_penalty_usd": 0.0,
       "battery_throughput_cost_usd": 794.368849,
-      "transmission_tiebreak_usd": 204.9775
+      "transmission_tiebreak_usd": 204.9775,
+      "emergency_runback_penalty_usd": 0.0
     }
   },
   "assets": {
@@ -77,6 +79,7 @@
         "energy_capacity_mwh": 60.0,
         "min_soc_mwh": 0.0,
         "initial_soc_mwh": 30.0,
+        "final_soc_mwh": null,
         "charge_efficiency": 0.95,
         "discharge_efficiency": 0.95
       },
@@ -87,6 +90,7 @@
         "energy_capacity_mwh": 600.0,
         "min_soc_mwh": 0.0,
         "initial_soc_mwh": 300.0,
+        "final_soc_mwh": null,
         "charge_efficiency": 0.95,
         "discharge_efficiency": 0.95,
         "added_by_candidate": "c1_battery_norte_grande"
@@ -798,11 +802,11 @@
         0.0,
         0.0,
         0.0,
-        126.85,
+        0.0,
+        150.0,
+        120.375,
         150.0,
         0.0,
-        0.0,
-        143.525,
         0.0
       ]
     },
@@ -854,10 +858,10 @@
         600.0,
         600.0,
         600.0,
-        466.473684,
-        308.578947,
-        308.578947,
-        308.578947,
+        600.0,
+        442.105263,
+        315.394737,
+        157.5,
         157.5,
         300.0
       ]
@@ -882,11 +886,11 @@
         234.6,
         291.8,
         277.4,
-        344.35,
+        217.5,
         318.9,
-        169.5,
-        169.8,
-        313.425,
+        289.875,
+        319.8,
+        169.9,
         20.0
       ],
       "L2": [
@@ -908,11 +912,11 @@
         400.0,
         400.0,
         322.2,
-        329.95,
+        203.1,
         285.3,
-        137.0,
-        140.7,
-        289.425,
+        257.375,
+        290.7,
+        145.9,
         -2.2
       ],
       "L3": [
@@ -1040,11 +1044,11 @@
         0.0,
         0.0,
         0.0,
-        115.35,
+        242.2,
         300.1,
-        562.0,
-        552.6,
-        0.0,
+        441.625,
+        402.6,
+        143.525,
         0.0
       ],
       "n_centro_sur": [
@@ -1124,6 +1128,7 @@
     "battery_discharge_mwh": 753.65875,
     "battery_losses_mwh": 81.420197,
     "assumed_cost_proxy_usd": 1552445.66875,
+    "emergency_runback_mwh": 0.0,
     "line_hours_at_limit": {
       "L1": 0.0,
       "L2": 8.0,
@@ -1172,7 +1177,8 @@
       "hours": [
         15,
         16,
-        17
+        17,
+        18
       ],
       "detail": "state of charge at 600 MWh capacity (end of hour)"
     },
@@ -1201,6 +1207,7 @@
         13,
         14,
         19,
+        21,
         23
       ],
       "detail": "charging or discharging at 150 MW limit"
@@ -1337,7 +1344,8 @@
         18,
         19,
         20,
-        21
+        21,
+        22
       ],
       "detail": "demand not served"
     }

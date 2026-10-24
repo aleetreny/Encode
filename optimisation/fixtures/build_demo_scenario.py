@@ -47,7 +47,7 @@ def build() -> dict:
     daytime = [_bump(h, 13, 4) for h in hours]
 
     return {
-        "scenario_id": "chile-demo-001",
+        "scenario_id": "chile-sen-5node-demo",
         "mode": "synthetic",
         "time_step_hours": 1,
         "timestamps_utc": stamps,

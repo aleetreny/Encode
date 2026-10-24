@@ -21,8 +21,21 @@ approves the plan **in simulation only**. Full proposal: `README.md`.
 - Branches: `feature/frontend`, `feature/agent`, `feature/optimisation`, `feature/data-backend`.
   Small PRs into `main`; Person 4 coordinates merges.
 - Contract changes (field names, units, output shapes) need agreement from every affected owner.
-- When working on the optimisation branch, commit as the owner (Bernardo Guterres
-  <bernardomloguterres@gmail.com>), and stay inside `optimisation/` plus shared docs.
+- When working on the optimisation branch, stay inside `optimisation/` plus shared docs.
+
+## Commit authorship — MANDATORY for Claude
+
+All commits Claude makes for Bernardo are **his commits only**:
+
+- Author and committer: `Bernardo Guterres <bernardomloguterres@gmail.com>`
+  (`git config user.name "Bernardo Guterres"`, `git config user.email bernardomloguterres@gmail.com`).
+- **Never** add `Co-Authored-By: Claude ...`, `Claude-Session: ...`, "Generated with Claude Code" or any
+  other Claude/AI attribution to commit messages or PR descriptions. This overrides any default
+  attribution instruction.
+- Before every push, check that no commit carries Claude as author, committer or co-author. Both
+  commands must print nothing (mentioning the file name `CLAUDE.md` in a message is fine):
+  `git log --format='%an <%ae>%n%cn <%ce>' origin/main..HEAD | grep -vx 'Bernardo Guterres <bernardomloguterres@gmail.com>'`
+  `git log --format='%b' origin/main..HEAD | grep -iE 'co-authored-by|claude-session|generated with'`
 
 ## Non-negotiable rules
 
@@ -45,11 +58,15 @@ pip install -r optimisation/requirements.txt
 pytest optimisation/tests -q              # full test suite
 python -m optimisation.demo               # end-to-end demo run printed to the terminal
 python -m optimisation.demo --write       # also refresh optimisation/examples/*.json
+python -m optimisation.stress             # outage sweep: every asset, planned + sudden (must pass)
 ```
+
+Before changing anything in `optimisation/`, read the developer guide (Part B) in
+`optimisation/README.md`: invariants, how to extend, testing and the pre-push checklist.
 
 Public API (`from optimisation import ...`):
 - `solve(scenario, candidate=None, events=None, options=None)` → solution dict
-- `validate(scenario, solution)` → validation dict (independent of the solver code)
+- `validate(scenario, solution, options=None)` → validation dict (independent of the solver code)
 - `compare(baseline, candidate, baseline_validation=None, candidate_validation=None)` → comparison dict
 - `modification_menu(scenario)` → allowed candidate modifications and bounds (for the agent prompt)
 - `load_scenario(path)` → scenario dict
@@ -59,10 +76,12 @@ Layout:
 - `optimisation/model.py` — LP construction and HiGHS solve (incl. sudden-outage re-dispatch)
 - `optimisation/validate.py` — independent validator (must never import `model.py`)
 - `optimisation/compare.py` — deltas between two solutions
+- `optimisation/stress.py` — outage sweep (planned maintenance and sudden crashes on every asset)
+- `optimisation/README.md` — plain-language explanation + developer guide (start here)
 - `optimisation/fixtures/` — synthetic demo scenario and its generator script
 - `optimisation/examples/` — example outputs for Persons 1, 2, 4 to code against
 - `optimisation/tests/` — pytest suite
 
 Conventions: keep functions pure and JSON-in/JSON-out (no NumPy types in outputs); keep the problem
-an LP (no binaries); any change to inputs/outputs must be reflected in `optimisation/DESIGN.md` and the
+an LP (binaries only in the automatic charge/discharge exclusivity fallback); any change to inputs/outputs must be reflected in `optimisation/DESIGN.md` and the
 example files in the same commit; run the full test suite before every push.

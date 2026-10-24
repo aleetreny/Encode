@@ -27,6 +27,7 @@ class _LP:
         self.lb: list[float] = []
         self.ub: list[float] = []
         self.cost: list[float] = []
+        self.integer: list[int] = []
         self.row_lo: list[float] = []
         self.row_hi: list[float] = []
         self.row_idx: list[list[int]] = []
@@ -37,6 +38,10 @@ class _LP:
         self.ub.append(ub)
         self.cost.append(cost)
         return len(self.lb) - 1
+
+    def binary(self) -> int:
+        self.integer.append(self.var(0.0, 1.0))
+        return self.integer[-1]
 
     def row(self, idx: list[int], val: list[float], lo: float, hi: float) -> None:
         self.row_idx.append(idx)
@@ -62,6 +67,14 @@ class _LP:
             len(self.row_lo), np.array(self.row_lo), np.array(self.row_hi), len(index),
             np.array(starts, dtype=np.int32), np.array(index, dtype=np.int32), np.array(value),
         )
+        if self.integer:
+            h.setOptionValue("mip_rel_gap", 1e-9)
+            # tight integrality so a "binary" of 1e-6 cannot leave both charge and discharge open
+            h.setOptionValue("mip_feasibility_tolerance", 1e-9)
+            h.changeColsIntegrality(
+                len(self.integer), np.array(self.integer, dtype=np.int32),
+                np.full(len(self.integer), highspy.HighsVarType.kInteger),
+            )
         h.run()
         status = h.getModelStatus()
         if status == highspy.HighsModelStatus.kOptimal:
@@ -74,8 +87,27 @@ class _LP:
 # ---------------------------------------------------------------- core solve
 
 
-def _solve_grid(grid: Grid, pinned: dict[str, np.ndarray] | None = None, pin_until: int = 0) -> tuple[str, dict | None]:
-    """Build and solve the LP. Decisions for hours < ``pin_until`` are fixed to ``pinned``."""
+def _simultaneous(raw: dict, pin_until: int) -> bool:
+    both = np.minimum(raw["ch"][:, pin_until:], raw["dis"][:, pin_until:])
+    return bool(both.size and both.max() > BIND_TOL)
+
+
+def _solve_grid(grid: Grid, pinned: dict[str, np.ndarray] | None = None, pin_until: int = 0) -> tuple[str, dict | None, bool]:
+    """Solve the LP; if a battery charges and discharges in the same hour, re-solve with binaries.
+
+    Returns (status, raw values, whether the binary fallback was used). Decisions for hours
+    < ``pin_until`` are fixed to ``pinned``.
+    """
+    status, raw = _build_and_solve(grid, pinned, pin_until, exclusive=False)
+    if raw is None or not _simultaneous(raw, pin_until):
+        return status, raw, False
+    # Some objective weights (e.g. a curtailment penalty with no battery throughput cost) make
+    # wasting energy through simultaneous charge/discharge losses "optimal". Forbid it exactly.
+    status, raw = _build_and_solve(grid, pinned, pin_until, exclusive=True)
+    return status, raw, True
+
+
+def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until: int, exclusive: bool) -> tuple[str, dict | None]:
     T, dt = grid.T, grid.dt
     obj = grid.objective
     voll = obj["unserved_energy_penalty_usd_per_mwh"]
@@ -106,9 +138,17 @@ def _solve_grid(grid: Grid, pinned: dict[str, np.ndarray] | None = None, pin_unt
             DIS[b, t] = lp.var(*bounds("dis", b, t, 0.0, pmax), dt * c_thr)
         s0 = bat["initial_soc_mwh"]
         SOC[b, 0] = lp.var(s0, s0)
-        for t in range(1, T + 1):
-            lo = bat["min_soc_mwh"] if t < T else max(bat["min_soc_mwh"], s0)
-            SOC[b, t] = lp.var(lo, bat["energy_capacity_mwh"])
+        for t in range(1, T):
+            SOC[b, t] = lp.var(bat["min_soc_mwh"], bat["energy_capacity_mwh"])
+        if bat["final_soc_mwh"] is None:  # end at least as full as at the start
+            SOC[b, T] = lp.var(max(bat["min_soc_mwh"], s0), bat["energy_capacity_mwh"])
+        else:  # scenario fixes the end-of-horizon state of charge exactly
+            SOC[b, T] = lp.var(bat["final_soc_mwh"], bat["final_soc_mwh"])
+        if exclusive and pmax > 0:
+            for t in range(pin_until if pinned is not None else 0, T):
+                z = lp.binary()  # 1 = may charge, 0 = may discharge
+                lp.row([CH[b, t], z], [1.0, -pmax], -np.inf, 0.0)
+                lp.row([DIS[b, t], z], [1.0, pmax], -np.inf, pmax)
     # flow f = f_pos - f_neg; a tiny cost on |f| avoids pointless transfers (e.g. shedding
     # load at one node while exporting from it), which keeps results unique and readable
     c_tx = obj["transmission_tiebreak_usd_per_mwh"]
@@ -145,13 +185,25 @@ def _solve_grid(grid: Grid, pinned: dict[str, np.ndarray] | None = None, pin_unt
         ec, ed = bat["charge_efficiency"], bat["discharge_efficiency"]
         for t in range(T):
             lp.row([SOC[b, t + 1], SOC[b, t], CH[b, t], DIS[b, t]], [1.0, -1.0, -ec * dt, dt / ed], 0.0, 0.0)
-    # ramp limits (only into hours where the unit is online; a trip drops output instantly)
+    # ramp limits (only into hours where the unit is online; a trip drops output instantly).
+    # In the hour a sudden event starts, units may also drop faster than their ramp rate
+    # (emergency runback / generator tripping, cf. EDAG): e.g. a plant left exporting into an
+    # island after a line trip must be able to back down. Ramping up stays limited.
+    # The runback beyond the ramp rate is a penalised slack, so it is only used when nothing
+    # else works (it costs more than any fuel saving it could buy).
+    c_rb = obj["emergency_runback_penalty_usd_per_mwh"]
     for g, gen in enumerate(grid.generators):
         ramp = gen["ramp_rate_mw_per_h"]
         if ramp is None:
             continue
         for t in range(1, T):
-            if grid.gen_online[g, t]:
+            if not grid.gen_online[g, t]:
+                continue
+            if t in grid.runback_hours:
+                rb = lp.var(0.0, np.inf, dt * c_rb)
+                lp.row([P[g, t], P[g, t - 1]], [1.0, -1.0], -np.inf, ramp * dt)
+                lp.row([P[g, t], P[g, t - 1], rb], [1.0, -1.0, 1.0], -ramp * dt, np.inf)
+            else:
                 lp.row([P[g, t], P[g, t - 1]], [1.0, -1.0], -ramp * dt, ramp * dt)
 
     status, x = lp.solve(grid.options["time_limit_s"])
@@ -219,17 +271,38 @@ def _binding(grid: Grid, ts: dict) -> list[dict]:
                 (grid.avail[g] > 0) & (p >= grid.avail[g] - BIND_TOL), f"output at {gen['capacity_mw']:g} MW capacity")
             ramp = gen["ramp_rate_mw_per_h"]
             if ramp is not None and T > 1:
-                step = np.abs(np.diff(p))
+                step = np.diff(p)
+                runback = np.array([t in grid.runback_hours for t in range(1, T)])
                 mask = np.zeros(T, dtype=bool)
-                mask[1:] = grid.gen_online[g, 1:] & (step >= ramp * dt - BIND_TOL) & (ramp * dt > 0)
+                mask[1:] = (grid.gen_online[g, 1:] & (np.abs(step) >= ramp * dt - BIND_TOL) & (ramp * dt > 0)
+                            & ~(runback & (step < -ramp * dt - BIND_TOL)))
                 add("ramp_limit", gen["id"], mask, f"output changing at the {ramp:g} MW/h ramp limit")
+                fast = np.zeros(T, dtype=bool)
+                fast[1:] = grid.gen_online[g, 1:] & runback & (step < -ramp * dt - BIND_TOL)
+                add("emergency_runback", gen["id"], fast,
+                    f"output cut faster than the {ramp:g} MW/h ramp limit right after a sudden event")
     for n, node in enumerate(grid.node_ids):
         add("unserved_energy", node, np.array(ts["unserved_mw"][node]) > BIND_TOL, "demand not served")
     return out
 
 
+def _runback_mwh(grid: Grid, ts: dict) -> float:
+    """Energy by which units were cut faster than their ramp limit right after sudden events."""
+    total = 0.0
+    for g, gen in enumerate(grid.generators):
+        ramp = gen["ramp_rate_mw_per_h"]
+        if ramp is None:
+            continue
+        p = ts["generation_mw"][gen["id"]]
+        for t in grid.runback_hours:
+            if 0 < t < grid.T and grid.gen_online[g, t]:
+                total += max(0.0, p[t - 1] - p[t] - ramp * grid.dt) * grid.dt
+    return total
+
+
 def _metrics(grid: Grid, ts: dict) -> tuple[dict, dict]:
     dt, obj = grid.dt, grid.objective
+    runback = _runback_mwh(grid, ts)
     curt_by = {g["id"]: _r(sum(ts["curtailment_mw"][g["id"]]) * dt) for g in grid.generators if g["renewable"]}
     uns_by = {n: _r(sum(ts["unserved_mw"][n]) * dt) for n in grid.node_ids}
     ren_used = sum(sum(ts["generation_mw"][g["id"]]) for g in grid.generators if g["renewable"]) * dt
@@ -257,6 +330,7 @@ def _metrics(grid: Grid, ts: dict) -> tuple[dict, dict]:
         "battery_charge_mwh": _r(ch_tot), "battery_discharge_mwh": _r(dis_tot),
         "battery_losses_mwh": _r(losses),
         "assumed_cost_proxy_usd": _r(cost),
+        "emergency_runback_mwh": _r(runback),
         "line_hours_at_limit": at_limit,
     }
     terms = {
@@ -268,6 +342,7 @@ def _metrics(grid: Grid, ts: dict) -> tuple[dict, dict]:
             sum(sum(abs(v) for v in ts["line_flow_mw"][ln["id"]]) for ln in grid.lines)
             * dt * obj["transmission_tiebreak_usd_per_mwh"]
         ),
+        "emergency_runback_penalty_usd": _r(runback * obj["emergency_runback_penalty_usd_per_mwh"]),
     }
     return metrics, {"total_usd": _r(sum(terms.values())), "terms": terms}
 
@@ -330,7 +405,8 @@ def _envelope(scenario: dict, candidate: dict | None, events: Any, options: Any)
         "events": events if isinstance(events, list) else [],
         "options": options if isinstance(options, dict) else {},
         "time_step_hours": None, "timestamps_utc": None,
-        "solver": {"name": "HiGHS", "version": highspy.Highs().version(), "solve_time_s": 0.0, "solves": 0},
+        "solver": {"name": "HiGHS", "version": highspy.Highs().version(), "method": None,
+                   "solve_time_s": 0.0, "solves": 0},
         "objective": None, "assets": None, "timeseries": None, "metrics": None, "binding_constraints": None,
     }
 
@@ -353,18 +429,22 @@ def solve(scenario: dict, candidate: dict | None = None, events: list | None = N
     sudden = [e for e in full.events if e["mode"] == "sudden"]
     applied = list(planned)
     grid = build_grid(scenario, candidate, applied, options, include_scenario_events=False)
-    status, raw = _solve_grid(grid)
-    solves = 1
+    status, raw, mip = _solve_grid(grid)
+    solves = 1 + mip
     stage = "plan before any sudden outage" if sudden else None
     for ev in sudden:
         if raw is None:
             break
         applied.append(ev)
         grid = build_grid(scenario, candidate, applied, options, include_scenario_events=False)
-        status, raw = _solve_grid(grid, pinned=raw, pin_until=ev["from_hour"])
-        solves += 1
+        status, raw, used = _solve_grid(grid, pinned=raw, pin_until=ev["from_hour"])
+        solves += 1 + used
+        mip = mip or used
         stage = f"re-dispatch after sudden {ev['type'].replace('_', ' ')} of {ev['id']} at hour {ev['from_hour']}"
-    out["solver"].update(solve_time_s=round(time.perf_counter() - t0, 4), solves=solves)
+    out["solver"].update(
+        solve_time_s=round(time.perf_counter() - t0, 4), solves=solves,
+        method="MILP (battery charge/discharge exclusivity enforced)" if mip else "LP",
+    )
 
     if status != "optimal":
         out["status"] = "infeasible" if status == "infeasible" else "error"

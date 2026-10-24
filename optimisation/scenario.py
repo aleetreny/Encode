@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import json
 import math
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,7 @@ DEFAULT_OBJECTIVE = {
     "curtailment_penalty_usd_per_mwh": 0.0,
     "battery_throughput_cost_usd_per_mwh": 0.5,
     "transmission_tiebreak_usd_per_mwh": 0.01,
+    "emergency_runback_penalty_usd_per_mwh": 1000.0,
 }
 
 DEFAULT_LIMITS = {
@@ -41,6 +43,7 @@ DEFAULT_OPTIONS = {"allow_unserved": True, "time_limit_s": 30.0}
 
 EVENT_TYPES = ("generator_outage", "line_outage")
 EVENT_MODES = ("planned", "sudden")
+WEATHER_DRIVEN = ("solar", "wind")  # must come with an hourly availability profile
 
 
 class ScenarioError(ValueError):
@@ -63,6 +66,7 @@ class Grid:
     avail: np.ndarray  # (G, T) MW, 0 during outages
     gen_online: np.ndarray  # (G, T) bool
     line_cap: np.ndarray  # (L, T) MW, 0 during outages
+    runback_hours: set[int]  # hours where a sudden event starts: units may drop faster than ramp
     objective: dict
     options: dict
     candidate_id: str = "baseline"
@@ -226,6 +230,7 @@ def apply_candidate(scenario: dict, candidate: dict | None) -> tuple[dict, str, 
                     "energy_capacity_mwh": energy,
                     "min_soc_mwh": 0.0,
                     "initial_soc_mwh": energy * lim["initial_soc_fraction"],
+                    "final_soc_mwh": None,
                     "charge_efficiency": lim["charge_efficiency"],
                     "discharge_efficiency": lim["discharge_efficiency"],
                     "added_by_candidate": cid,
@@ -326,6 +331,23 @@ def normalise_options(options: Any) -> dict:
 # ---------------------------------------------------------------- grid
 
 
+def _check_time_axis(stamps: list[str], dt: float) -> None:
+    """Timestamps must be timezone-aware ISO 8601, exactly ``dt`` hours apart."""
+    times = []
+    for i, s in enumerate(stamps):
+        try:
+            t = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        except ValueError:
+            _fail(f"timestamps_utc[{i}] = {s!r} is not an ISO 8601 timestamp")
+        if t.tzinfo is None:
+            _fail(f"timestamps_utc[{i}] = {s!r} has no timezone; use UTC, e.g. 2026-10-01T03:00:00Z")
+        times.append(t)
+    step = timedelta(hours=dt)
+    for i in range(1, len(times)):
+        if abs(times[i] - times[i - 1] - step) > timedelta(seconds=1):
+            _fail(f"timestamps_utc[{i}] is not {dt:g} h after timestamps_utc[{i - 1}]")
+
+
 def _check_radial(node_ids: list[str], lines: list[dict]) -> None:
     parent = {n: n for n in node_ids}
 
@@ -370,6 +392,7 @@ def build_grid(
     if not isinstance(stamps, list) or not stamps or not all(isinstance(s, str) for s in stamps):
         _fail("timestamps_utc must be a non-empty list of ISO 8601 strings")
     T = len(stamps)
+    _check_time_axis(stamps, dt)
 
     nodes = scen.get("nodes") or []
     if not isinstance(nodes, list) or not nodes:
@@ -409,6 +432,11 @@ def build_grid(
         cap = _num(g.get("capacity_mw"), f"generator {gid}.capacity_mw", lo=0.0)
         cost = _num(g.get("variable_cost_usd_per_mwh", 0.0), f"generator {gid}.variable_cost_usd_per_mwh", lo=0.0)
         renewable = gid in avail_raw
+        if not renewable and str(g.get("technology", "")).lower() in WEATHER_DRIVEN:
+            _fail(
+                f"generator {gid} is {g['technology']} but has no entry in "
+                "renewable_availability_mw_by_generator; without it, it would run at full capacity day and night"
+            )
         ramp = g.get("ramp_rate_mw_per_h")
         if ramp is not None:
             if renewable:
@@ -438,6 +466,9 @@ def build_grid(
         E = _num(b.get("energy_capacity_mwh"), f"battery {bid}.energy_capacity_mwh", lo=0.0)
         smin = _num(b.get("min_soc_mwh", 0.0), f"battery {bid}.min_soc_mwh", lo=0.0, hi=E)
         s0 = _num(b.get("initial_soc_mwh"), f"battery {bid}.initial_soc_mwh", lo=smin, hi=E)
+        s_end = b.get("final_soc_mwh")
+        if s_end is not None:
+            s_end = _num(s_end, f"battery {bid}.final_soc_mwh", lo=smin, hi=E)
         if "charge_efficiency" in b or "discharge_efficiency" in b:
             eta_c = _num(b.get("charge_efficiency"), f"battery {bid}.charge_efficiency", lo=1e-6, hi=1.0)
             eta_d = _num(b.get("discharge_efficiency"), f"battery {bid}.discharge_efficiency", lo=1e-6, hi=1.0)
@@ -448,7 +479,7 @@ def build_grid(
             _fail(f"battery {bid} needs charge_efficiency and discharge_efficiency")
         batteries.append(
             {"id": bid, "node_id": b["node_id"], "power_capacity_mw": P, "energy_capacity_mwh": E,
-             "min_soc_mwh": smin, "initial_soc_mwh": s0, "charge_efficiency": eta_c,
+             "min_soc_mwh": smin, "initial_soc_mwh": s0, "final_soc_mwh": s_end, "charge_efficiency": eta_c,
              "discharge_efficiency": eta_d, "added_by_candidate": b.get("added_by_candidate")}
         )
 
@@ -489,5 +520,6 @@ def build_grid(
         scenario_id=sid, T=T, dt=dt, timestamps=list(stamps), node_ids=node_ids, lines=lines,
         generators=generators, batteries=batteries, demand=demand, avail=avail,
         gen_online=gen_online, line_cap=line_cap, objective=objective,
+        runback_hours={ev["from_hour"] for ev in evs if ev["mode"] == "sudden" and ev["from_hour"] > 0},
         options=normalise_options(options), candidate_id=cid, modifications=mods, events=evs,
     )

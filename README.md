@@ -18,9 +18,11 @@ Read [backend operations](backend/README.md), [the native v2 contract](docs/cont
 
 **Encode London Hackathon · 24–25 October 2026 · Team of 4**
 
-> **Mission:** Emulate Chile's **Coordinador Eléctrico Nacional (CEN)** inside a verified digital-twin simulation. Powered by **Gemini 4 Argon** as the autonomous orchestrator and a deterministic **HiGHS LP solver + independent physics/regulatory validator**, GridPilot manages both **renewable** (solar, wind) and **non-renewable / dispatchable** (hydro, gas, coal, diesel, BESS) generation across Chile's north–south transmission backbone. It complies with Chilean electricity regulations (**LGSE**, **Supreme Decree N° 32/2026 Art. 117 bis**, **NTSyCS**, and **Law N° 21.505**), eliminates renewable curtailment under normal operation, and **responds autonomously to sudden crisis scenarios** (such as a power plant or transmission line trip) by computing an emergency redispatch and network reconfiguration to **reconnect affected households**.
+> **Mission:** Emulate Chile's **Coordinador Eléctrico Nacional (CEN)** inside a verified digital-twin simulation. Powered by **Gemini 4 Argon** as the autonomous orchestrator and a deterministic **HiGHS LP solver + independent physics/regulatory validator**, GridPilot manages both **renewable** (solar, wind) and **non-renewable / dispatchable** (hydro, gas, coal, diesel, BESS) generation across Chile's north–south transmission backbone. It models selected requirements inspired by Chilean electricity regulation (**LGSE**, **Supreme Decree N° 32/2026 Art. 117 bis**, **NTSyCS**, and **Law N° 21.505**; see Section 2 for exactly what is and is not implemented), reduces renewable curtailment under normal operation, and **responds autonomously to sudden crisis scenarios** (such as a power plant or transmission line trip) by computing an emergency redispatch (batteries, ramp-limited thermal/hydro units, imports) to **reduce and restore unserved demand**.
 >
 > **Scope / safety:** We do **not** operate Chile's live physical grid, send real SCADA commands to power plants, replace official CEN/distributor control systems, or claim that a reduced 5-node backbone reproduces every bus of Chile's >1,000-node grid. All autonomous dispatches and crisis reconnections occur **strictly inside an audited simulation** under explicitly documented model assumptions.
+>
+> **Implementation status (24 Oct):** `optimisation/` (solver, validator, comparison, outages) is built, tested and verified against the backend bridge; `backend/`, `data/`, `contracts/` are on `feature/data-backend`; `agent/` and `frontend/` are in progress. The 5-node demo scenario is **synthetic**; CEN evidence is kept as separate, labelled context.
 
 ---
 
@@ -41,21 +43,21 @@ Real-time dispatch in Chile already uses intraday scheduling and SCADA/AGC, but 
 
 **Primary user:** A CEN control-room operations engineer, system planner, or emergency coordinator evaluating automated dispatch and post-contingency household recovery plans.
 
-**One-sentence pitch:** *GridPilot is an autonomous AI grid coordinator for Chile's SEN that optimises renewable and thermal dispatch under Chilean law and automatically re-routes power after sudden plant or line outages to reconnect affected households — verified at every step by deterministic physics.*
+**One-sentence pitch:** *GridPilot is an autonomous AI grid coordinator for Chile's SEN that optimises renewable and thermal dispatch under rules inspired by Chilean regulation and automatically re-routes power after sudden plant or line outages to reconnect affected households — verified at every step by deterministic physics.*
 
 ---
 
 ## 2. Chilean Regulatory Framework Mapped to Code
 
-GridPilot does not treat regulation as decorative text; every core Chilean electricity law is enforced as a **hard mathematical constraint or objective term** in the solver and validator:
+GridPilot does not treat regulation as decorative text: each row below names the **hard mathematical constraint or objective term** that represents it in the solver and validator, and what is deliberately **not** modelled. This is a simplified representation for a simulation, not a certified compliance check.
 
 | Chilean Law / Standard | Legal Mandate in Chile | Deterministic Implementation in GridPilot |
 | --- | --- | --- |
-| **LGSE (DFL N° 4/2006, Art. 72°-1)**<br/>*Ley General de Servicios Eléctricos* | CEN must preserve overall system security while guaranteeing **minimum total operating cost** via **audited marginal-cost merit order** (generators do not submit free-market price bids; they declare audited fuel/variable costs). | Linear objective dispatches $0/MWh renewables (`solar`, `wind`) first, then low-cost `hydro` / `coal` / `gas` ($25–$95/MWh), and expensive `diesel` peakers ($180–$250/MWh) only when needed, with a dominant Value of Lost Load (`VoLL = $10,000/MWh`) penalising any unserved household demand. |
-| **Supreme Decree N° 32/2026 (Art. 117 bis)**<br/>*Automatic Economic Dispatch (SCED)* | Mandates automated security-constrained economic dispatch co-optimising generation, transmission limits, and dynamic unit capabilities within a 36-month rollout. | Closed-loop autonomous agent workflow (`agent/` + `optimisation/`) that computes nodal generation setpoints (`generation_mw`) and line flows (`line_flow_mw`) while enforcing unit-specific **maximum ramp rates (`ramp_rate_mw_per_h`)**. |
-| **NTSyCS (CNE)**<br/>*Norma Técnica de Seguridad y Calidad de Servicio* | Defines system states (*Normal, Alerta, Emergencia, Recuperación*), **N-1 contingency security**, line thermal ratings, generator ramp limits, and **EDAC** (automatic load shedding during deficits) followed by corrective redispatch to restore service. | **No-hindsight sudden outage solver (`mode: "sudden"`)**: locks pre-trip dispatch and battery SOC prior to the fault hour, applies the generator/line trip, enforces ramp limits on surviving thermal/hydro units, quantifies affected demand (`unserved_mw` / equivalent disconnected households), and computes the optimal recovery redispatch. |
+| **LGSE (DFL N° 4/2006, Art. 72°-1)**<br/>*Ley General de Servicios Eléctricos* | CEN must preserve overall system security while guaranteeing **minimum total operating cost** via **audited marginal-cost merit order** (generators do not submit free-market price bids; they declare audited fuel/variable costs). | Linear objective dispatches $0/MWh renewables (`solar`, `wind`) first, then lower-cost `hydro` / `coal` / `gas` ($25–$95/MWh in the demo), and the `diesel` peaker ($220/MWh in the demo) only when needed, all as an **assumed-cost proxy** (not audited CEN costs), with a dominant Value of Lost Load (`VoLL = $10,000/MWh`) penalising any unserved demand. |
+| **Supreme Decree N° 32/2026 (Art. 117 bis)**<br/>*Automatic Economic Dispatch (SCED)* | Mandates automated security-constrained economic dispatch co-optimising generation, transmission limits, and dynamic unit capabilities within a 36-month rollout. | Closed-loop autonomous agent workflow (`agent/` + `optimisation/`) that computes nodal generation setpoints (`generation_mw`) and line flows (`line_flow_mw`) while enforcing line limits and unit-specific **maximum ramp rates (`ramp_rate_mw_per_h`)**. *Not modelled:* preventive N-1 security constraints and reserve requirements. |
+| **NTSyCS (CNE)**<br/>*Norma Técnica de Seguridad y Calidad de Servicio* | Defines system states (*Normal, Alerta, Emergencia, Recuperación*), **N-1 contingency security**, line thermal ratings, generator ramp limits, and **EDAC** (automatic load shedding during deficits) followed by corrective redispatch to restore service. | **No-hindsight sudden outage solver (`mode: "sudden"`)**: locks pre-trip dispatch and battery SOC prior to the fault hour, applies the generator/line trip, enforces ramp limits on surviving thermal/hydro units, quantifies affected demand (`unserved_mw`, per node and hour), and computes the optimal recovery redispatch. *Not modelled:* NTSyCS system states, EDAC relay settings and sub-hourly frequency response. |
 | **Law N° 21.505 (2022/2023)**<br/>*Storage (SAE) & Electromobility Law* | Integrates Battery Energy Storage Systems (**BESS / SAE**) into centralized CEN dispatch to absorb solar curtailment and provide fast-response contingency reserve. | Time-coupled battery dynamics (`battery_charge_mw`, `battery_discharge_mw`, `battery_soc_mwh`) with one-way efficiencies, minimum/maximum SOC bounds, and end-of-horizon conservation (`soc[T] >= soc[0]`) so batteries absorb northern solar peaks and bridge evening thermal outages. |
-| **NTD / SEC Household Equivalence**<br/>*Distribution Substation Interface* | CEN coordinates transmission down to primary distribution substations (*barras de retiro*), from which distribution feeders serve residential households. | Nodal demand (`demand_mw_by_node`) and unserved energy (`unserved_mwh_by_node`) are mapped to **equivalent connected/affected households** (~1,000 Chilean households per MW of residential substation load), making crisis impact and reconnection immediately tangible. |
+| **NTD / SEC Household Equivalence**<br/>*Distribution Substation Interface* | CEN coordinates transmission down to primary distribution substations (*barras de retiro*), from which distribution feeders serve residential households. | Nodal demand (`demand_mw_by_node`) and unserved energy (`unserved_mwh_by_node`) can be mapped to **equivalent affected households** using a per-node `households_per_mw` factor. **Status: planned (Person 4), not yet implemented in code**; the factor must be sourced and labelled as an assumption, and must exclude industrial/mining load, which is a large share of Chilean demand. |
 
 ---
 
@@ -68,15 +70,15 @@ GridPilot does not treat regulation as decorative text; every core Chilean elect
    - Gemini inspects the grid and runs the baseline economic dispatch (`run_optimisation`). During midday solar peak (hours 9–16), corridor `L2 (Norte Chico → Centro)` saturates at its thermal limit, causing **1,368.2 MWh of northern solar curtailment**.
 2. **Investigate & Optimise Curtailment (What-If Intervention):**
    - Gemini queries `modification_menu`, identifies the binding bottleneck (`L2` line limit), and tests bounded grid interventions (e.g., co-locating a utility-scale battery in `Norte Grande` vs `Sur`, or uprating `L2`).
-   - Every candidate is checked by the **independent deterministic validator (`validate_candidate`)**. Gemini sees that placing storage in `Sur` yields **0 MWh** curtailment reduction (wrong side of the bottleneck!), whereas placing a **150 MW / 600 MWh BESS in `Norte Grande`** cuts curtailment by **631.6 MWh** and uprating `L2` cuts it by **993.0 MWh**.
+   - Every candidate is checked by the **independent deterministic validator (`validate_candidate`)**. The `Sur` battery passes validation (it is physically valid) but `compare_results` shows it yields **0 MWh** curtailment reduction (wrong side of the bottleneck!), whereas placing a **150 MW / 600 MWh BESS in `Norte Grande`** cuts curtailment by **631.6 MWh** and uprating `L2` cuts it by **993.0 MWh**.
 3. **Crisis Stress-Test (Sudden Plant Outage & Household Reconnection):**
    - Suddenly at **18:00 (evening peak)**, a major central thermal plant (`gas_centro`, 600 MW) suffers an unexpected forced outage (`generator_outage`, `mode: "sudden"`, hours 18–22).
-   - **Without hindsight** (hours 0–17 remain locked to the pre-outage plan), remaining thermal/hydro units hit their physical **ramp-rate limits (`ramp_limit`)** and `L2` hits its import limit. Under the baseline grid, **EDAC** is forced to shed **1,921.9 MWh** of load in `Centro` (equivalent to **~480,000 household-hours** / **~120,000 households** disconnected during the 4-hour crisis).
-   - Gemini autonomously evaluates emergency recovery across the candidate configurations, re-dispatching stored BESS energy, hydro, and fast-ramping units to **reduce unserved energy by up to 391.9 MWh (reconnecting tens of thousands of households immediately)** while respecting every Kirchhoff, ramp, and SOC constraint.
+   - **Without hindsight** (hours 0–17 remain locked to the pre-outage plan), the remaining coal, hydro and northern gas units are already at full output, the `diesel_centro` peaker maxes out, and `gas_centro`'s return at 22:00 is **ramp-limited (`ramp_limit`)**. Under the baseline grid, **1,921.9 MWh** of load is shed in `Centro` only, over hours 18–22 (peak 553 MW at 21:00) — the simulation's stand-in for EDAC load shedding.
+   - Gemini evaluates recovery across the candidate configurations: the northern 150 MW / 600 MWh BESS **reduces unserved energy by 391.9 MWh** (and shortens the shedding window by one hour), the `Sur` battery by 243.1 MWh, and the `L2` uprate by 0 MWh — every number from `optimisation.compare`, every solution validated.
 4. **Verify & Self-Correct:**
    - If Gemini proposes an invalid parameter or if strict zero-shedding mode (`allow_unserved: false`) is tested during the crisis, the solver/validator returns `infeasible` / `error` naming the exact hours and MW shortfall. Gemini reads the diagnostic and revises its operational plan rather than inventing numbers.
 5. **Explain & Governance Gate:**
-   - The UI shows side-by-side generation stacks (solar, wind, hydro, gas, coal, diesel, BESS), line flows, binding constraints, curtailment reduction, and **households protected/reconnected**, producing an exportable **RIO-style regulatory audit report** with an operator **Autonomous / Approve / Reject** control gate.
+   - The UI shows side-by-side generation stacks (solar, wind, hydro, gas, coal, diesel, BESS), line flows, binding constraints, curtailment reduction, and **households protected/reconnected**, producing an exportable **RIO-style audit report** (format inspired by CEN's RIO log; not an official RIO submission) with an operator **Autonomous / Approve / Reject** control gate.
 
 ---
 
@@ -114,13 +116,13 @@ GridPilot does not treat regulation as decorative text; every core Chilean elect
   3. **Crisis Stress-Test:** Automatically subject baseline and winning candidates to a sudden generator trip (`gas_centro` outage hours 18–22), quantify household impact (`unserved_mwh` & equivalent households reconnected), and recommend the most resilient compliant plan.
 
 ### Person 3 — Energy Optimisation, Crisis Redispatch & Independent Validation
-**Owns:** everything in **`optimisation/`** (`feature/optimisation`, Bernardo Guterres); the deterministic mathematical core (`SciPy/HiGHS` via `highspy`, `NumPy`, `pytest`). **Status: M0–M4 implemented and verified with 101 passing tests (see `optimisation/DESIGN.md`).**
+**Owns:** everything in **`optimisation/`** (`feature/optimisation`, Bernardo Guterres); the deterministic mathematical core (HiGHS via `highspy`, `NumPy`, `pytest`). **Status: M0–M4 implemented and verified with 113 passing tests and a 532-case outage sweep (planned maintenance and sudden crashes on every plant and line); integrated and verified against Person 4's backend bridge (see `optimisation/README.md` for a plain-language guide and `optimisation/DESIGN.md` for the specification).**
 
 **Built & Maintained:**
 - **5-node Chilean radial backbone (`DC-equivalent transport model`)** with renewable (`solar`, `wind`) and dispatchable (`hydro`, `gas`, `coal`, `diesel`) generators, transmission lines (`L1`–`L4`), and batteries (`BESS`).
-- **Multi-hour LP dispatch (`optimisation/model.py`):** Minimises audited dispatchable operating cost + Value of Lost Load (`VoLL = $10,000/MWh`) + battery throughput tie-break, subject to nodal balance, battery SOC dynamics (`soc[T] >= soc[0]`), line thermal capacities, and generator **ramp rates (`ramp_rate_mw_per_h`)**.
-- **Planned & Sudden Crisis Outages (`mode: "planned" | "sudden"`):** True **no-hindsight sudden-outage re-dispatch** (locks hours `< from_hour` to pre-trip plan, trips the generator or line, and re-solves hours `>= from_hour` subject to physical ramp limits and islanded balances).
-- **Independent Validator (`optimisation/validate.py`):** Zero shared code with `model.py`; independently checks nodal balances, line limits, ramp rates, battery recursion, simultaneous charge/discharge, and recomputes all metrics within `1e-4 MW` tolerance.
+- **Multi-hour LP dispatch (`optimisation/model.py`):** Minimises an assumed dispatchable-cost proxy + Value of Lost Load (`VoLL = $10,000/MWh`) + small battery-throughput and transmission tie-breaks, subject to nodal balance, battery SOC dynamics (`soc[T] >= soc[0]`, or an exact `final_soc_mwh` when the scenario sets one), line thermal capacities, and generator **ramp rates (`ramp_rate_mw_per_h`)**. If any objective weights would make a battery charge and discharge in the same hour, it automatically re-solves with that forbidden exactly (MILP fallback).
+- **Planned & Sudden Crisis Outages (`mode: "planned" | "sudden"`):** True **no-hindsight sudden-outage re-dispatch** (locks hours `< from_hour` to pre-trip plan, trips the generator or line, and re-solves hours `>= from_hour` subject to physical ramp limits and islanded balances), with a penalised **emergency runback** (cf. EDAG) when a line trip leaves an exporting plant islanded. Planned maintenance is optimised for the whole day in advance.
+- **Independent Validator (`optimisation/validate.py`):** Never imports `model.py` (shares only input parsing); independently checks nodal balances, line limits, ramp rates, battery recursion, simultaneous charge/discharge, and recomputes all metrics within `1e-4 MW` tolerance.
 - **Comparator & Menu (`optimisation/compare.py`, `modification_menu`):** Deterministic deltas for curtailment, cost proxy, unserved energy (`unserved_reduction_mwh`), and binding constraints.
 
 ### Person 4 — Chilean CEN Data Provenance, FastAPI Backend & Deployment
@@ -168,7 +170,7 @@ GridPilot does not treat regulation as decorative text; every core Chilean elect
   "status": "completed",
   "governance_mode": "autonomous_sced_with_audit_gate",
   "provenance": {
-    "mode": "historically_anchored_simulation",
+    "mode": "synthetic",
     "regulatory_framework": ["LGSE DFL 4/2006 Art. 72-1", "DS 32/2026 Art. 117 bis (SCED)", "NTSyCS (CNE)", "Ley 21.505 (SAE)"]
   },
   "tool_trace": [
@@ -188,14 +190,14 @@ GridPilot does not treat regulation as decorative text; every core Chilean elect
   "candidate": {},
   "comparison": {
     "curtailment_reduction_mwh": 631.6,
-    "assumed_cost_delta_usd": -46747.8
+    "assumed_cost_delta_usd": -74229.8
   },
   "crisis_analysis": {
     "event": {"type": "generator_outage", "id": "gas_centro", "from_hour": 18, "to_hour": 22, "mode": "sudden"},
     "baseline_unserved_mwh": 1921.9,
     "candidate_unserved_mwh": 1530.0,
     "unserved_reduction_mwh": 391.9,
-    "estimated_households_reconnected": 97975
+    "estimated_households_reconnected": null
   },
   "validation": {"passed": true, "violations": [], "max_residual_mw": 0.0},
   "operator_report": {
@@ -230,7 +232,7 @@ GridPilot does not treat regulation as decorative text; every core Chilean elect
 ### A. Key Technical & Regulatory Limitations (and how we address them honestly)
 1. **Transmission Backbone (CEN) vs. Street-Level Distribution (Distributors):**
    - *Limitation:* In Chile, the CEN coordinates generation and high-voltage transmission down to primary distribution substations (*barras de retiro*, e.g. *Polpaico* / *Alto Jahuel*). Low-voltage street feeders to individual homes are operated by distribution utilities (Enel, CGE, Chilquinta) with non-public topologies.
-   - *Our solution:* We model the grid down to nodal distribution substations and express load shedding (`unserved_mw`) and reconnection in **substation feeder blocks and equivalent households (~1,000 Chilean households per MW of residential peak load)** — matching how **EDAC** disconnects and restores residential demand in real CEN operations.
+   - *Our solution:* We model the grid down to nodal distribution substations and express load shedding (`unserved_mw`) and reconnection in **substation feeder blocks and, once implemented, equivalent households (via a sourced, labelled `households_per_mw` assumption per node)** — matching how **EDAC** disconnects and restores residential demand in real CEN operations.
 2. **Hourly/Multi-Step LP Transport Model vs. Sub-Second AC Electromechanical Transients:**
    - *Limitation:* In the first 0.1–5 seconds after a plant trip, grid survival depends on physical rotational inertia, primary frequency control (CPF), and automatic protection relays (50 Hz stability), not cloud LLM inference.
    - *Our solution:* We explicitly scope GridPilot to **SCED and Post-Contingency Corrective Redispatch (minutes to 24 hours)** — the exact window where human coordinators currently calculate redispatches and issue recovery instructions.
@@ -244,7 +246,7 @@ GridPilot does not treat regulation as decorative text; every core Chilean elect
 2. **Risk — Framing "Autonomous / No Humans" as Unsafe for Critical Infrastructure:**
    - *Mitigation:* Implement **Verified Autonomy with a Regulatory Guardrail**. Normal SCED adjustments execute autonomously *only* after passing deterministic NTSyCS validation (`passed == true`), while crisis recovery plans produce a transparent RIO audit trail with an operator **Approve / Override** gate.
 3. **Risk — External API Downtime (CEN API or Network Glitch During Demo):**
-   - *Mitigation:* All CEN-anchored scenarios and pre-validated fallback runs are cached locally in the repo so the demo is 100% reproducible offline and online.
+   - *Mitigation:* All scenarios (synthetic, with CEN evidence kept as separate labelled context) and pre-validated fallback runs are cached locally in the repo so the demo is 100% reproducible offline and online.
 
 ### C. Our Core Strengths
 1. **Timely Regulatory Alignment:** Directly targets Chile's **August/September 2026 SCED Implementation Plan** and **Supreme Decree N° 32/2026 (Art. 117 bis)**.
@@ -263,13 +265,15 @@ Encode/
 ├── frontend/                  # Person 1 — Control-room & Crisis UI
 ├── agent/                     # Person 2 — Gemini 4 Argon orchestration & regulatory tools
 ├── optimisation/              # Person 3 — LP dispatch, sudden-outage solver & validator
+│   ├── README.md              # Plain-language guide (start here)
 │   ├── DESIGN.md              # Frozen mathematical & API specification
 │   ├── model.py               # HiGHS LP solver (normal + no-hindsight sudden outages)
 │   ├── validate.py            # Independent physics & regulatory validator
 │   ├── compare.py             # Baseline vs candidate & crisis delta calculator
+│   ├── stress.py              # Outage sweep: planned maintenance & sudden crashes on every asset
 │   ├── fixtures/              # 5-node Chilean corridor scenario
 │   ├── examples/              # Pre-computed validated JSON outputs for P1, P2, P4
-│   └── tests/                 # 101 deterministic pytest tests
+│   └── tests/                 # 113 deterministic pytest tests
 ├── backend/                   # Person 4 — FastAPI routes & service integration
 └── data/                      # Person 4 — CEN historical datasets & provenance
 ```
@@ -279,9 +283,9 @@ Encode/
 | Time | Visual | The Point |
 | --- | --- | --- |
 | **0:00–0:30** | Chile SEN context, August 2026 CEN SCED plan, and 5-node backbone | **Real regulatory mandate & clear scope** |
-| **0:30–1:15** | Midday solar congestion on `L2`; Gemini tests candidates & validator rejects wrong-side battery | **Autonomous reasoning + deterministic verification** |
-| **1:15–2:15** | **CRISIS:** Sudden 600 MW `gas_centro` trip at 18:00; EDAC household impact; Gemini orchestrates BESS + hydro + thermal ramp recovery | **High-stakes crisis simulation & household reconnection** |
-| **2:15–3:00** | Quantified metrics (−631.6 MWh curtailment, −391.9 MWh unserved / ~98k household-hours saved), RIO audit report & operator gate | **Regulatory compliance, human control & verified impact** |
+| **0:30–1:15** | Midday solar congestion on `L2`; Gemini tests candidates; comparison exposes the wrong-side battery (0 MWh) | **Autonomous reasoning + deterministic verification** |
+| **1:15–2:15** | **CRISIS:** Sudden 600 MW `gas_centro` trip at 18:00; load shed in Centro; Gemini compares BESS / line-uprate recovery options | **High-stakes crisis simulation & household reconnection** |
+| **2:15–3:00** | Quantified metrics (−631.6 MWh curtailment, −391.9 MWh unserved), RIO audit report & operator gate | **Regulatory compliance, human control & verified impact** |
 
 ---
 

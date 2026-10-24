@@ -13,7 +13,7 @@ from typing import Any
 
 import numpy as np
 
-from .scenario import Grid, ScenarioError, build_grid
+from .scenario import Grid, ScenarioError, build_grid, normalise_options
 
 TOL_MW = 1e-4  # power / energy balance tolerance (MW or MWh)
 TOL_REL = 1e-6  # relative tolerance for reported metrics
@@ -94,8 +94,12 @@ def _rebuild(scenario: dict, solution: dict) -> Grid:
     )
 
 
-def validate(scenario: dict, solution: dict) -> dict:
-    """Check a ``solve()`` output against the scenario. Returns a pass/fail report."""
+def validate(scenario: dict, solution: dict, options: dict | None = None) -> dict:
+    """Check a ``solve()`` output against the scenario. Returns a pass/fail report.
+
+    Pass ``options`` (the ones the caller asked ``solve`` to use) to also reject a solution that
+    claims different options, e.g. one that allowed unserved demand when strict mode was requested.
+    """
     rep = _Report()
     rep.check("status")
     if not isinstance(solution, dict):
@@ -112,6 +116,17 @@ def validate(scenario: dict, solution: dict) -> dict:
     except ScenarioError as exc:
         rep.fail("inputs", None, None, 0.0, f"cannot rebuild the scenario this solution claims: {exc}")
         return rep.result()
+
+    if options is not None:
+        rep.check("options_consistent")
+        try:
+            expected = normalise_options(options)
+        except ScenarioError as exc:
+            rep.fail("inputs", None, None, 0.0, str(exc))
+            return rep.result()
+        if expected != grid.options:
+            rep.fail("options_consistent", None, None, 0.0,
+                     f"solution was solved with options {grid.options}, expected {expected}")
 
     rep.check("events_consistent")
     try:
@@ -171,7 +186,11 @@ def validate(scenario: dict, solution: dict) -> dict:
         resid = np.abs(s[1:] - expected)
         rep.residual(resid.max(initial=0.0))
         _over(rep, "soc_dynamics", bid, resid, "state of charge does not follow charge/discharge")
-        if s[-1] < b["initial_soc_mwh"] - TOL_MW:
+        if b["final_soc_mwh"] is not None:
+            if abs(s[-1] - b["final_soc_mwh"]) > TOL_MW:
+                rep.fail("soc_final", bid, T, abs(s[-1] - b["final_soc_mwh"]),
+                         f"battery must end the horizon at exactly {b['final_soc_mwh']:g} MWh")
+        elif s[-1] < b["initial_soc_mwh"] - TOL_MW:
             rep.fail("soc_final", bid, T, b["initial_soc_mwh"] - s[-1], "battery ends the horizon below its initial charge")
         _over(rep, "simultaneous_charge_discharge", bid, np.minimum(c, d), "charging and discharging in the same hour")
 
@@ -214,9 +233,13 @@ def validate(scenario: dict, solution: dict) -> dict:
         r = g["ramp_rate_mw_per_h"]
         if r is None:
             continue
-        step = np.abs(np.diff(p[g["id"]]))
+        step = np.diff(p[g["id"]])
         online = grid.gen_online[i, 1:]
-        excess = np.where(online, step - r * dt, 0.0)
+        # a drop in the hour a sudden event starts is an allowed emergency runback
+        runback = np.array([t in grid.runback_hours for t in range(1, grid.T)], dtype=bool)
+        up_excess = step - r * dt
+        down_excess = np.where(runback, -np.inf, -step - r * dt)
+        excess = np.where(online, np.maximum(up_excess, down_excess), 0.0)
         for t in np.flatnonzero(excess > TOL_MW):
             rep.fail("ramp_limits", g["id"], int(t) + 1, excess[t], f"output changes faster than {r:g} MW/h")
 
@@ -244,8 +267,17 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
         + float(dis[b["id"]].sum()) * dt * (1 / b["discharge_efficiency"] - 1)
         for b in bats
     )
+    runback = 0.0
+    for i, g in enumerate(gens):
+        r = g["ramp_rate_mw_per_h"]
+        if r is None:
+            continue
+        for t in grid.runback_hours:
+            if 0 < t < grid.T and grid.gen_online[i, t]:
+                runback += max(0.0, float(p[g["id"]][t - 1] - p[g["id"]][t]) - r * dt) * dt
     expected = {
         "curtailment_mwh": curt_mwh,
+        "emergency_runback_mwh": runback,
         "unserved_mwh": uns_mwh,
         "renewable_used_mwh": ren,
         "dispatchable_mwh": disp,
@@ -282,6 +314,7 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
         "battery_throughput_cost_usd": (ch_tot + dis_tot) * obj["battery_throughput_cost_usd_per_mwh"],
         "transmission_tiebreak_usd": sum(float(np.abs(f[k]).sum()) for k in f)
         * dt * obj["transmission_tiebreak_usd_per_mwh"],
+        "emergency_runback_penalty_usd": runback * obj["emergency_runback_penalty_usd_per_mwh"],
     }
     for key, val in exp_terms.items():
         got = terms.get(key)

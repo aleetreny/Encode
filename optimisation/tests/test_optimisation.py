@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -202,6 +203,10 @@ def test_modification_menu(scen):
         (lambda s: s["renewable_availability_mw_by_generator"].update(pv=[0, 300, 0, 0]), "exceeds capacity"),
         (lambda s: s["demand_mw_by_node"].update(b=[1, 2, float("nan"), 3]), "finite"),
         (lambda s: s.update(objective={"made_up": 1}), "unknown field"),
+        (lambda s: s["renewable_availability_mw_by_generator"].pop("pv"), "full capacity day and night"),
+        (lambda s: s["timestamps_utc"].__setitem__(1, "banana"), "not an ISO 8601"),
+        (lambda s: s["timestamps_utc"].__setitem__(2, "2026-10-01T05:00:00Z"), "not 1 h after"),
+        (lambda s: s.update(timestamps_utc=[t.rstrip("Z") for t in s["timestamps_utc"]]), "no timezone"),
     ],
 )
 def test_bad_input_returns_error(mutate, msg):
@@ -446,9 +451,12 @@ def _random_radial(rng: np.random.Generator) -> dict:
             bats.append({"id": f"b{i}", "node_id": f"n{i}", "power_capacity_mw": float(rng.uniform(1, 100)),
                          "energy_capacity_mwh": E, "initial_soc_mwh": float(rng.uniform(0, E)),
                          "charge_efficiency": float(rng.uniform(0.8, 1)), "discharge_efficiency": float(rng.uniform(0.8, 1))})
+    dt = float(rng.choice([0.5, 1.0, 2.0]))
+    start = datetime(2026, 10, 1, 3, tzinfo=timezone.utc)
     s = {
-        "scenario_id": "random", "time_step_hours": float(rng.choice([0.5, 1.0, 2.0])),
-        "timestamps_utc": [f"t{t}" for t in range(T)], "nodes": nodes, "lines": lines,
+        "scenario_id": "random", "time_step_hours": dt,
+        "timestamps_utc": [(start + timedelta(hours=dt * t)).strftime("%Y-%m-%dT%H:%M:%SZ") for t in range(T)],
+        "nodes": nodes, "lines": lines,
         "generators": gens, "batteries": bats,
         "demand_mw_by_node": {f"n{i}": [float(rng.uniform(0, 150)) for _ in range(T)] for i in range(n)},
         "renewable_availability_mw_by_generator": prof,
@@ -466,3 +474,102 @@ def test_random_radial_scenarios_solve_and_validate(seed):
     s = _random_radial(np.random.default_rng(seed))
     sol = solve(s)
     ok(s, sol)
+
+
+# ------------------------------------------------------------------ backend compatibility
+
+
+def test_exact_final_soc():
+    s = tiny_scenario()
+    s["batteries"][0]["node_id"] = "a"
+    s["batteries"][0]["final_soc_mwh"] = 20
+    sol = solve(s)
+    ok(s, sol)
+    assert sol["timeseries"]["battery_soc_mwh"]["bat"][-1] == pytest.approx(20)
+    bad = copy.deepcopy(sol)
+    bad["timeseries"]["battery_soc_mwh"]["bat"][-1] = 25.0
+    assert "soc_final" in {x["check"] for x in validate(s, bad)["violations"]}
+
+
+def test_curtailment_penalty_cannot_buy_battery_cycling():
+    """A curtailment penalty with zero throughput cost rewards wasting surplus through
+    simultaneous charge/discharge losses; the solver must forbid that exactly."""
+    s = tiny_scenario(objective={"curtailment_penalty_usd_per_mwh": 5, "battery_throughput_cost_usd_per_mwh": 0})
+    s["batteries"][0].update(node_id="a", initial_soc_mwh=40, final_soc_mwh=40)  # full: can only burn energy
+    sol = solve(s)
+    ok(s, sol)
+    assert sol["solver"]["method"].startswith("MILP")
+    ch = sol["timeseries"]["battery_charge_mw"]["bat"]
+    dis = sol["timeseries"]["battery_discharge_mw"]["bat"]
+    assert all(min(c, d) <= 1e-6 for c, d in zip(ch, dis))
+
+
+def test_plain_lp_when_no_cycling_incentive(base):
+    assert base["solver"]["method"] == "LP"
+
+
+def test_validate_rejects_solution_solved_with_other_options():
+    s = tiny_scenario(demand_mw_by_node={"a": [10, 10, 10, 10], "b": [60, 80, 400, 70]})
+    lax = solve(s)  # default allows unserved demand
+    assert validate(s, lax)["passed"]
+    assert validate(s, lax, {"allow_unserved": True})["passed"]
+    strict = validate(s, lax, {"allow_unserved": False})
+    assert not strict["passed"]
+    assert "options_consistent" in {v["check"] for v in strict["violations"]}
+
+
+def test_examples_match_current_code():
+    """optimisation/examples/*.json must be regenerated whenever outputs change."""
+    import contextlib
+    import io
+
+    from optimisation import demo
+
+    with contextlib.redirect_stdout(io.StringIO()):
+        results = demo.run(write=False)
+    for name, data in results.items():
+        if name.startswith("solution_"):
+            data = {**data, "solver": {**data["solver"], "solve_time_s": 0.0}}
+        stored = json.loads((demo.EXAMPLES / f"{name}.json").read_text())
+        assert stored == json.loads(json.dumps(data)), f"examples/{name}.json is stale: run python -m optimisation.demo --write"
+
+
+# ------------------------------------------------------------------ outage sweep
+
+
+def test_line_trip_islanding_exporting_plant_uses_emergency_runback(scen):
+    """L1 trips while gas_ng exports north->south: the Norte Grande island has more generation
+    than demand and gas_ng cannot ramp down fast enough, so it must be run back (cf. EDAG)."""
+    trip = {"type": "line_outage", "id": "L1", "from_hour": 6, "to_hour": 10, "mode": "sudden"}
+    sol = solve(scen, events=[trip])
+    ok(scen, sol)
+    assert sol["metrics"]["emergency_runback_mwh"] > 0
+    assert 6 in binding(sol, "emergency_runback", "gas_ng")
+    assert sol["objective"]["terms"]["emergency_runback_penalty_usd"] == pytest.approx(
+        sol["metrics"]["emergency_runback_mwh"] * 1000, rel=1e-6)
+    # planned in advance, the plant is ramped down beforehand: no runback needed
+    planned = solve(scen, events=[{**trip, "mode": "planned"}])
+    ok(scen, planned)
+    assert planned["metrics"]["emergency_runback_mwh"] == 0
+    assert planned["objective"]["total_usd"] <= sol["objective"]["total_usd"]
+
+
+def test_validator_rejects_fast_drop_outside_sudden_event_hour(scen):
+    sol = solve(scen)
+    bad = copy.deepcopy(sol)
+    bad["timeseries"]["generation_mw"]["gas_ng"][5] = 0.0  # 350 -> 0 MW without any event
+    assert "ramp_limits" in {v["check"] for v in validate(scen, bad)["violations"]}
+
+
+def test_outage_stress_sweep_quick():
+    """Every generator and line, planned and sudden, midday and evening, baseline and one
+    candidate, normal and strict mode (python -m optimisation.stress runs the full sweep)."""
+    import contextlib
+    import io
+
+    from optimisation import stress
+
+    with contextlib.redirect_stdout(io.StringIO()):
+        summary = stress.run(quick=True, verbose=False)
+    assert summary["passed"], summary["failures"][:5]
+    assert summary["cases"] >= 100

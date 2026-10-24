@@ -1,7 +1,7 @@
 {
   "status": "optimal",
   "message": null,
-  "scenario_id": "chile-demo-001",
+  "scenario_id": "chile-sen-5node-demo",
   "candidate_id": "c1_battery_norte_grande",
   "modifications": [
     {
@@ -47,6 +47,7 @@
   "solver": {
     "name": "HiGHS",
     "version": "1.15.1",
+    "method": "LP",
     "solve_time_s": 0.0,
     "solves": 1
   },
@@ -57,7 +58,8 @@
       "unserved_penalty_usd": 0.0,
       "curtailment_penalty_usd": 0.0,
       "battery_throughput_cost_usd": 623.143848,
-      "transmission_tiebreak_usd": 205.226
+      "transmission_tiebreak_usd": 205.226,
+      "emergency_runback_penalty_usd": 0.0
     }
   },
   "assets": {
@@ -69,6 +71,7 @@
         "energy_capacity_mwh": 60.0,
         "min_soc_mwh": 0.0,
         "initial_soc_mwh": 30.0,
+        "final_soc_mwh": null,
         "charge_efficiency": 0.95,
         "discharge_efficiency": 0.95
       },
@@ -79,6 +82,7 @@
         "energy_capacity_mwh": 600.0,
         "min_soc_mwh": 0.0,
         "initial_soc_mwh": 300.0,
+        "final_soc_mwh": null,
         "charge_efficiency": 0.95,
         "discharge_efficiency": 0.95,
         "added_by_candidate": "c1_battery_norte_grande"
@@ -1116,6 +1120,7 @@
     "battery_discharge_mwh": 591.20875,
     "battery_losses_mwh": 63.870197,
     "assumed_cost_proxy_usd": 1591133.16875,
+    "emergency_runback_mwh": 0.0,
     "line_hours_at_limit": {
       "L1": 0.0,
       "L2": 8.0,
