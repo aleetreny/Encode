@@ -36,6 +36,10 @@ def main():
     if not health["worker_enabled"]:
         raise SystemExit("Worker disabled")
     request("/api/ready?mode=" + args.mode)
+    if not health["adapters"]["solver"] or not health["adapters"]["validator"]:
+        raise SystemExit(
+            "Production numerical adapters are missing; cached replay alone is insufficient for this release smoke"
+        )
     if health["adapters"]["solver"] and health["adapters"]["validator"]:
         for policy in ("disabled", "optimised"):
             solve_body = dict(scenario_id=args.scenario, options={"battery_policy": policy})
