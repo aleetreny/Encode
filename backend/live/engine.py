@@ -29,6 +29,7 @@ from backend.live.agent_loop import (
     generate_periodic_note_es,
     lever_to_solver_mod,
     moderate_jury_name,
+    option_has_positive_improvement,
     prepare_scenario_and_events,
     run_incident_evaluation,
     sanitize_no_digits,
@@ -531,8 +532,16 @@ class LiveSession:
         # If autonomy is enabled and this is still the current undecided incident, start 5->0 countdown
         if self.autonomy and self.current_incident_id == incident_id and not rec.get("decided"):
             rec_opt = self._find_option(rec, res["recommended_id"])
-            if rec_opt and rec_opt.get("validation", {}).get("passed"):
-                self._start_countdown(incident_id, res["recommended_id"])
+            if (
+                rec_opt
+                and rec_opt.get("validation", {}).get("passed")
+                and option_has_positive_improvement(rec_opt)
+            ):
+                self._start_countdown(incident_id, rec_opt["option_id"])
+            else:
+                self.emit_note(
+                    "Modo autónomo en espera: ninguna maniobra operativa disponible reduce el déficit residencial actual, por lo que no se aplica ningún plan automáticamente."
+                )
 
         return opt_event
 
@@ -546,7 +555,11 @@ class LiveSession:
         return options[0]
 
     def _cancel_countdown(self) -> None:
-        if self._countdown_task and not self._countdown_task.done():
+        try:
+            cur = asyncio.current_task()
+        except RuntimeError:
+            cur = None
+        if self._countdown_task and not self._countdown_task.done() and self._countdown_task is not cur:
             self._countdown_task.cancel()
         self._countdown_task = None
 
@@ -564,6 +577,12 @@ class LiveSession:
             for secs in (5, 4, 3, 2, 1, 0):
                 rec = self.incident_records.get(incident_id)
                 if not rec or rec.get("decided") or not self.autonomy:
+                    return
+                rec_opt = self._find_option(rec, option_id)
+                if not option_has_positive_improvement(rec_opt):
+                    self.emit_note(
+                        "Modo autónomo en espera: ninguna maniobra operativa disponible reduce el déficit residencial actual, por lo que no se aplica ningún plan automáticamente."
+                    )
                     return
                 self._emit(
                     {
@@ -597,8 +616,16 @@ class LiveSession:
                 if rec and not rec.get("decided") and rec.get("options"):
                     rec_id = rec.get("recommended_id") or rec["options"][0]["option_id"]
                     opt = self._find_option(rec, rec_id)
-                    if opt and opt.get("validation", {}).get("passed"):
-                        self._start_countdown(self.current_incident_id, rec_id)
+                    if (
+                        opt
+                        and opt.get("validation", {}).get("passed")
+                        and option_has_positive_improvement(opt)
+                    ):
+                        self._start_countdown(self.current_incident_id, opt["option_id"])
+                    else:
+                        self.emit_note(
+                            "Modo autónomo en espera: ninguna maniobra operativa disponible reduce el déficit residencial actual, por lo que no se aplica ningún plan automáticamente."
+                        )
         return self.autonomy
 
     async def decide(

@@ -23,6 +23,7 @@ from agent.orchestrator import (
 from agent.regulatory import (
     CHILEAN_LEGAL_FRAMEWORK,
     build_regulatory_compliance_matrix,
+    compute_household_impact,
     estimate_affected_households,
 )
 from agent.tools import REQUIRED_TOOL_NAMES, AgentToolkit, ToolTraceRecorder
@@ -39,5 +40,6 @@ __all__ = [
     "run_investigation",
     "run_crisis_investigation",
     "build_regulatory_compliance_matrix",
+    "compute_household_impact",
     "estimate_affected_households",
 ]

@@ -105,6 +105,10 @@ def estimate_household_impact(
     }
 
 
+# Canonical alias for household impact calculation
+compute_household_impact = estimate_household_impact
+
+
 def estimate_affected_households(
     unserved_mw_by_node_before: dict[str, list[float]],
     unserved_mw_by_node_after: dict[str, list[float]],

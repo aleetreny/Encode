@@ -226,8 +226,13 @@ def apply_candidate(scenario: dict, candidate: dict | None) -> tuple[dict, str, 
     limits = _limits(scenario)
     if not isinstance(mods, list) or not mods:
         _fail("candidate.modifications must be a non-empty list")
-    if len(mods) > limits["max_modifications"]:
-        _fail(f"at most {limits['max_modifications']} modifications per candidate, got {len(mods)}")
+    planning_mods = [
+        m for m in mods if isinstance(m, dict) and m.get("type") in ("add_battery", "uprate_line")
+    ]
+    if len(planning_mods) > limits["max_modifications"]:
+        _fail(f"at most {limits['max_modifications']} modifications per candidate, got {len(planning_mods)}")
+    if len(mods) > max(limits["max_modifications"], 8):
+        _fail(f"at most {max(limits['max_modifications'], 8)} modifications per candidate, got {len(mods)}")
 
     out = copy.deepcopy(scenario)
     node_ids = {n.get("id") for n in out.get("nodes", [])}

@@ -21,6 +21,7 @@ import os
 import re
 import time
 import uuid
+from pathlib import Path
 from typing import Any, Callable
 
 import httpx
@@ -29,11 +30,31 @@ from agent.gemini_client import FORBIDDEN_ARGON_PARAMS, VALID_THINKING_LEVELS
 from optimisation import solve, validate
 from optimisation.scenario import ScenarioError, build_grid
 
+_ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+if _ENV_PATH.is_file():
+    for _line in _ENV_PATH.read_text(encoding="utf-8").splitlines():
+        _s = _line.strip()
+        if not _s or _s.startswith("#") or "=" not in _s:
+            continue
+        _k, _v = _s.split("=", 1)
+        _k = _k.strip()
+        _v = _v.strip().strip('"').strip("'")
+        if _k and _v:
+            os.environ.setdefault(_k, _v)
+
 DEFAULT_DECIDER_MODEL = "gemini-4-argon"
 DEFAULT_FAST_MODEL = "gemini-3.8-flash"
 DEFAULT_DECIDER_THINKING = "high"
 
 TRADEOFF_TAGS = ("max_hogares", "min_costo", "min_co2", "min_riesgo_red")
+OPERATIONAL_LEVER_TYPES = (
+    "emergency_rating",
+    "demand_response",
+    "activate_reserve_bess",
+    "hydro_reserve_release",
+    "start_peaker",
+)
+PLANNING_LEVER_TYPES = ("add_battery", "uprate_line")
 
 NODE_NAMES_ES = {
     "n_norte_grande": "Norte Grande",
@@ -169,9 +190,17 @@ def prepare_scenario_and_events(
     return scen_copy, solver_events
 
 
-def lever_to_solver_mod(lever: dict[str, Any]) -> dict[str, Any]:
+def lever_to_solver_mod(
+    lever: dict[str, Any],
+    *,
+    allow_planning_levers: bool = True,
+) -> dict[str, Any]:
     """Convert a contract `Lever` dict into an `optimisation` modification dict."""
     kind = lever["type"]
+    if not allow_planning_levers and kind not in OPERATIONAL_LEVER_TYPES:
+        raise ValueError(
+            f"Palanca {kind!r} no permitida en modo crisis; solo se permiten {OPERATIONAL_LEVER_TYPES}."
+        )
     target_id = str(lever["target_id"])
     params = lever.get("params") or {}
     fh = max(0, min(23, int(lever.get("from_hour", 0))))
@@ -426,6 +455,10 @@ def to_contract_solution(
     }
 
 
+# Canonical alias
+compute_solution_dict = to_contract_solution
+
+
 def compute_incident_impact(solution: dict[str, Any]) -> dict[str, Any]:
     """Compute incident impact summary from the no-action incident Solution."""
     T = len(solution.get("cost_proxy_usd", [])) or 24
@@ -493,30 +526,34 @@ def compute_option_metrics(
     T = len(base_sol.get("cost_proxy_usd", [])) or 24
     nodes = list(base_sol.get("unserved_mw", {}).keys())
 
+    base_uns_mwh = sum(sum(float(x) for x in base_sol["unserved_mw"][n]) for n in nodes)
+    cand_uns_mwh = sum(sum(float(x) for x in cand_sol["unserved_mw"][n]) for n in nodes)
+    unserved_mwh_avoided = round(max(0.0, base_uns_mwh - cand_uns_mwh), 2)
+
     base_hh_by_h = [sum(float(base_sol["households_off"][n][h]) for n in nodes) for h in range(T)]
     cand_hh_by_h = [sum(float(cand_sol["households_off"][n][h]) for n in nodes) for h in range(T)]
 
     base_peak_hh = max(base_hh_by_h, default=0.0)
     cand_peak_hh = max(cand_hh_by_h, default=0.0)
 
-    # Also compute average/window household improvement so two options that reduce different amounts are differentiated
-    households_reconnected = int(round(max(0.0, base_peak_hh - cand_peak_hh)))
-    if households_reconnected == 0 and base_peak_hh > 0:
-        # Check cumulative household-hours recovered in window if peak hour had residual
-        window_recovered = max(
-            0.0,
-            max(
-                (base_hh_by_h[h] - cand_hh_by_h[h] for h in range(from_hour, min(T, to_hour))),
-                default=0.0,
-            ),
-        )
-        households_reconnected = int(round(window_recovered))
+    if unserved_mwh_avoided <= 1e-3:
+        # Guard against LP battery time-shifting artifacts when zero net MWh is avoided
+        households_reconnected = 0
+    else:
+        raw_reconnected = max(0.0, base_peak_hh - cand_peak_hh)
+        if raw_reconnected <= 0.0 and base_peak_hh > 0 and cand_peak_hh <= base_peak_hh + 1e-3:
+            raw_reconnected = max(
+                0.0,
+                max(
+                    (base_hh_by_h[h] - cand_hh_by_h[h] for h in range(from_hour, min(T, to_hour))),
+                    default=0.0,
+                ),
+            )
+        # Cap reconnected households by physical energy avoided (1000 households per MW)
+        max_physical_hh = round(unserved_mwh_avoided * 1000.0)
+        households_reconnected = int(min(round(raw_reconnected), max_physical_hh))
 
     households_newly_off = int(round(max(0.0, cand_peak_hh - base_peak_hh)))
-
-    base_uns_mwh = sum(sum(float(x) for x in base_sol["unserved_mw"][n]) for n in nodes)
-    cand_uns_mwh = sum(sum(float(x) for x in cand_sol["unserved_mw"][n]) for n in nodes)
-    unserved_mwh_avoided = round(max(0.0, base_uns_mwh - cand_uns_mwh), 2)
 
     base_cost = sum(float(x) for x in base_sol.get("cost_proxy_usd", []))
     cand_cost = sum(float(x) for x in cand_sol.get("cost_proxy_usd", []))
@@ -724,6 +761,8 @@ def generate_operational_candidates(
         ("bess_b_reserve_centro", "bess_b_reserve_ng"),
         ("bess_b_reserve_ng", "er_L1"),
         ("bess_b_reserve_ng", "er_L2"),
+        ("bess_b_reserve_ng", "dr_n_centro_200"),
+        ("bess_b_reserve_ng", "dr_n_centro_120"),
         ("bess_b_reserve_ng", "dr_n_norte_grande_120"),
         ("hydro_150", "er_L3"),
         ("hydro_150", "er_L4"),
@@ -738,7 +777,7 @@ def generate_operational_candidates(
         ("er_L3", "dr_n_centro_sur_120"),
     ]
     for k1, k2 in pair_specs:
-        if len(candidates) >= 38:
+        if len(candidates) >= 40:
             break
         if k1 in by_key and k2 in by_key and k1 != k2:
             candidates.append(
@@ -759,12 +798,12 @@ def evaluate_single_candidate(
     from_hour: int,
     to_hour: int,
 ) -> dict[str, Any]:
-    """Solve and independently validate a single candidate specification."""
+    """Solve and independently validate a single operational candidate specification."""
     t0 = time.perf_counter()
     cid = cand_spec["candidate_id"]
     levers = cand_spec["levers"]
     try:
-        mods = [lever_to_solver_mod(lv) for lv in levers]
+        mods = [lever_to_solver_mod(lv, allow_planning_levers=False) for lv in levers]
         solver_cand = {"candidate_id": cid, "modifications": mods}
         raw_sol = solve(
             scen_for_solve,
@@ -836,14 +875,98 @@ def compute_pareto_front(passed_candidates: list[dict[str, Any]]) -> list[dict[s
     return front if front else list(passed_candidates)
 
 
+def is_tag_truthful(tag: str, m_self: dict[str, Any], m_other: dict[str, Any]) -> bool:
+    """Return True iff `tag` is truthful for `m_self` when compared pairwise against `m_other`."""
+    if tag == "max_hogares":
+        return float(m_self["households_reconnected"]) >= float(m_other["households_reconnected"])
+    if tag == "min_costo":
+        return float(m_self["cost_delta_usd"]) <= float(m_other["cost_delta_usd"])
+    if tag == "min_co2":
+        return float(m_self["co2_delta_t"]) <= float(m_other["co2_delta_t"])
+    if tag == "min_riesgo_red":
+        return float(m_self["max_line_loading_pct"]) <= float(m_other["max_line_loading_pct"])
+    return False
+
+
+def find_truthful_tag_pair(
+    ma: dict[str, Any],
+    mb: dict[str, Any],
+) -> tuple[str, str] | None:
+    """Find distinct `(tag_a, tag_b)` where `tag_a` is truthful for `ma` vs `mb`
+    and `tag_b` is truthful for `mb` vs `ma`.
+    """
+    pref_a = ("max_hogares", "min_co2", "min_costo", "min_riesgo_red")
+    pref_b = ("min_costo", "min_co2", "min_riesgo_red", "max_hogares")
+
+    def is_strict(tag: str, m_self: dict[str, Any], m_other: dict[str, Any]) -> bool:
+        if tag == "max_hogares":
+            return float(m_self["households_reconnected"]) > float(m_other["households_reconnected"])
+        if tag == "min_costo":
+            return float(m_self["cost_delta_usd"]) < float(m_other["cost_delta_usd"])
+        if tag == "min_co2":
+            return float(m_self["co2_delta_t"]) < float(m_other["co2_delta_t"])
+        if tag == "min_riesgo_red":
+            return float(m_self["max_line_loading_pct"]) < float(m_other["max_line_loading_pct"])
+        return False
+
+    # Pass 1: Both tags strictly beat the other on their dimension
+    for ta in pref_a:
+        if not is_strict(ta, ma, mb):
+            continue
+        for tb in pref_b:
+            if tb != ta and is_strict(tb, mb, ma):
+                return ta, tb
+
+    # Pass 2: tag_a is strict, tag_b is truthful (>= or <=)
+    for ta in pref_a:
+        if not is_strict(ta, ma, mb):
+            continue
+        for tb in pref_b:
+            if tb != ta and is_tag_truthful(tb, mb, ma):
+                return ta, tb
+
+    # Pass 3: tag_a is truthful, tag_b is strict
+    for ta in pref_a:
+        if not is_tag_truthful(ta, ma, mb):
+            continue
+        for tb in pref_b:
+            if tb != ta and is_strict(tb, mb, ma):
+                return ta, tb
+
+    # Pass 4: Both are truthful (ties allowed)
+    for ta in pref_a:
+        if not is_tag_truthful(ta, ma, mb):
+            continue
+        for tb in pref_b:
+            if tb != ta and is_tag_truthful(tb, mb, ma):
+                return ta, tb
+
+    return None
+
+
+def option_has_positive_improvement(option: dict[str, Any] | None) -> bool:
+    """Return True iff the option reconnects > 0 households and avoids > 0 MWh of unserved energy."""
+    if not option or not isinstance(option, dict):
+        return False
+    metrics = option.get("metrics") or {}
+    return (
+        float(metrics.get("households_reconnected", 0)) > 0
+        and float(metrics.get("unserved_mwh_avoided", 0.0)) > 0.0
+    )
+
+
 def select_distinct_pair_and_tags(
     passed_candidates: list[dict[str, Any]],
     pareto_front: list[dict[str, Any]],
     preferred_ids: list[str] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], str, str]:
-    """Select two verified candidates and assign guaranteed distinct `tradeoff_tag` values."""
+    """Select two verified candidates and assign guaranteed distinct, pairwise-truthful `tradeoff_tag` values."""
     pool = pareto_front if len(pareto_front) >= 2 else passed_candidates
     by_id = {c["candidate_id"]: c for c in passed_candidates}
+    max_avail_hh = max(
+        (float(c["metrics"]["households_reconnected"]) for c in passed_candidates),
+        default=0.0,
+    )
 
     chosen: list[dict[str, Any]] = []
     if preferred_ids:
@@ -852,73 +975,167 @@ def select_distinct_pair_and_tags(
                 chosen.append(by_id[pid])
             if len(chosen) == 2:
                 break
+        if chosen:
+            # Order so chosen[0] has >= households_reconnected
+            chosen.sort(
+                key=lambda c: (
+                    -float(c["metrics"]["households_reconnected"]),
+                    -float(c["metrics"]["unserved_mwh_avoided"]),
+                    float(c["metrics"]["cost_delta_usd"]),
+                )
+            )
+            # Never keep a 0-reconnected primary candidate if a >0 candidate exists
+            if max_avail_hh > 0 and float(chosen[0]["metrics"]["households_reconnected"]) <= 0:
+                chosen = []
+            # Never keep a pair where one is strictly dominated on all 4 metrics by the other
+            elif len(chosen) == 2 and find_truthful_tag_pair(chosen[0]["metrics"], chosen[1]["metrics"]) is None:
+                chosen = [chosen[0]]
 
     if len(chosen) < 2:
-        # Sort for Option A: maximum households reconnected, then maximum MWh avoided, then lowest CO2, then lowest cost
         sorted_recon = sorted(
             pool,
             key=lambda c: (
-                -c["metrics"]["households_reconnected"],
-                -c["metrics"]["unserved_mwh_avoided"],
-                c["metrics"]["co2_delta_t"],
-                c["metrics"]["cost_delta_usd"],
+                -float(c["metrics"]["households_reconnected"]),
+                -float(c["metrics"]["unserved_mwh_avoided"]),
+                float(c["metrics"]["co2_delta_t"]),
+                float(c["metrics"]["cost_delta_usd"]),
             ),
         )
         if not chosen and sorted_recon:
             chosen.append(sorted_recon[0])
 
-        # Sort for Option B: a contrasting trade-off (lowest cost, or lowest CO2, or lowest line loading)
         first = chosen[0]
+        ma_first = first["metrics"]
         remaining = [c for c in passed_candidates if c["candidate_id"] != first["candidate_id"]]
         if not remaining:
-            remaining = [copy.deepcopy(first)]
-            remaining[0]["candidate_id"] = first["candidate_id"] + "_alt"
+            dup = copy.deepcopy(first)
+            dup["candidate_id"] = first["candidate_id"] + "_alt"
+            remaining = [dup]
 
-        def contrast_score(c: dict[str, Any]) -> tuple[float, float, float]:
-            # Prefer a candidate that uses different lever types and contrasts on cost, CO2, or line loading
+        def contrast_score(c: dict[str, Any]) -> tuple[float, float, float, float, float]:
+            mc = c["metrics"]
+            tag_pair = find_truthful_tag_pair(ma_first, mc)
+            has_truthful_pair = 0.0 if tag_pair is not None else 1.0
+            strictly_contrasts = (
+                0.0
+                if (
+                    float(mc["cost_delta_usd"]) < float(ma_first["cost_delta_usd"])
+                    or float(mc["co2_delta_t"]) < float(ma_first["co2_delta_t"])
+                    or float(mc["max_line_loading_pct"]) < float(ma_first["max_line_loading_pct"])
+                )
+                else 1.0
+            )
+            # Prefer a contrasting option that also reconnects > 0 households when possible
+            also_reconnects = (
+                0.0
+                if (float(ma_first["households_reconnected"]) > 0 and float(mc["households_reconnected"]) > 0)
+                else 1.0
+            )
             types_a = {lv["type"] for lv in first["levers"]}
             types_b = {lv["type"] for lv in c["levers"]}
             diff_types = 0.0 if types_a != types_b else 1.0
             return (
+                has_truthful_pair,
+                strictly_contrasts,
+                also_reconnects,
                 diff_types,
-                c["metrics"]["cost_delta_usd"],
-                c["metrics"]["max_line_loading_pct"],
+                float(mc["cost_delta_usd"]),
             )
 
         remaining_sorted = sorted(remaining, key=contrast_score)
         chosen.append(remaining_sorted[0])
 
+    # Always order cand_a, cand_b so cand_a has >= households_reconnected
+    if float(chosen[1]["metrics"]["households_reconnected"]) > float(chosen[0]["metrics"]["households_reconnected"]):
+        chosen[0], chosen[1] = chosen[1], chosen[0]
+
     cand_a, cand_b = chosen[0], chosen[1]
     ma, mb = cand_a["metrics"], cand_b["metrics"]
 
-    # Assign primary tradeoff_tag to cand_a
-    if ma["households_reconnected"] > mb["households_reconnected"]:
-        tag_a = "max_hogares"
-    elif ma["co2_delta_t"] < mb["co2_delta_t"]:
-        tag_a = "min_co2"
-    elif ma["cost_delta_usd"] <= mb["cost_delta_usd"]:
-        tag_a = "min_costo"
+    tag_pair = find_truthful_tag_pair(ma, mb)
+    if tag_pair is not None:
+        tag_a, tag_b = tag_pair
     else:
-        tag_a = "max_hogares"
-
-    # Assign a guaranteed DISTINCT tradeoff_tag to cand_b based on its strongest relative dimension
-    if tag_a != "min_costo" and mb["cost_delta_usd"] <= ma["cost_delta_usd"]:
-        tag_b = "min_costo"
-    elif tag_a != "min_co2" and mb["co2_delta_t"] <= ma["co2_delta_t"]:
-        tag_b = "min_co2"
-    elif tag_a != "min_riesgo_red" and mb["max_line_loading_pct"] <= ma["max_line_loading_pct"]:
-        tag_b = "min_riesgo_red"
-    elif tag_a != "max_hogares" and mb["households_reconnected"] >= ma["households_reconnected"]:
-        tag_b = "max_hogares"
-    else:
-        for fallback_tag in ("min_costo", "min_riesgo_red", "min_co2", "max_hogares"):
-            if fallback_tag != tag_a:
-                tag_b = fallback_tag
+        # Last-resort search across all passed candidate pairs for a guaranteed truthful pair
+        found_alt = False
+        for alt_b in passed_candidates:
+            if alt_b["candidate_id"] == cand_a["candidate_id"]:
+                continue
+            tp = find_truthful_tag_pair(ma, alt_b["metrics"])
+            if tp is not None:
+                cand_b = alt_b
+                mb = cand_b["metrics"]
+                tag_a, tag_b = tp
+                found_alt = True
                 break
-        else:
+        if not found_alt:
+            tag_a = "max_hogares"
             tag_b = "min_costo"
 
     return cand_a, cand_b, tag_a, tag_b
+
+
+NO_IMPROVEMENT_DIAGNOSIS_ES = (
+    "Ninguna maniobra operativa disponible mejora el déficit residencial bajo las restricciones actuales de la red."
+)
+
+
+def enforce_option_pair_guardrails(
+    options: list[dict[str, Any]],
+    recommended_id: str,
+    diagnosis_es: str,
+) -> tuple[list[dict[str, Any]], str, str]:
+    """Validate and enforce:
+    1. Pairwise truthfulness and distinctness of `tradeoff_tag` across the two options.
+    2. Never recommend (`recommended_id`) an option with `households_reconnected == 0` when the other has `> 0`.
+    3. If neither option improves (`max(opt_a.households_reconnected, opt_b.households_reconnected) == 0`),
+       explicitly note in `diagnosis_es` (without digits) that no available maneuver improves the deficit.
+    """
+    if len(options) < 2:
+        return options, recommended_id, sanitize_no_digits(diagnosis_es)
+
+    opt_a, opt_b = options[0], options[1]
+    ma, mb = opt_a["metrics"], opt_b["metrics"]
+    tag_a = opt_a.get("tradeoff_tag", "max_hogares")
+    tag_b = opt_b.get("tradeoff_tag", "min_costo")
+
+    # 1. Verify pairwise truthfulness of both tags and distinctness
+    if tag_a == tag_b or not is_tag_truthful(tag_a, ma, mb) or not is_tag_truthful(tag_b, mb, ma):
+        # Try swapping options if opt_b has more reconnected households than opt_a
+        if float(mb["households_reconnected"]) > float(ma["households_reconnected"]):
+            opt_a, opt_b = opt_b, opt_a
+            ma, mb = opt_a["metrics"], opt_b["metrics"]
+            tag_a, tag_b = opt_a.get("tradeoff_tag", "max_hogares"), opt_b.get("tradeoff_tag", "min_costo")
+
+        if tag_a == tag_b or not is_tag_truthful(tag_a, ma, mb) or not is_tag_truthful(tag_b, mb, ma):
+            tp = find_truthful_tag_pair(ma, mb)
+            if tp is not None:
+                opt_a["tradeoff_tag"], opt_b["tradeoff_tag"] = tp
+            else:
+                # Try swapping opt_a and opt_b to find a truthful tag pair
+                tp_rev = find_truthful_tag_pair(mb, ma)
+                if tp_rev is not None:
+                    opt_a, opt_b = opt_b, opt_a
+                    ma, mb = opt_a["metrics"], opt_b["metrics"]
+                    opt_a["tradeoff_tag"], opt_b["tradeoff_tag"] = tp_rev
+
+    # 2. Never recommend an option with households_reconnected == 0 if the other has > 0
+    hh_a = float(opt_a["metrics"]["households_reconnected"])
+    hh_b = float(opt_b["metrics"]["households_reconnected"])
+    if hh_a > 0 and hh_b <= 0:
+        recommended_id = opt_a["option_id"]
+    elif hh_b > 0 and hh_a <= 0:
+        recommended_id = opt_b["option_id"]
+    elif recommended_id not in (opt_a["option_id"], opt_b["option_id"]):
+        recommended_id = opt_a["option_id"] if hh_a >= hh_b else opt_b["option_id"]
+
+    # 3. If neither option reconnects any households, explicitly state in diagnosis_es (digit-free)
+    clean_diag = sanitize_no_digits(diagnosis_es)
+    if max(hh_a, hh_b) <= 0:
+        if "ninguna maniobra" not in clean_diag.lower():
+            clean_diag = sanitize_no_digits(f"{clean_diag} {NO_IMPROVEMENT_DIAGNOSIS_ES}")
+
+    return [opt_a, opt_b], recommended_id, clean_diag
 
 
 def build_default_title_es(cand: dict[str, Any], tag: str) -> str:
@@ -1042,7 +1259,8 @@ LIVE_DECIDER_TOOLS: list[dict[str, Any]] = [
                         "properties": {
                             "type": {
                                 "type": "STRING",
-                                "description": "Tipo: emergency_rating, demand_response, activate_reserve_bess, hydro_reserve_release, start_peaker.",
+                                "enum": list(OPERATIONAL_LEVER_TYPES),
+                                "description": "Tipo (solo palancas operativas en crisis): emergency_rating, demand_response, activate_reserve_bess, hydro_reserve_release, start_peaker.",
                             },
                             "target_id": {
                                 "type": "STRING",
@@ -1375,7 +1593,11 @@ def run_incident_evaluation(
                             raw_levers = fn_args.get("levers") or []
                             norm_levers = []
                             for rl in raw_levers[:2]:
-                                if isinstance(rl, dict) and rl.get("type") and rl.get("target_id"):
+                                if (
+                                    isinstance(rl, dict)
+                                    and str(rl.get("type")) in OPERATIONAL_LEVER_TYPES
+                                    and rl.get("target_id")
+                                ):
                                     norm_levers.append(
                                         {
                                             "type": str(rl["type"]),
@@ -1511,6 +1733,12 @@ def run_incident_evaluation(
     ):
         recommended_id = str(proposal["recommended_id"])
 
+    final_options, recommended_id, diagnosis_es = enforce_option_pair_guardrails(
+        [option_a, option_b],
+        recommended_id,
+        diagnosis_es,
+    )
+
     latency_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
     model_execution: dict[str, Any] = {
         "model": decider_model,
@@ -1527,7 +1755,7 @@ def run_incident_evaluation(
     return {
         "incident_id": incident_id,
         "diagnosis_es": diagnosis_es,
-        "options": [option_a, option_b],
+        "options": final_options,
         "recommended_id": recommended_id,
         "candidates_evaluated": len(evaluated),
         "candidates_passed": len(passed_candidates),

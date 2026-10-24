@@ -263,8 +263,11 @@ def create_app(settings=None):
             readiness_scope="Local adapters and fixtures; provider connectivity is not probed",
             mode="live" if credentials_configured and all(adapters.values()) else "offline",
             solver_ok=bool(adapters.get("solver") and adapters.get("validator")),
-            gemini_model_agent=os.environ.get("GRIDPILOT_MODEL_AGENT", "gemini-4-argon"),
-            gemini_model_fast=os.environ.get("GRIDPILOT_MODEL_FAST", "gemini-2.5-flash"),
+            gemini_model_agent=os.environ.get(
+                "GRIDPILOT_MODEL_DECIDER",
+                os.environ.get("GRIDPILOT_MODEL_AGENT", "gemini-4-argon"),
+            ),
+            gemini_model_fast=os.environ.get("GRIDPILOT_MODEL_FAST", "gemini-3.8-flash"),
             gemini_probe=gemini_probe,
         )
 
