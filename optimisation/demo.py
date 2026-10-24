@@ -21,11 +21,11 @@ FIXTURE = HERE / "fixtures" / "demo_scenario.json"
 EXAMPLES = HERE / "examples"
 
 CANDIDATES = [
-    {"candidate_id": "c1_battery_norte_grande", "description": "Battery north of the L2 bottleneck",
+    {"candidate_id": "north_bess", "description": "Battery north of the L2 bottleneck",
      "modifications": [{"type": "add_battery", "node_id": "n_norte_grande", "power_mw": 150, "energy_mwh": 600}]},
-    {"candidate_id": "c2_battery_sur", "description": "Same battery, south of the bottleneck",
+    {"candidate_id": "south_bess", "description": "Same battery, south of the bottleneck",
      "modifications": [{"type": "add_battery", "node_id": "n_sur", "power_mw": 150, "energy_mwh": 600}]},
-    {"candidate_id": "c3_uprate_l2", "description": "Raise the L2 limit by 50 %",
+    {"candidate_id": "uprate_l2", "description": "Raise the L2 limit by 50 %",
      "modifications": [{"type": "uprate_line", "line_id": "L2", "new_capacity_mw": 600}]},
 ]
 SUDDEN_TRIP = {"type": "generator_outage", "id": "gas_centro", "from_hour": 18, "to_hour": 22, "mode": "sudden"}

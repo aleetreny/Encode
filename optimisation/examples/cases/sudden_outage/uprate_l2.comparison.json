@@ -2,7 +2,7 @@
   "comparable": true,
   "reason": null,
   "baseline_id": "baseline",
-  "candidate_id": "c3_uprate_l2",
+  "candidate_id": "uprate_l2",
   "modifications": [
     {
       "type": "uprate_line",
@@ -17,7 +17,7 @@
       "id": "gas_centro",
       "from_hour": 18,
       "to_hour": 22,
-      "mode": "planned"
+      "mode": "sudden"
     }
   ],
   "both_valid": true,
@@ -39,24 +39,24 @@
     },
     "dispatchable_mwh": {
       "baseline": 22626.178947,
-      "candidate": 21636.257895,
-      "delta": -989.921052
+      "candidate": 21638.3485,
+      "delta": -987.830447
     },
     "battery_losses_mwh": {
       "baseline": 6.003947,
-      "candidate": 9.082895,
-      "delta": 3.078948
+      "candidate": 11.1735,
+      "delta": 5.169553
     },
     "assumed_cost_proxy_usd": {
       "baseline": 1556802.999965,
-      "candidate": 1479995.684225,
-      "delta": -76807.31574
+      "candidate": 1480013.91,
+      "delta": -76789.089965
     }
   },
   "curtailment_reduction_mwh": 993.0,
   "unserved_reduction_mwh": 0.0,
-  "assumed_cost_delta_usd": -76807.31574,
-  "objective_delta_usd": -76760.423583,
+  "assumed_cost_delta_usd": -76789.089965,
+  "objective_delta_usd": -76722.852204,
   "line_hours_at_limit": {
     "L1": {
       "baseline": 0.0,
@@ -90,7 +90,7 @@
           20,
           21
         ],
-        "detail": "planned generator outage"
+        "detail": "sudden generator outage"
       },
       {
         "type": "line_limit",
@@ -111,7 +111,9 @@
         "type": "battery_full",
         "id": "b_centro",
         "hours": [
-          17
+          16,
+          17,
+          18
         ],
         "detail": "state of charge at 60 MWh capacity (end of hour)"
       },
@@ -119,7 +121,7 @@
         "type": "battery_power_limit",
         "id": "b_centro",
         "hours": [
-          18,
+          20,
           23
         ],
         "detail": "charging or discharging at 30 MW limit"
@@ -272,7 +274,7 @@
           20,
           21
         ],
-        "detail": "planned generator outage"
+        "detail": "sudden generator outage"
       },
       {
         "type": "line_limit",
@@ -292,10 +294,7 @@
           14,
           15,
           16,
-          17,
-          18,
-          19,
-          20
+          17
         ],
         "detail": "state of charge at 60 MWh capacity (end of hour)"
       },
@@ -303,8 +302,6 @@
         "type": "battery_empty",
         "id": "b_centro",
         "hours": [
-          1,
-          2,
           3,
           4,
           5,
@@ -320,7 +317,7 @@
         "id": "b_centro",
         "hours": [
           11,
-          22,
+          21,
           23
         ],
         "detail": "charging or discharging at 30 MW limit"

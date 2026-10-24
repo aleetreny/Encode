@@ -20,10 +20,10 @@
             "emergency_runback_mwh": 0.0
           }
         },
-        "c1_battery_norte_grande": {
+        "north_bess": {
           "description": "Battery north of the L2 bottleneck",
-          "solution": "cases/normal/c1_battery_norte_grande.solution.json",
-          "validation": "cases/normal/c1_battery_norte_grande.validation.json",
+          "solution": "cases/normal/north_bess.solution.json",
+          "validation": "cases/normal/north_bess.validation.json",
           "valid": true,
           "metrics": {
             "curtailment_mwh": 736.621053,
@@ -32,17 +32,17 @@
             "battery_losses_mwh": 63.870197,
             "emergency_runback_mwh": 0.0
           },
-          "comparison": "cases/normal/c1_battery_norte_grande.comparison.json",
+          "comparison": "cases/normal/north_bess.comparison.json",
           "vs_baseline": {
             "curtailment_reduction_mwh": 631.578947,
             "unserved_reduction_mwh": 0.0,
             "assumed_cost_delta_usd": -74229.83118
           }
         },
-        "c2_battery_sur": {
+        "south_bess": {
           "description": "Same battery, south of the bottleneck",
-          "solution": "cases/normal/c2_battery_sur.solution.json",
-          "validation": "cases/normal/c2_battery_sur.validation.json",
+          "solution": "cases/normal/south_bess.solution.json",
+          "validation": "cases/normal/south_bess.validation.json",
           "valid": true,
           "metrics": {
             "curtailment_mwh": 1368.2,
@@ -51,17 +51,17 @@
             "battery_losses_mwh": 23.194737,
             "emergency_runback_mwh": 0.0
           },
-          "comparison": "cases/normal/c2_battery_sur.comparison.json",
+          "comparison": "cases/normal/south_bess.comparison.json",
           "vs_baseline": {
             "curtailment_reduction_mwh": 0.0,
             "unserved_reduction_mwh": 0.0,
             "assumed_cost_delta_usd": -18093.999915
           }
         },
-        "c3_uprate_l2": {
+        "uprate_l2": {
           "description": "Raise the L2 limit by 50 %",
-          "solution": "cases/normal/c3_uprate_l2.solution.json",
-          "validation": "cases/normal/c3_uprate_l2.validation.json",
+          "solution": "cases/normal/uprate_l2.solution.json",
+          "validation": "cases/normal/uprate_l2.validation.json",
           "valid": true,
           "metrics": {
             "curtailment_mwh": 375.2,
@@ -70,7 +70,7 @@
             "battery_losses_mwh": 11.327447,
             "emergency_runback_mwh": 0.0
           },
-          "comparison": "cases/normal/c3_uprate_l2.comparison.json",
+          "comparison": "cases/normal/uprate_l2.comparison.json",
           "vs_baseline": {
             "curtailment_reduction_mwh": 993.0,
             "unserved_reduction_mwh": 0.0,
@@ -104,10 +104,10 @@
             "emergency_runback_mwh": 0.0
           }
         },
-        "c1_battery_norte_grande": {
+        "north_bess": {
           "description": "Battery north of the L2 bottleneck",
-          "solution": "cases/sudden_outage/c1_battery_norte_grande.solution.json",
-          "validation": "cases/sudden_outage/c1_battery_norte_grande.validation.json",
+          "solution": "cases/sudden_outage/north_bess.solution.json",
+          "validation": "cases/sudden_outage/north_bess.validation.json",
           "valid": true,
           "metrics": {
             "curtailment_mwh": 736.621053,
@@ -116,17 +116,17 @@
             "battery_losses_mwh": 81.420197,
             "emergency_runback_mwh": 0.0
           },
-          "comparison": "cases/sudden_outage/c1_battery_norte_grande.comparison.json",
+          "comparison": "cases/sudden_outage/north_bess.comparison.json",
           "vs_baseline": {
             "curtailment_reduction_mwh": 631.578947,
             "unserved_reduction_mwh": 391.875,
             "assumed_cost_delta_usd": -4357.331215
           }
         },
-        "c2_battery_sur": {
+        "south_bess": {
           "description": "Same battery, south of the bottleneck",
-          "solution": "cases/sudden_outage/c2_battery_sur.solution.json",
-          "validation": "cases/sudden_outage/c2_battery_sur.validation.json",
+          "solution": "cases/sudden_outage/south_bess.solution.json",
+          "validation": "cases/sudden_outage/south_bess.validation.json",
           "valid": true,
           "metrics": {
             "curtailment_mwh": 1368.2,
@@ -135,17 +135,17 @@
             "battery_losses_mwh": 32.262237,
             "emergency_runback_mwh": 0.0
           },
-          "comparison": "cases/sudden_outage/c2_battery_sur.comparison.json",
+          "comparison": "cases/sudden_outage/south_bess.comparison.json",
           "vs_baseline": {
             "curtailment_reduction_mwh": 0.0,
             "unserved_reduction_mwh": 243.0575,
             "assumed_cost_delta_usd": 36835.00005
           }
         },
-        "c3_uprate_l2": {
+        "uprate_l2": {
           "description": "Raise the L2 limit by 50 %",
-          "solution": "cases/sudden_outage/c3_uprate_l2.solution.json",
-          "validation": "cases/sudden_outage/c3_uprate_l2.validation.json",
+          "solution": "cases/sudden_outage/uprate_l2.solution.json",
+          "validation": "cases/sudden_outage/uprate_l2.validation.json",
           "valid": true,
           "metrics": {
             "curtailment_mwh": 375.2,
@@ -154,7 +154,7 @@
             "battery_losses_mwh": 11.1735,
             "emergency_runback_mwh": 0.0
           },
-          "comparison": "cases/sudden_outage/c3_uprate_l2.comparison.json",
+          "comparison": "cases/sudden_outage/uprate_l2.comparison.json",
           "vs_baseline": {
             "curtailment_reduction_mwh": 993.0,
             "unserved_reduction_mwh": 0.0,
@@ -188,10 +188,10 @@
             "emergency_runback_mwh": 0.0
           }
         },
-        "c1_battery_norte_grande": {
+        "north_bess": {
           "description": "Battery north of the L2 bottleneck",
-          "solution": "cases/planned_maintenance/c1_battery_norte_grande.solution.json",
-          "validation": "cases/planned_maintenance/c1_battery_norte_grande.validation.json",
+          "solution": "cases/planned_maintenance/north_bess.solution.json",
+          "validation": "cases/planned_maintenance/north_bess.validation.json",
           "valid": true,
           "metrics": {
             "curtailment_mwh": 736.621053,
@@ -200,17 +200,17 @@
             "battery_losses_mwh": 82.207895,
             "emergency_runback_mwh": 0.0
           },
-          "comparison": "cases/planned_maintenance/c1_battery_norte_grande.comparison.json",
+          "comparison": "cases/planned_maintenance/north_bess.comparison.json",
           "vs_baseline": {
             "curtailment_reduction_mwh": 631.578947,
             "unserved_reduction_mwh": 420.375,
             "assumed_cost_delta_usd": -1575.0
           }
         },
-        "c2_battery_sur": {
+        "south_bess": {
           "description": "Same battery, south of the bottleneck",
-          "solution": "cases/planned_maintenance/c2_battery_sur.solution.json",
-          "validation": "cases/planned_maintenance/c2_battery_sur.validation.json",
+          "solution": "cases/planned_maintenance/south_bess.solution.json",
+          "validation": "cases/planned_maintenance/south_bess.validation.json",
           "valid": true,
           "metrics": {
             "curtailment_mwh": 1368.2,
@@ -219,17 +219,17 @@
             "battery_losses_mwh": 51.418421,
             "emergency_runback_mwh": 0.0
           },
-          "comparison": "cases/planned_maintenance/c2_battery_sur.comparison.json",
+          "comparison": "cases/planned_maintenance/south_bess.comparison.json",
           "vs_baseline": {
             "curtailment_reduction_mwh": 0.0,
             "unserved_reduction_mwh": 420.375,
             "assumed_cost_delta_usd": 55500.00003
           }
         },
-        "c3_uprate_l2": {
+        "uprate_l2": {
           "description": "Raise the L2 limit by 50 %",
-          "solution": "cases/planned_maintenance/c3_uprate_l2.solution.json",
-          "validation": "cases/planned_maintenance/c3_uprate_l2.validation.json",
+          "solution": "cases/planned_maintenance/uprate_l2.solution.json",
+          "validation": "cases/planned_maintenance/uprate_l2.validation.json",
           "valid": true,
           "metrics": {
             "curtailment_mwh": 375.2,
@@ -238,7 +238,7 @@
             "battery_losses_mwh": 9.082895,
             "emergency_runback_mwh": 0.0
           },
-          "comparison": "cases/planned_maintenance/c3_uprate_l2.comparison.json",
+          "comparison": "cases/planned_maintenance/uprate_l2.comparison.json",
           "vs_baseline": {
             "curtailment_reduction_mwh": 993.0,
             "unserved_reduction_mwh": 0.0,

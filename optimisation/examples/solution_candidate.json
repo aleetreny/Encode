@@ -2,14 +2,14 @@
   "status": "optimal",
   "message": null,
   "scenario_id": "chile-sen-5node-demo",
-  "candidate_id": "c1_battery_norte_grande",
+  "candidate_id": "north_bess",
   "modifications": [
     {
       "type": "add_battery",
       "node_id": "n_norte_grande",
       "power_mw": 150.0,
       "energy_mwh": 600.0,
-      "battery_id": "c1_battery_norte_grande_bat1"
+      "battery_id": "north_bess_bat1"
     }
   ],
   "events": [],
@@ -76,7 +76,7 @@
         "discharge_efficiency": 0.95
       },
       {
-        "id": "c1_battery_norte_grande_bat1",
+        "id": "north_bess_bat1",
         "node_id": "n_norte_grande",
         "power_capacity_mw": 150.0,
         "energy_capacity_mwh": 600.0,
@@ -85,7 +85,7 @@
         "final_soc_mwh": null,
         "charge_efficiency": 0.95,
         "discharge_efficiency": 0.95,
-        "added_by_candidate": "c1_battery_norte_grande"
+        "added_by_candidate": "north_bess"
       }
     ],
     "lines": [
@@ -721,7 +721,7 @@
         0.0,
         0.0
       ],
-      "c1_battery_norte_grande_bat1": [
+      "north_bess_bat1": [
         0.0,
         0.0,
         0.0,
@@ -775,7 +775,7 @@
         0.0,
         0.0
       ],
-      "c1_battery_norte_grande_bat1": [
+      "north_bess_bat1": [
         150.0,
         0.0,
         135.0,
@@ -830,7 +830,7 @@
         30.0,
         30.0
       ],
-      "c1_battery_norte_grande_bat1": [
+      "north_bess_bat1": [
         300.0,
         142.105263,
         142.105263,
@@ -1146,7 +1146,7 @@
     },
     {
       "type": "battery_full",
-      "id": "c1_battery_norte_grande_bat1",
+      "id": "north_bess_bat1",
       "hours": [
         15,
         16,
@@ -1156,7 +1156,7 @@
     },
     {
       "type": "battery_empty",
-      "id": "c1_battery_norte_grande_bat1",
+      "id": "north_bess_bat1",
       "hours": [
         2,
         3,
@@ -1172,7 +1172,7 @@
     },
     {
       "type": "battery_power_limit",
-      "id": "c1_battery_norte_grande_bat1",
+      "id": "north_bess_bat1",
       "hours": [
         0,
         12,

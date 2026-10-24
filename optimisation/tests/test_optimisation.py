@@ -535,7 +535,7 @@ def test_examples_match_current_code():
     index = results["index"]["situations"]
     assert set(index) == {"normal", "sudden_outage", "planned_maintenance"}
     for situation in index.values():
-        assert set(situation["options"]) == {"baseline", "c1_battery_norte_grande", "c2_battery_sur", "c3_uprate_l2"}
+        assert set(situation["options"]) == {"baseline", "north_bess", "south_bess", "uprate_l2"}
         assert all(entry["valid"] for entry in situation["options"].values())
 
 

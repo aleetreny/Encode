@@ -2,14 +2,14 @@
   "comparable": true,
   "reason": null,
   "baseline_id": "baseline",
-  "candidate_id": "c2_battery_sur",
+  "candidate_id": "south_bess",
   "modifications": [
     {
       "type": "add_battery",
       "node_id": "n_sur",
       "power_mw": 150.0,
       "energy_mwh": 600.0,
-      "battery_id": "c2_battery_sur_bat1"
+      "battery_id": "south_bess_bat1"
     }
   ],
   "events": [
@@ -314,7 +314,7 @@
       },
       {
         "type": "battery_full",
-        "id": "c2_battery_sur_bat1",
+        "id": "south_bess_bat1",
         "hours": [
           15,
           16,
@@ -326,7 +326,7 @@
       },
       {
         "type": "battery_power_limit",
-        "id": "c2_battery_sur_bat1",
+        "id": "south_bess_bat1",
         "hours": [
           13,
           20,

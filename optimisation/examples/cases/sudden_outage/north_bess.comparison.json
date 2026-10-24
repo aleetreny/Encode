@@ -2,14 +2,14 @@
   "comparable": true,
   "reason": null,
   "baseline_id": "baseline",
-  "candidate_id": "c1_battery_norte_grande",
+  "candidate_id": "north_bess",
   "modifications": [
     {
       "type": "add_battery",
       "node_id": "n_norte_grande",
       "power_mw": 150.0,
       "energy_mwh": 600.0,
-      "battery_id": "c1_battery_norte_grande_bat1"
+      "battery_id": "north_bess_bat1"
     }
   ],
   "events": [
@@ -302,7 +302,7 @@
       },
       {
         "type": "battery_full",
-        "id": "c1_battery_norte_grande_bat1",
+        "id": "north_bess_bat1",
         "hours": [
           15,
           16,
@@ -313,7 +313,7 @@
       },
       {
         "type": "battery_empty",
-        "id": "c1_battery_norte_grande_bat1",
+        "id": "north_bess_bat1",
         "hours": [
           2,
           3,
@@ -329,7 +329,7 @@
       },
       {
         "type": "battery_power_limit",
-        "id": "c1_battery_norte_grande_bat1",
+        "id": "north_bess_bat1",
         "hours": [
           0,
           12,

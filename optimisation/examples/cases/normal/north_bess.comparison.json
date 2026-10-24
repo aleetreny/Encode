@@ -2,14 +2,14 @@
   "comparable": true,
   "reason": null,
   "baseline_id": "baseline",
-  "candidate_id": "c2_battery_sur",
+  "candidate_id": "north_bess",
   "modifications": [
     {
       "type": "add_battery",
-      "node_id": "n_sur",
+      "node_id": "n_norte_grande",
       "power_mw": 150.0,
       "energy_mwh": 600.0,
-      "battery_id": "c2_battery_sur_bat1"
+      "battery_id": "north_bess_bat1"
     }
   ],
   "events": [],
@@ -17,8 +17,8 @@
   "metrics": {
     "curtailment_mwh": {
       "baseline": 1368.2,
-      "candidate": 1368.2,
-      "delta": 0.0
+      "candidate": 736.621053,
+      "delta": -631.578947
     },
     "unserved_mwh": {
       "baseline": 0.0,
@@ -27,29 +27,29 @@
     },
     "renewable_used_mwh": {
       "baseline": 9737.3,
-      "candidate": 9737.3,
-      "delta": 0.0
+      "candidate": 10368.878947,
+      "delta": 631.578947
     },
     "dispatchable_mwh": {
       "baseline": 24548.257894,
-      "candidate": 24565.294737,
-      "delta": 17.036843
+      "candidate": 23974.39125,
+      "delta": -573.866644
     },
     "battery_losses_mwh": {
       "baseline": 6.157895,
-      "candidate": 23.194737,
-      "delta": 17.036842
+      "candidate": 63.870197,
+      "delta": 57.712302
     },
     "assumed_cost_proxy_usd": {
       "baseline": 1665362.99993,
-      "candidate": 1647269.000015,
-      "delta": -18093.999915
+      "candidate": 1591133.16875,
+      "delta": -74229.83118
     }
   },
-  "curtailment_reduction_mwh": 0.0,
+  "curtailment_reduction_mwh": 631.578947,
   "unserved_reduction_mwh": 0.0,
-  "assumed_cost_delta_usd": -18093.999915,
-  "objective_delta_usd": -17928.245388,
+  "assumed_cost_delta_usd": -74229.83118,
+  "objective_delta_usd": -73655.366279,
   "line_hours_at_limit": {
     "L1": {
       "baseline": 0.0,
@@ -249,6 +249,43 @@
         "detail": "flow n_norte_chico -> n_centro at 400 MW limit"
       },
       {
+        "type": "battery_full",
+        "id": "north_bess_bat1",
+        "hours": [
+          15,
+          16,
+          17
+        ],
+        "detail": "state of charge at 600 MWh capacity (end of hour)"
+      },
+      {
+        "type": "battery_empty",
+        "id": "north_bess_bat1",
+        "hours": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "detail": "state of charge at 0 MWh minimum (end of hour)"
+      },
+      {
+        "type": "battery_power_limit",
+        "id": "north_bess_bat1",
+        "hours": [
+          0,
+          12,
+          13,
+          14
+        ],
+        "detail": "charging or discharging at 150 MW limit"
+      },
+      {
         "type": "renewable_curtailed",
         "id": "solar_ng",
         "hours": [
@@ -256,8 +293,7 @@
           11,
           12,
           13,
-          14,
-          15
+          14
         ],
         "detail": "available renewable output not used"
       },
@@ -295,11 +331,18 @@
         "type": "dispatchable_at_capacity",
         "id": "gas_centro",
         "hours": [
-          19,
           20,
           21
         ],
         "detail": "output at 600 MW capacity"
+      },
+      {
+        "type": "ramp_limit",
+        "id": "gas_centro",
+        "hours": [
+          19
+        ],
+        "detail": "output changing at the 250 MW/h ramp limit"
       },
       {
         "type": "dispatchable_at_capacity",
