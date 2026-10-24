@@ -342,16 +342,18 @@ export function LiveSessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  return (
-    <LiveSessionContext.Provider value={{
-      state,
-      catalog: state.catalog,
-      connected,
-      connectionMode,
-      actions,
-      interpolatedSimHour
-    }}>
-      {children}
-    </LiveSessionContext.Provider>
+  return React.createElement(
+    LiveSessionContext.Provider,
+    {
+      value: {
+        state,
+        catalog: state.catalog,
+        connected,
+        connectionMode,
+        actions,
+        interpolatedSimHour,
+      },
+    },
+    children
   );
 }

@@ -269,6 +269,9 @@ export interface DisruptCommandRequest {
 export interface JuryDisruptCommandRequest {
   asset_id: string;
   jury_name?: string;
+  device_id?: string;
+  card_id?: string;
+  action?: any;
 }
 
 export interface DecideCommandRequest {
@@ -280,3 +283,51 @@ export interface DecideCommandRequest {
 export interface AutonomyCommandRequest {
   enabled: boolean;
 }
+
+export interface LiveSessionState {
+  sessionId: string | null;
+  lastSeq: number;
+  catalog: Catalog | null;
+  grid_state: GridState;
+  clock: {
+    sim_hour: number;
+    running: boolean;
+    speed_hours_per_sec: number;
+    autonomy_mode: boolean;
+  };
+  active_incidents: Disruption[];
+  solution: Solution | null;
+  validation: ValidationSummary | null;
+  comparison: any | null;
+  agent_status: {
+    phase: 'idle' | 'analyzing' | 'awaiting_operator' | 'executing' | 'resolved';
+    detail_es: string;
+    started_at_utc: string | null;
+  };
+  thoughts: { text_es: string; ts_utc: string; sim_hour: number }[];
+  tool_calls: Extract<LiveEvent, { type: 'agent.tool_call' }>[];
+  options: [Option, Option] | null;
+  countdown: { candidate_id: string; seconds_left: number; active: boolean } | null;
+  notes: { text_es: string; ts_utc: string; sim_hour: number }[];
+}
+
+export interface LiveSessionActions {
+  setClock(cmd: ClockCommandRequest): Promise<void>;
+  injectEvent(cmd: DisruptCommandRequest): Promise<void>;
+  submitJuryAction(cmd: JuryDisruptCommandRequest): Promise<Response>;
+  submitOperatorDecision(cmd: DecideCommandRequest): Promise<void>;
+  vetoCountdown(incidentId: string, optionId: string): Promise<void>;
+  switchMode(mode: 'live' | 'offline'): void;
+  replayOfflineDemo(): void;
+  downloadReportUrl(): string;
+}
+
+export interface LiveSessionHook {
+  state: LiveSessionState;
+  catalog: Catalog | null;
+  connected: boolean;
+  connectionMode: 'live' | 'offline' | 'connecting';
+  actions: LiveSessionActions;
+  interpolatedSimHour: number;
+}
+
