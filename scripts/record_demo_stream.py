@@ -9,13 +9,18 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from optimisation import load_scenario, solve, validate
-
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from backend.live.agent_loop import to_contract_solution
+from backend.live.catalog import build_catalog
+from optimisation import load_scenario, solve, validate
 SCENARIO_PATH = ROOT / "optimisation" / "fixtures" / "demo_scenario.json"
 OUT_PATH = ROOT / "frontend" / "src" / "live" / "fixtures" / "demo-stream.jsonl"
 SCHEMA_PATH = ROOT / "contracts" / "live.schema.json"
@@ -92,204 +97,6 @@ def strip_digits(text: str) -> str:
     cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
     assert not re.search(r"\d", cleaned), f"Digit remained in text: {cleaned}"
     return cleaned
-
-
-def build_catalog(scen: dict[str, Any]) -> dict[str, Any]:
-    nodes = []
-    for n in scen["nodes"]:
-        nid = n["id"]
-        meta = NODE_META[nid]
-        nodes.append(
-            {
-                "id": nid,
-                "name": meta["name"],
-                "lat": float(n.get("lat", meta["lat"])),
-                "lon": float(n.get("lon", meta["lon"])),
-                "households_total": int(n.get("households_total", meta["households_total"])),
-                "households_per_mw": int(n.get("households_per_mw", meta["households_per_mw"])),
-            }
-        )
-    generators = [
-        {
-            "id": g["id"],
-            "name": GEN_NAMES.get(g["id"], g["id"]),
-            "node_id": g["node_id"],
-            "technology": g["technology"],
-            "capacity_mw": float(g["capacity_mw"]),
-            "disruptable": True,
-        }
-        for g in scen["generators"]
-    ]
-    batteries = [
-        {
-            "id": b["id"],
-            "name": BAT_NAMES.get(b["id"], b["id"]),
-            "node_id": b["node_id"],
-            "power_mw": float(b["power_capacity_mw"]),
-            "energy_mwh": float(b["energy_capacity_mwh"]),
-            "standby": bool(b.get("standby", False)),
-        }
-        for b in scen.get("batteries", [])
-    ]
-    lines = [
-        {
-            "id": ln["id"],
-            "from": ln["from"],
-            "to": ln["to"],
-            "capacity_mw": float(ln["capacity_mw"]),
-            "disruptable": True,
-        }
-        for ln in scen["lines"]
-    ]
-    levers = [
-        {
-            "type": "emergency_rating",
-            "label_es": "Sobrecarga térmica temporal de línea",
-            "description_es": "Incrementa temporalmente el límite térmico del corredor durante la ventana crítica.",
-        },
-        {
-            "type": "demand_response",
-            "label_es": "Respuesta de demanda industrial",
-            "description_es": "Recorte voluntario remunerado de carga industrial sin afectar hogares residenciales.",
-        },
-        {
-            "type": "activate_reserve_bess",
-            "label_es": "Activación de batería en reserva fría",
-            "description_es": "Conecta almacenamiento BESS contratado en estado standby al despacho económico.",
-        },
-        {
-            "type": "hydro_reserve_release",
-            "label_es": "Liberación de reserva hídrica de embalse",
-            "description_es": "Eleva la cota máxima de generación hidroeléctrica valorizando el costo de oportunidad del agua.",
-        },
-        {
-            "type": "start_peaker",
-            "label_es": "Arranque de turbina diésel de emergencia",
-            "description_es": "Inicia unidad térmica rápida con rampa de sincronización desde estado frío.",
-        },
-        {
-            "type": "add_battery",
-            "label_es": "Inyección de almacenamiento BESS zonal",
-            "description_es": "Incorpora capacidad de almacenamiento de energía en el nodo afectado.",
-        },
-        {
-            "type": "uprate_line",
-            "label_es": "Ampliación de capacidad de corredor",
-            "description_es": "Expande la capacidad de transferencia del enlace troncal.",
-        },
-    ]
-    return {
-        "nodes": nodes,
-        "generators": generators,
-        "batteries": batteries,
-        "lines": lines,
-        "levers": levers,
-        "provenance": {
-            "nodes_coordinates": "derived",
-            "households_per_mw": "assumption",
-            "households_total": "assumption",
-            "generators": "synthetic",
-            "batteries": "synthetic",
-            "lines": "synthetic",
-            "demand_mw": "synthetic",
-            "emission_factors": "assumption",
-        },
-    }
-
-
-def to_contract_solution(
-    scen: dict[str, Any],
-    raw_sol: dict[str, Any],
-    val_res: dict[str, Any],
-    solution_id: str,
-) -> dict[str, Any]:
-    ts = raw_sol["timeseries"]
-    T = len(scen["timestamps_utc"])
-    gen_map = {g["id"]: g for g in scen["generators"]}
-    node_ids = [n["id"] for n in scen["nodes"]]
-
-    # line capacity per hour (reflecting outages and any uprate)
-    sol_lines = {ln["id"]: float(ln["capacity_mw"]) for ln in (raw_sol.get("assets") or {}).get("lines", scen["lines"])}
-    line_cap_mw: dict[str, list[float]] = {}
-    for ln in scen["lines"]:
-        lid = ln["id"]
-        base_c = sol_lines.get(lid, float(ln["capacity_mw"]))
-        arr = [base_c] * T
-        for ev in raw_sol.get("events", []):
-            if ev["type"] == "line_outage" and ev["id"] == lid:
-                for h in range(ev["from_hour"], ev["to_hour"]):
-                    arr[h] = 0.0
-        line_cap_mw[lid] = arr
-
-    # battery flow (+ discharge, - charge) and 24-step soc
-    battery_flow_mw: dict[str, list[float]] = {}
-    battery_soc_mwh: dict[str, list[float]] = {}
-    for b_id, dis_arr in ts["battery_discharge_mw"].items():
-        ch_arr = ts["battery_charge_mw"][b_id]
-        battery_flow_mw[b_id] = [round(float(d) - float(c), 4) for d, c in zip(dis_arr, ch_arr)]
-        soc_full = ts["battery_soc_mwh"][b_id]
-        battery_soc_mwh[b_id] = [round(float(x), 4) for x in soc_full[:T]]
-
-    demand_mw = {nid: [round(float(v), 4) for v in scen["demand_mw_by_node"][nid]] for nid in node_ids}
-    unserved_mw = {nid: [round(float(v), 4) for v in ts["unserved_mw"][nid]] for nid in node_ids}
-    dr_raw = ts.get("demand_response_mw") or {}
-    demand_response_mw = {
-        nid: [round(float(v), 4) for v in dr_raw.get(nid, [0.0] * T)] for nid in node_ids
-    }
-
-    curtailment_mw: dict[str, list[float]] = {}
-    for g in scen["generators"]:
-        gid = g["id"]
-        curtailment_mw[gid] = [round(float(v), 4) for v in ts["curtailment_mw"].get(gid, [0.0] * T)]
-
-    households_off: dict[str, list[float]] = {}
-    for nid in node_ids:
-        hh_per_mw = float(NODE_META[nid]["households_per_mw"])
-        households_off[nid] = [round(u * hh_per_mw, 1) for u in unserved_mw[nid]]
-
-    cost_proxy_usd: list[float] = []
-    co2_t: list[float] = []
-    for h in range(T):
-        c_h = 0.0
-        e_h = 0.0
-        for gid, gen_series in ts["generation_mw"].items():
-            g = gen_map[gid]
-            mw = float(gen_series[h])
-            c_h += mw * float(g.get("variable_cost_usd_per_mwh", 0.0))
-            tech = str(g.get("technology", "")).lower()
-            e_h += mw * EMISSION_FACTORS_T_PER_MWH.get(tech, 0.0)
-        for nid in node_ids:
-            c_h += float(demand_response_mw[nid][h]) * 300.0
-        cost_proxy_usd.append(round(c_h, 2))
-        co2_t.append(round(e_h, 4))
-
-    violations_str = [
-        f"{v.get('check')}:{v.get('id')}@{v.get('hour')} ({v.get('detail')})"
-        for v in val_res.get("violations", [])
-    ]
-
-    return {
-        "solution_id": solution_id,
-        "generation_mw": ts["generation_mw"],
-        "available_mw": ts["available_mw"],
-        "line_flow_mw": ts["line_flow_mw"],
-        "line_capacity_mw": line_cap_mw,
-        "battery_flow_mw": battery_flow_mw,
-        "battery_soc_mwh": battery_soc_mwh,
-        "demand_mw": demand_mw,
-        "unserved_mw": unserved_mw,
-        "demand_response_mw": demand_response_mw,
-        "curtailment_mw": curtailment_mw,
-        "households_off": households_off,
-        "cost_proxy_usd": cost_proxy_usd,
-        "co2_t": co2_t,
-        "status": raw_sol["status"],
-        "validation": {
-            "passed": bool(val_res["passed"]),
-            "violations": violations_str,
-            "max_residual_mw": float(val_res["max_residual_mw"]),
-        },
-    }
 
 
 def compute_option_metrics(
@@ -378,13 +185,6 @@ def compute_impact(sol: dict[str, Any], from_hour: int, to_hour: int) -> dict[st
 
 def generate_stream() -> list[dict[str, Any]]:
     scen = load_scenario(SCENARIO_PATH)
-    # Apply the derived coordinates from section 4 Phase 1 so the stream has accurate substation coords
-    for n in scen["nodes"]:
-        nid = n["id"]
-        n["lat"] = NODE_META[nid]["lat"]
-        n["lon"] = NODE_META[nid]["lon"]
-        n["households_total"] = NODE_META[nid]["households_total"]
-        n["households_per_mw"] = NODE_META[nid]["households_per_mw"]
 
     catalog = build_catalog(scen)
     session_id = "ses-live-demo-chile"
@@ -517,12 +317,12 @@ def generate_stream() -> list[dict[str, Any]]:
         },
     )
 
-    # Candidate A for incident 1: add_battery at n_centro + uprate L2 (max_hogares)
+    # Candidate A for incident 1: activate_reserve_bess at b_reserve_centro + emergency_rating L2 (max_hogares)
     cand_1a = {
         "candidate_id": "opt_inc1_a",
         "modifications": [
-            {"type": "add_battery", "node_id": "n_centro", "power_mw": 150.0, "energy_mwh": 600.0},
-            {"type": "uprate_line", "line_id": "L2", "new_capacity_mw": 560.0},
+            {"type": "activate_reserve_bess", "battery_id": "b_reserve_centro", "from_hour": 18, "to_hour": 22},
+            {"type": "emergency_rating", "line_id": "L2", "factor": 1.20, "from_hour": 18, "to_hour": 22},
         ],
     }
     raw_1a = solve(scen, candidate=cand_1a, events=solver_ev_1)
@@ -530,11 +330,11 @@ def generate_stream() -> list[dict[str, Any]]:
     assert val_1a["passed"], val_1a
     sol_1a = to_contract_solution(scen, raw_1a, val_1a, "sol-inc1-opt-a")
 
-    # Candidate B for incident 1: add_battery at n_norte_grande (min_costo / min_co2)
+    # Candidate B for incident 1: hydro_reserve_release at hydro_sur (min_costo / min_co2)
     cand_1b = {
         "candidate_id": "opt_inc1_b",
         "modifications": [
-            {"type": "add_battery", "node_id": "n_norte_grande", "power_mw": 150.0, "energy_mwh": 600.0},
+            {"type": "hydro_reserve_release", "generator_id": "hydro_sur", "extra_mw": 120.0, "water_value_usd_per_mwh": 120.0, "from_hour": 18, "to_hour": 22},
         ],
     }
     raw_1b = solve(scen, candidate=cand_1b, events=solver_ev_1)
@@ -551,7 +351,7 @@ def generate_stream() -> list[dict[str, Any]]:
             "call_id": "call-sim-inc1-a",
             "tool": "simulate_plan",
             "args_summary_es": strip_digits(
-                "Simular respaldo de batería zonal en Centro combinado con alivio de corredor norte"
+                "Simular activación de batería en reserva fría en Centro combinada con límite térmico de emergencia en corredor norte"
             ),
             "status": "pass",
             "duration_ms": 18,
@@ -565,32 +365,32 @@ def generate_stream() -> list[dict[str, Any]]:
             "type": "agent.thought",
             "incident_id": "inc-gas-centro",
             "delta": strip_digits(
-                "El frente de Pareto muestra un dilema claro entre maximizar la reconexión inmediata de hogares en Santiago o minimizar el costo operativo desplazando excedente solar del norte."
+                "El frente de Pareto muestra un dilema claro entre maximizar la reconexión inmediata de hogares en Santiago con batería de reserva y sobrecarga temporal o liberar cota hidroeléctrica del sur."
             ),
         },
     )
 
     option_1a = {
         "option_id": "opt-a-max-hogares",
-        "title_es": strip_digits("Priorizar reconexión residencial en zona central"),
+        "title_es": strip_digits("Activar reserva BESS central y sobrecarga térmica norte"),
         "levers": [
             {
-                "type": "add_battery",
-                "target_id": "n_centro",
-                "params": {"power_mw": 150.0, "energy_mwh": 600.0},
+                "type": "activate_reserve_bess",
+                "target_id": "b_reserve_centro",
+                "params": {},
                 "from_hour": 18,
                 "to_hour": 22,
             },
             {
-                "type": "uprate_line",
+                "type": "emergency_rating",
                 "target_id": "L2",
-                "params": {"new_capacity_mw": 560.0},
+                "params": {"factor": 1.20},
                 "from_hour": 18,
                 "to_hour": 22,
             },
         ],
         "rationale_es": strip_digits(
-            "Activa almacenamiento de respaldo en el nodo central y libera transferencia desde el norte para restituir suministro residencial con rapidez."
+            "Habilita la batería de reserva en Polpaico y eleva temporalmente el límite térmico del corredor norte para restituir suministro residencial con rapidez."
         ),
         "tradeoff_tag": "max_hogares",
         "metrics": compute_option_metrics(sol_inc1, sol_1a, 18),
@@ -600,20 +400,20 @@ def generate_stream() -> list[dict[str, Any]]:
 
     option_1b = {
         "option_id": "opt-b-min-costo",
-        "title_es": strip_digits("Despacho económico con almacenamiento solar norteño"),
+        "title_es": strip_digits("Liberar reserva hídrica de embalse austral"),
         "levers": [
             {
-                "type": "add_battery",
-                "target_id": "n_norte_grande",
-                "params": {"power_mw": 150.0, "energy_mwh": 600.0},
+                "type": "hydro_reserve_release",
+                "target_id": "hydro_sur",
+                "params": {"extra_mw": 120.0, "cost_usd_per_mwh": 120.0},
                 "from_hour": 18,
                 "to_hour": 22,
             }
         ],
         "rationale_es": strip_digits(
-            "Contiene el costo sistémico absorbiendo recorte solar del Norte Grande, aunque mantiene mayor racionamiento temporal en el centro."
+            "Incrementa la inyección hidroeléctrica limpia desde el sur sin exigir sobrecarga térmica en el corredor norte, aunque mantiene mayor racionamiento temporal."
         ),
-        "tradeoff_tag": "min_costo",
+        "tradeoff_tag": "min_co2",
         "metrics": compute_option_metrics(sol_inc1, sol_1b, 18),
         "validation": sol_1b["validation"],
         "solution": sol_1b,
@@ -743,8 +543,8 @@ def generate_stream() -> list[dict[str, Any]]:
     cand_2a = {
         "candidate_id": "opt_inc2_a",
         "modifications": [
-            {"type": "add_battery", "node_id": "n_centro", "power_mw": 150.0, "energy_mwh": 900.0},
-            {"type": "uprate_line", "line_id": "L2", "new_capacity_mw": 600.0},
+            {"type": "demand_response", "node_id": "n_centro", "max_mw": 120.0, "cost_usd_per_mwh": 300.0, "from_hour": 19, "to_hour": 22},
+            {"type": "emergency_rating", "line_id": "L2", "factor": 1.20, "from_hour": 19, "to_hour": 22},
         ],
     }
     raw_2a = solve(scen, candidate=cand_2a, events=solver_ev_2)
@@ -755,8 +555,8 @@ def generate_stream() -> list[dict[str, Any]]:
     cand_2b = {
         "candidate_id": "opt_inc2_b",
         "modifications": [
-            {"type": "add_battery", "node_id": "n_centro", "power_mw": 150.0, "energy_mwh": 600.0},
-            {"type": "uprate_line", "line_id": "L1", "new_capacity_mw": 550.0},
+            {"type": "activate_reserve_bess", "battery_id": "b_reserve_centro", "from_hour": 18, "to_hour": 22},
+            {"type": "start_peaker", "generator_id": "diesel_centro", "from_hour": 19, "to_hour": 22},
         ],
     }
     raw_2b = solve(scen, candidate=cand_2b, events=solver_ev_2)
@@ -766,25 +566,25 @@ def generate_stream() -> list[dict[str, Any]]:
 
     option_2a = {
         "option_id": "opt-2a-max-hogares",
-        "title_es": strip_digits("Refuerzo máximo de corredor norte y almacenamiento central"),
+        "title_es": strip_digits("Respuesta de demanda industrial y límite de emergencia en corredor norte"),
         "levers": [
             {
-                "type": "add_battery",
+                "type": "demand_response",
                 "target_id": "n_centro",
-                "params": {"power_mw": 150.0, "energy_mwh": 900.0},
+                "params": {"max_mw": 120.0, "cost_usd_per_mwh": 300.0},
                 "from_hour": 19,
                 "to_hour": 22,
             },
             {
-                "type": "uprate_line",
+                "type": "emergency_rating",
                 "target_id": "L2",
-                "params": {"new_capacity_mw": 600.0},
+                "params": {"factor": 1.20},
                 "from_hour": 19,
                 "to_hour": 22,
             },
         ],
         "rationale_es": strip_digits(
-            "Compensa la desconexión del sur ampliando al máximo el corredor Norte Chico hacia Centro junto con descarga extendida de batería."
+            "Compensa la desconexión del sur activando carga industrial interrumpible voluntaria en el centro sin cortar suministro a hogares residenciales."
         ),
         "tradeoff_tag": "max_hogares",
         "metrics": compute_option_metrics(sol_inc2, sol_2a, 19),
@@ -794,25 +594,25 @@ def generate_stream() -> list[dict[str, Any]]:
 
     option_2b = {
         "option_id": "opt-2b-min-riesgo",
-        "title_es": strip_digits("Alivio conservador de enlaces del norte"),
+        "title_es": strip_digits("Arranque de turbina diésel de respaldo y reserva BESS local"),
         "levers": [
             {
-                "type": "add_battery",
-                "target_id": "n_centro",
-                "params": {"power_mw": 150.0, "energy_mwh": 600.0},
+                "type": "start_peaker",
+                "target_id": "diesel_centro",
+                "params": {"startup_delay_hours": 1},
                 "from_hour": 19,
                 "to_hour": 22,
             },
             {
-                "type": "uprate_line",
-                "target_id": "L1",
-                "params": {"new_capacity_mw": 550.0},
+                "type": "activate_reserve_bess",
+                "target_id": "b_reserve_centro",
+                "params": {},
                 "from_hour": 19,
                 "to_hour": 22,
             },
         ],
         "rationale_es": strip_digits(
-            "Mantiene menor exigencia térmica en el enlace central a cambio de menor restitución de carga residencial."
+            "Sincroniza generación térmica rápida local con menor exigencia térmica en el enlace norte tras la rampa de arranque."
         ),
         "tradeoff_tag": "min_riesgo_red",
         "metrics": compute_option_metrics(sol_inc2, sol_2b, 19),

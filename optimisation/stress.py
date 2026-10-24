@@ -188,7 +188,8 @@ def run(quick: bool = False, verbose: bool = True) -> dict:
         sol = solve(scen_standby, levers_cand, [{"type": "generator_outage", "id": "gas_centro", "from_hour": 17, "to_hour": 21, "mode": "sudden"}])
         sweep.cases += 1
         sweep.solves += sol["solver"]["solves"]
-        sweep.check(sol["status"] == "optimal", f"5 new levers: status {sol['status']} ({sol['message']})")
+        if sweep.check(sol["status"] == "optimal", f"5 new levers: status {sol['status']} ({sol['message']})"):
+            sweep.check(validate(scen_standby, sol)["passed"], "5 new levers: validation failed")
 
     elapsed = time.perf_counter() - t0
     summary = {

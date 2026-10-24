@@ -52,3 +52,18 @@
 - **Cómo probar la Ola C completa**:
   - `pytest tests/test_live_api.py tests/test_live_report.py -q`
   - `pytest -q` (224 passed)
+
+## Ola D · Biblioteca de Incidentes Sin Red (W9), Unificación de Fórmula de Hogares (W10) y Verificación de Aceptación
+- **W9 — Biblioteca de incidentes pre-calculados (`frontend/public/incidents/`) y modo sin red (`offline.ts`)** (`live-ops/w9`, commit `a907efc`):
+  - **Modelo**: `flash` (Gemini 3.8 Flash)
+  - **Qué entró**: `scripts/build_incident_library.py` que genera 111 secuencias `.jsonl` en `frontend/public/incidents/` (activos × horas `{9, 12, 13, 18, 19, 20}` × duración 4 h, más combinaciones dobles `combo_gas_centro_L3_18` y `combo_L1_gas_ng_12`) e `index.json`, marcando `model_execution.cached = True` con `cached_at_utc` y `response_id`, integración de carga y reproducción por activo/hora en `frontend/src/live/offline.ts`, y suite `tests/test_incident_library.py`.
+- **W10 — Auditoría y unificación de la fórmula única de hogares** (`live-ops/w10`, commit `90cc439`):
+  - **Modelo**: `flash` (Gemini 3.8 Flash)
+  - **Qué entró**: Eliminación del número fijo `243,058` en `frontend/src/components/ChileIsoMaquette.tsx` reemplazándolo por `Math.round(unservedMw) * 1000`, aclaración de la fórmula `unserved_mw * households_per_mw` (`1000`, `assumption`) en `agent/DESIGN.md`, auditoría histórica completa (`120,000`, `243,058`, `562,000`, `480,000`) en `docs/household-formula-audit.md`, y suite `tests/test_household_consistency.py`.
+- **Verificación de Aceptación y `demo-stream.jsonl` final**:
+  - **Modelo**: Gemini 4 Argon · High (Orquestador)
+  - **Qué entró**: Actualización de `scripts/record_demo_stream.py` y `frontend/src/live/fixtures/demo-stream.jsonl` con palancas operacionales de Fase 1 (`activate_reserve_bess`, `emergency_rating`, `hydro_reserve_release`, `demand_response`, `start_peaker`), script `scripts/verify_live_acceptance.py` y reporte de latencia/aceptación en `docs/live-latency.md` (`incident.detected` p90 `29.31 ms < 300 ms`, `options.ready` p90 `1112.35 ms < 8 s`, `20/20` incidentes aleatorios validados sin dígitos y con `tradeoff_tag` distinto, y `2` fallas simultáneas + autonomía + veto verificados).
+- **Cómo probar la Ola D y los 9 criterios de aceptación**:
+  - `python3 scripts/verify_live_acceptance.py`
+  - `pytest -q && pytest optimisation/tests -q && python3 -m optimisation.stress`
+  - `cd frontend && npm run build && ./scripts/demo.sh --check-only`
