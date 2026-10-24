@@ -1700,9 +1700,106 @@
       "sha256_of_pages": "448a0ef756089333609cd391ebcc117a6fdaa4177cf8914b33c9c2b67dfbcb97",
       "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-23",
       "retrieved_at_utc": "2026-10-24T21:18:21+00:00"
+    },
+    "costo-marginal-real/2025-02-25": {
+      "name": "costo-marginal-real/2025-02-25",
+      "endpoint": "/costo-marginal-real/v4/findByDate",
+      "params": {
+        "startDate": "2025-02-25",
+        "endDate": "2025-02-25"
+      },
+      "page_size": 5000,
+      "pages": 30,
+      "rows": 143032,
+      "sha256_of_pages": "3d0d77124e02256aaa43f6ec28b20e78c6170b73ac07f931680533c980a29037",
+      "url_without_key": "https://sipub.api.coordinador.cl/costo-marginal-real/v4/findByDate?startDate=2025-02-25&endDate=2025-02-25",
+      "retrieved_at_utc": "2026-10-24T22:05:39+00:00"
+    },
+    "costo-marginal-real/2026-10-14": {
+      "name": "costo-marginal-real/2026-10-14",
+      "endpoint": "/costo-marginal-real/v4/findByDate",
+      "params": {
+        "startDate": "2026-10-14",
+        "endDate": "2026-10-14"
+      },
+      "page_size": 5000,
+      "pages": 32,
+      "rows": 153016,
+      "sha256_of_pages": "2c403b0d39c41fe3a5628770088431cf6b4f26ccda76fa85d13ff3d5de14a47b",
+      "url_without_key": "https://sipub.api.coordinador.cl/costo-marginal-real/v4/findByDate?startDate=2026-10-14&endDate=2026-10-14",
+      "retrieved_at_utc": "2026-10-24T22:05:40+00:00"
+    },
+    "centrales": {
+      "name": "centrales",
+      "endpoint": "/centrales/v4/findByDate",
+      "params": {},
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 1362,
+      "sha256_of_pages": "e92feef6aabb4bc7934af1fcb7500f0ff98299fa461a65e6503f19f89c0e54ef",
+      "url_without_key": "https://sipub.api.coordinador.cl/centrales/v4/findByDate?",
+      "retrieved_at_utc": "2026-10-24T22:05:40+00:00"
+    },
+    "lineas-transmision": {
+      "name": "lineas-transmision",
+      "endpoint": "/lineas-transmision/v4/findByDate",
+      "params": {},
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 1741,
+      "sha256_of_pages": "61004cee44aa5446f64b75e27b184f35188493d721dc5cc3df7cf0642c9a553c",
+      "url_without_key": "https://sipub.api.coordinador.cl/lineas-transmision/v4/findByDate?",
+      "retrieved_at_utc": "2026-10-24T22:05:40+00:00"
+    },
+    "generacion-real/2026-08-14": {
+      "name": "generacion-real/2026-08-14",
+      "endpoint": "/generacion-real/v3/findByDate",
+      "params": {
+        "startDate": "2026-08-14",
+        "endDate": "2026-08-14"
+      },
+      "page_size": 5000,
+      "pages": 7,
+      "rows": 34831,
+      "sha256_of_pages": "a4c46281f67972a08b9d15feee52003628bfe74dbb78d88a95a706dea59ca620",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/findByDate?startDate=2026-08-14&endDate=2026-08-14",
+      "retrieved_at_utc": "2026-10-24T22:07:31+00:00"
+    },
+    "demanda-neta/2026-08-14": {
+      "name": "demanda-neta/2026-08-14",
+      "endpoint": "/demanda-neta/v4/findByDate",
+      "params": {
+        "startDate": "2026-08-14",
+        "endDate": "2026-08-14"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 24,
+      "sha256_of_pages": "e60e266b79d9424acf54cee4e7350a4ccedf95d30b264ccecc8c4a8c4bb1e1a6",
+      "url_without_key": "https://sipub.api.coordinador.cl/demanda-neta/v4/findByDate?startDate=2026-08-14&endDate=2026-08-14",
+      "retrieved_at_utc": "2026-10-24T22:07:39+00:00"
+    },
+    "demanda-real-estimada/2026-08-14": {
+      "name": "demanda-real-estimada/2026-08-14",
+      "endpoint": "/demanda-real-estimada/v4/findByDate",
+      "params": {
+        "startDate": "2026-08-14",
+        "endDate": "2026-08-14"
+      },
+      "page_size": 5000,
+      "pages": 80,
+      "rows": 392746,
+      "sha256_of_pages": "e6882fbe3342f8451a568267db6c487a6b4d121d2e4f0b7a0ef8f5442a597fa7",
+      "url_without_key": "https://sipub.api.coordinador.cl/demanda-real-estimada/v4/findByDate?startDate=2026-08-14&endDate=2026-08-14",
+      "retrieved_at_utc": "2026-10-24T22:22:11+00:00"
     }
   },
   "publisher": "Coordinador Eléctrico Nacional (SIP API)",
   "documentation": "https://portal.api.coordinador.cl/documentacion?service=sipubv2",
-  "license": "Public data; attribution to Coordinador Eléctrico Nacional preserved. Contact fields removed."
+  "license": "Public data; attribution to Coordinador Eléctrico Nacional preserved. Contact fields removed.",
+  "notes": [
+    "demanda-real-estimada returned 0 rows for 2026-10-14 and 2026-09-14 (not yet published as of 2026-10-24); latest published month is August 2026.",
+    "v4 endpoints with many pages report one more page than they serve: the second-to-last page is short and the last is empty. demanda-real-estimada/2026-08-14 reported 397,746 rows (probe with limit=1) and served 392,746 (98.7%). All served pages were saved; the gap could not be explained from the client side. Small v4 queries paginate exactly (demanda-neta: 24 rows, 5 pages of 5).",
+    "costo-marginal-real holds 15-minute slots; both downloaded days contain 93 distinct slots out of 96 and most buses have 89-96 rows."
+  ]
 }

@@ -4,7 +4,7 @@
 set -u
 cd "$(dirname "$0")/.."
 ENVF="$1"
-for p in 04-large 05-catalogs; do
+for p in 04-large 05-catalogs 06-august; do
   echo "=== $p $(date -u +%H:%M:%S)"
   python3 scripts/cen_sip_snapshot.py "scripts/cen_sip_plans/$p.json" --env-file "$ENVF" || echo "FAILED $p"
 done

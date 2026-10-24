@@ -14,13 +14,5 @@
    "startDate": "2026-10-14",
    "endDate": "2026-10-14"
   }
- },
- {
-  "name": "demanda-real-estimada/2026-10-14",
-  "endpoint": "/demanda-real-estimada/v4/findByDate",
-  "params": {
-   "startDate": "2026-10-14",
-   "endDate": "2026-10-14"
-  }
  }
 ]
