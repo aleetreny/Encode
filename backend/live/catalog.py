@@ -40,14 +40,42 @@ DEFAULT_EMISSION_FACTORS: dict[str, float] = {
     "hydro": 0.0,
 }
 
-LEVERS: list[str] = [
-    "emergency_rating",
-    "demand_response",
-    "activate_reserve_bess",
-    "hydro_reserve_release",
-    "start_peaker",
-    "add_battery",
-    "uprate_line",
+LEVERS: list[dict[str, str]] = [
+    {
+        "type": "emergency_rating",
+        "label_es": "Límite Térmico de Emergencia",
+        "description_es": "Incrementa temporalmente la capacidad de transporte de una línea troncal durante la ventana crítica.",
+    },
+    {
+        "type": "demand_response",
+        "label_es": "Respuesta de Demanda Industrial",
+        "description_es": "Recorte voluntario de carga industrial compensada sin desconectar hogares residenciales.",
+    },
+    {
+        "type": "activate_reserve_bess",
+        "label_es": "Activar BESS de Reserva en Standby",
+        "description_es": "Conecta bancos de baterías estratégicos en reserva para inyectar potencia inmediata.",
+    },
+    {
+        "type": "hydro_reserve_release",
+        "label_es": "Liberación de Reserva Hídrica",
+        "description_es": "Despacha cota adicional de embalse en el sur valorizando el costo de oportunidad del agua.",
+    },
+    {
+        "type": "start_peaker",
+        "label_es": "Arranque de Turbina Rápida (Peaker)",
+        "description_es": "Inicia unidad térmica de respaldo rápido con retraso de sincronización desde frío.",
+    },
+    {
+        "type": "add_battery",
+        "label_es": "Almacenamiento BESS (Planificación)",
+        "description_es": "Incorpora capacidad de almacenamiento para arbitraje solar y soporte de punta.",
+    },
+    {
+        "type": "uprate_line",
+        "label_es": "Ampliación de Corredor Troncal",
+        "description_es": "Aumenta la capacidad nominal permanente de una línea de transmisión congestionada.",
+    },
 ]
 
 STRESS_RECIPES: list[dict[str, Any]] = [

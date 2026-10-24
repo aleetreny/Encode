@@ -729,17 +729,12 @@ class AgentToolkit:
 
                 native = solve_checked(scenario, candidate=candidate, events=events, options=opts)
             except Exception:
-                try:
-                    from optimisation import solve as p3_solve  # type: ignore
-                    from optimisation import validate as p3_validate  # type: ignore
+                from optimisation import solve as p3_solve  # type: ignore
+                from optimisation import validate as p3_validate  # type: ignore
 
-                    sol = p3_solve(scenario, candidate=candidate, events=events, options=opts)
-                    checked = p3_validate(scenario, sol)
-                    native = {**sol, "validation": checked, "accepted": bool(checked.get("passed"))}
-                except Exception:
-                    sol = solve_native(scenario, candidate=candidate, events=events, options=opts)
-                    checked = validate_solution(scenario, sol, options=opts)
-                    native = {**sol, "validation": checked, "accepted": bool(checked.get("passed"))}
+                sol = p3_solve(scenario, candidate=candidate, events=events, options=opts)
+                checked = p3_validate(scenario, sol)
+                native = {**sol, "validation": checked, "accepted": bool(checked.get("passed"))}
 
             status = native.get("status", "error")
             metrics = native.get("metrics") or {}
@@ -799,16 +794,9 @@ class AgentToolkit:
 
                 validation = check_solution(scenario, solution, candidate, events, options)
             except Exception:
-                try:
-                    from optimisation import validate as p3_validate  # type: ignore
+                from optimisation import validate as p3_validate  # type: ignore
 
-                    validation = p3_validate(scenario, solution)
-                except Exception:
-                    validation = validate_solution(
-                        scenario,
-                        solution,
-                        options=options or solution.get("options") or {"allow_unserved": True},
-                    )
+                validation = p3_validate(scenario, solution)
 
             passed = bool(validation.get("passed", False))
             solution["validation"] = validation
@@ -865,19 +853,11 @@ class AgentToolkit:
 
                 comp = p4_compare(baseline, candidate, baseline_validation, candidate_validation)
             except Exception:
-                try:
-                    from optimisation import compare as p3_compare  # type: ignore
+                from optimisation import compare as p3_compare  # type: ignore
 
-                    comp = p3_compare(
-                        baseline, candidate, baseline_validation, candidate_validation
-                    )
-                except Exception:
-                    comp = compare_solutions(
-                        baseline,
-                        candidate,
-                        baseline_validation=baseline_validation,
-                        candidate_validation=candidate_validation,
-                    )
+                comp = p3_compare(
+                    baseline, candidate, baseline_validation, candidate_validation
+                )
             self.recorder.succeed(
                 "compare_results",
                 {

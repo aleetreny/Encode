@@ -30,6 +30,7 @@
       "additionalProperties": false,
       "required": ["nodes", "generators", "batteries", "lines", "levers", "provenance"],
       "properties": {
+        "scenario_id": { "type": "string" },
         "nodes": {
           "type": "array",
           "items": {
@@ -39,10 +40,13 @@
             "properties": {
               "id": { "type": "string" },
               "name": { "type": "string" },
+              "label": { "type": "string" },
+              "substation": { "type": "string" },
               "lat": { "type": "number" },
               "lon": { "type": "number" },
               "households_total": { "type": "number" },
-              "households_per_mw": { "type": "number" }
+              "households_per_mw": { "type": "number" },
+              "provenance": { "$ref": "#/$defs/Provenance" }
             }
           }
         },
@@ -61,6 +65,9 @@
                 "enum": ["solar", "wind", "hydro", "gas", "coal", "diesel"]
               },
               "capacity_mw": { "type": "number" },
+              "variable_cost_usd_per_mwh": { "type": "number" },
+              "ramp_rate_mw_per_h": { "anyOf": [{ "type": "number" }, { "type": "null" }] },
+              "emission_factor_t_per_mwh": { "type": "number" },
               "disruptable": { "type": "boolean" }
             }
           }
@@ -76,7 +83,10 @@
               "name": { "type": "string" },
               "node_id": { "type": "string" },
               "power_mw": { "type": "number" },
+              "power_capacity_mw": { "type": "number" },
               "energy_mwh": { "type": "number" },
+              "energy_capacity_mwh": { "type": "number" },
+              "initial_soc_mwh": { "type": "number" },
               "standby": { "type": "boolean" }
             }
           }
@@ -91,6 +101,8 @@
               "id": { "type": "string" },
               "from": { "type": "string" },
               "to": { "type": "string" },
+              "from_node": { "type": "string" },
+              "to_node": { "type": "string" },
               "capacity_mw": { "type": "number" },
               "disruptable": { "type": "boolean" }
             }
@@ -109,6 +121,9 @@
             }
           }
         },
+        "stress_recipes": { "type": "array" },
+        "jury_cards": { "type": "array" },
+        "assumptions": { "type": "object" },
         "provenance": {
           "type": "object",
           "additionalProperties": { "$ref": "#/$defs/Provenance" }

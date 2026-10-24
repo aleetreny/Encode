@@ -90,7 +90,7 @@ export async function postClockCommand(sessionId: string, cmd: ClockCommandReque
 }
 
 export async function postEventCommand(sessionId: string, cmd: InjectEventRequest): Promise<void> {
-  const res = await fetch(`${API_BASE}/live/sessions/${encodeURIComponent(sessionId)}/events`, {
+  const res = await fetch(`${API_BASE}/live/sessions/${encodeURIComponent(sessionId)}/disrupt`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(cmd)
@@ -99,7 +99,7 @@ export async function postEventCommand(sessionId: string, cmd: InjectEventReques
 }
 
 export async function postJuryCommand(sessionId: string, cmd: JuryCommandRequest): Promise<Response> {
-  return fetch(`${API_BASE}/live/sessions/${encodeURIComponent(sessionId)}/jury`, {
+  return fetch(`${API_BASE}/live/sessions/${encodeURIComponent(sessionId)}/jury/disrupt`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(cmd)
@@ -107,7 +107,7 @@ export async function postJuryCommand(sessionId: string, cmd: JuryCommandRequest
 }
 
 export async function postDecisionCommand(sessionId: string, cmd: OperatorDecisionRequest): Promise<void> {
-  const res = await fetch(`${API_BASE}/live/sessions/${encodeURIComponent(sessionId)}/decision`, {
+  const res = await fetch(`${API_BASE}/live/sessions/${encodeURIComponent(sessionId)}/decide`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(cmd)
