@@ -83,15 +83,156 @@ body,
   cursor: pointer;
 }
 
-/* Borderless 4-datum technical typography floating directly on white space */
+/* =========================================================
+   TOP BORDERLESS TELEMETRY & 2-STAGE NARRATIVE HEADER
+   ========================================================= */
+.bare-top-telemetry {
+  position: absolute;
+  top: 14px;
+  left: 32px;
+  right: 32px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+  font-family: var(--anatomy-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.bare-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.bare-brand-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  color: #09090b;
+  text-transform: uppercase;
+}
+
+.bare-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  display: inline-block;
+  transition: background-color 200ms ease;
+}
+
+.bare-preset-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bare-link-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #71717a;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.bare-link-btn:hover,
+.bare-link-btn.is-current {
+  color: #09090b;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.bare-sep {
+  color: #d4d4d8;
+  font-size: 10px;
+  user-select: none;
+}
+
+.bare-ai-toggle {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.bare-ai-toggle.is-on {
+  color: #16a34a;
+}
+
+.bare-ai-toggle.is-off {
+  color: #e5484d;
+}
+
+.bare-narrative-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 10.5px;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+  color: #52525b;
+}
+
+.bare-arrow-sep {
+  color: #a1a1aa;
+  font-weight: 700;
+}
+
+.bare-stage-line {
+  transition: color 200ms ease, font-weight 200ms ease;
+}
+
+.bare-stage-line.is-highlighting-perturb {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.bare-stage-line.is-highlighting-ai {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.bare-stage-line.is-ai-steady {
+  color: #18181b;
+  font-weight: 600;
+}
+
+.bare-stage-line.is-ai-disabled {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* =========================================================
+   BORDERLESS 4-DATUM NODE LABELS + INLINE PARAMETER SLIDERS
+   ========================================================= */
 .bare-node-label {
   position: absolute;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   gap: 2px;
-  cursor: pointer;
   user-select: none;
+  z-index: 10;
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease;
 }
 
@@ -115,12 +256,7 @@ body,
 
 .bare-node-label:hover,
 .bare-node-label.is-active {
-  transform: translate(-50%, calc(-50% - 3px));
-}
-
-.bare-node-label.align-left:hover,
-.bare-node-label.align-left.is-active {
-  transform: translate(0, calc(-50% - 3px));
+  transform: translate(-50%, calc(-50% - 2px));
 }
 
 .bare-node-title {
@@ -134,6 +270,7 @@ body,
   color: #09090b;
   text-transform: uppercase;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .bare-node-dot {
@@ -141,6 +278,7 @@ body,
   height: 6px;
   border-radius: 999px;
   flex-shrink: 0;
+  transition: background-color 200ms ease;
 }
 
 .bare-node-meta {
@@ -148,14 +286,108 @@ body,
   flex-direction: column;
   gap: 1px;
   font-family: var(--anatomy-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: #64748b;
-  line-height: 1.35;
+  line-height: 1.32;
   white-space: nowrap;
+}
+
+.bare-datum-primary {
+  color: #18181b;
+  font-weight: 600;
 }
 
 .bare-node-label.is-active .bare-node-meta {
   color: #18181b;
+}
+
+/* Minimalist borderless inline parameter editing directly beneath each node */
+.bare-inline-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  font-family: var(--anatomy-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.bare-step-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0 3px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #52525b;
+  cursor: pointer;
+  transition: color 140ms ease, transform 140ms ease;
+}
+
+.bare-step-btn:hover {
+  color: #09090b;
+  transform: scale(1.18);
+}
+
+.bare-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 78px;
+  height: 2px;
+  background: #d4d4d8;
+  border-radius: 999px;
+  outline: none;
+  cursor: ew-resize;
+}
+
+.bare-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--slider-accent, #18181b);
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 0 0 1px var(--slider-accent, #18181b);
+  cursor: ew-resize;
+  transition: transform 140ms ease;
+}
+
+.bare-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.28);
+}
+
+.bare-range-slider::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--slider-accent, #18181b);
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 0 0 1px var(--slider-accent, #18181b);
+  cursor: ew-resize;
+}
+
+.bare-quick-trigger {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0 2px;
+  font-family: inherit;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #3f3f46;
+  text-decoration: underline;
+  text-decoration-color: #d4d4d8;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 140ms ease, text-decoration-color 140ms ease;
+}
+
+.bare-quick-trigger:hover {
+  color: #09090b;
+  text-decoration-color: #09090b;
 }
