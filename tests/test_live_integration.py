@@ -94,3 +94,31 @@ def test_live_http_smoke_cannot_certify_a_substituted_replay(monkeypatch):
     with pytest.raises(SystemExit, match="Requested execution mode was replaced"):
         smoke.main()
     assert not any(path.endswith(("/decision", "/report")) for path in paths)
+
+
+def test_updated_native_agent_matches_backend_snapshot(monkeypatch):
+    """Real numerical/agent execution, explicitly offline; no provider claim."""
+    from agent import run_investigation
+    from backend.models import wire
+    from backend.native_models import InvestigationSettings
+    from backend.native_service import check_solution
+    from backend.runtime import _active_scenario, _active_evidence, load_scenario, inspect_evidence
+
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    scenario = load_scenario("chile-sen-5node-demo")
+    options = wire(InvestigationSettings())
+    scenario_token = _active_scenario.set(scenario)
+    evidence_token = _active_evidence.set(inspect_evidence(scenario["scenario_id"])["evidence"])
+    try:
+        result = run_investigation(scenario["scenario_id"], options)
+        assert check_solution(scenario, result["baseline"], None, [], options["options"])["passed"]
+        assert check_solution(
+            scenario, result["candidate"], result["candidate_definition"], [], options["options"]
+        )["passed"]
+        assert result["candidate_definition"]["candidate_id"] == "north_bess"
+        assert not verified_provider_metadata(result["model_execution"])
+        assert len(result["tool_trace"]) <= 100
+    finally:
+        _active_scenario.reset(scenario_token)
+        _active_evidence.reset(evidence_token)

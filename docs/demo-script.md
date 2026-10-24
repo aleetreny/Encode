@@ -17,4 +17,4 @@ Record the actual application screen with the mode label, tool trace, numerical 
 
 Show normal dispatch first, then the sudden gas outage during hours 18–22. Show the strict infeasible attempt and the feasible recovery with shedding, the independent no-hindsight check, household units and crisis approval gate. `--mode deterministic` executes this workflow with the real numerical core without Gemini.
 
-Current integration blockers and exact owner actions: [demo integration handoff](demo-integration-handoff.md). The frontend animation is not the live tool loop; its local approval and local report are not the backend decision/export. Do not record them as completed integration.
+Current integration blockers and exact owner actions: [demo integration handoff](demo-integration-handoff.md). The current frontend is a local JavaScript sandbox, not the live tool loop; backend approval/export still need UI controls. Do not record them as completed integration.

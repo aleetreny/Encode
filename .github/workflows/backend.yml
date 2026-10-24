@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: '22'
       - name: TypeScript contract client
-        run: npx --yes --package typescript@5.9.3 tsc --strict --noEmit --lib DOM,ES2022 --target ES2022 --moduleResolution node --module esnext contracts/client.ts contracts/native-client.ts
+        run: npx --yes --package typescript@5.9.3 tsc --strict --lib DOM,ES2022 --target ES2022 --moduleResolution node --module commonjs --outDir /tmp/gridpilot-contract-client contracts/client.ts contracts/native-client.ts
       - name: Reproduce CEN transformation without network
         run: |
           python scripts/prepare_data.py
@@ -42,6 +42,8 @@ jobs:
           done
           python scripts/smoke.py
           python scripts/smoke.py --mode deterministic
+          node scripts/smoke-client.cjs /tmp/gridpilot-contract-client http://127.0.0.1:8000 deterministic
+          node scripts/smoke-client.cjs /tmp/gridpilot-contract-client http://127.0.0.1:8000 replay
       - name: Container build
         run: docker build -t gridpilot-api:ci .
       - name: Container smoke
@@ -53,3 +55,4 @@ jobs:
             sleep 1
           done
           python scripts/smoke.py --base-url http://127.0.0.1:8001
+          node scripts/smoke-client.cjs /tmp/gridpilot-contract-client http://127.0.0.1:8001 deterministic

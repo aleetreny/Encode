@@ -304,7 +304,7 @@
         "type": "battery_power_limit",
         "id": "c2_battery_sur_bat1",
         "hours": [
-          18,
+          20,
           23
         ],
         "detail": "charging or discharging at 150 MW limit"

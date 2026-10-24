@@ -1,33 +1,36 @@
-# Demo integration handoff — 24 October 2026
+# Demo integration handoff — latest branch integration, 24 October 2026
 
-The target is one path: open a backend scenario → request a Gemini analysis → Gemini invokes numerical tools → backend verifies results → UI shows that same run → operator approves in simulation → download that run's backend report. No additional product features are required before this passes.
+Target: open the backend scenario → request a Gemini analysis → Gemini calls numerical tools → backend independently verifies → UI renders that same run → operator approves in simulation → download that run's backend report. Complete this before adding product features.
 
-## Sources integrated on `feature/data-backend`
+## Current sources and verified status
 
-| Owner | Remote commit inspected and merged | Actual state |
+All changes are on `feature/data-backend` / PR #1. `main` is unchanged.
+
+| Workstream | Latest remote commit merged | Verified state |
 |---|---|---|
-| P1 frontend | `d481a6a` | React UI and map exist. Standard build fails on `ImportMeta.env`. Scenario, dispatch, trace, decision and report are local fixture/state paths. |
-| P2 agent | `bc1d3d4` | Importable with runtime dependencies; five unit tests pass offline. Returns legacy canonical results, not native v2. Google credentials are absent here. Offline synthesis currently claims Google/model metadata using a local hash. |
-| P3 numerical | `c9306bb` | Latest solver and independent validator integrated unchanged. 113 numerical tests and 532-case outage stress sweep pass. Adds emergency-runback output fields and improved dispatch; old cached native results no longer pass its validator. |
-| P4 backend | This branch / PR #1 | API, native tools, independent acceptance, run persistence, simulation decision and report work via actual HTTP. Native replay regenerated against P3's current module. Runtime manifest now includes the imports required by P2. |
+| P1 frontend | `260744a` | Standard `npm ci && npm run build` now passes: Vite types are fixed. Current `App.tsx` is a local schematic sandbox using JavaScript arithmetic and timer-based battery SOC. It does not call the backend and has no verified-run approval/report path. |
+| P2 agent | `d0acb32` (includes native support `b3abdf5`) | Native v2 baseline/candidate and selected definition now match the backend snapshot and independently pass validation. Actual native trace has 53 events. Provider behavior remains unchanged: Python chooses candidates/tools, Google is called only for final synthesis if a key exists, and offline output claims locally generated Google IDs. |
+| P3 numerical | `e60d223` | Older saved-result compatibility plus full validated example matrix integrated. Solver and validator source are unchanged by P4. Two generated south-battery crisis examples differed in hourly dispatch; regenerated with the owner's prescribed `python -m optimisation.demo --write`, without changing tests/constraints. |
+| P4 backend/client | Current branch | Real HTTP workflow and the shared TypeScript client pass scenario → run → independent acceptance → persisted simulation approval → report download, in deterministic and replay modes. Strict live correctly fails with no configured credential. |
 
-These are merges into the integration branch, not into `main`. No public deployment or messages to teammates were made.
+Earlier reports that the frontend build fails or the agent only supports v1 are superseded. Neither correction establishes a complete live demo.
 
-## Person 1 — required changes in frontend
+## Person 1 — wire the current interface
 
-1. Make the existing build work: add `frontend/src/vite-env.d.ts` containing `/// <reference types="vite/client" />`. `npm ci && npm run build` currently fails at `src/api/client.ts:6`. Passing `--types vite/client` externally lets TypeScript and Vite build; that diagnostic is not a fix committed to your area.
-2. Use `contracts/native-client.ts` (and `contracts/client.ts`, which defines `ApiError`). The client takes the **server origin**, e.g. `http://127.0.0.1:8000`, or `""` with a same-origin `/api` proxy. Do not pass a base ending in `/api`, or requests become `/api/api/...`. Keep the Gemini key only in the backend. The Vite proxy should target `http://127.0.0.1:8000` to match the documented IPv4 backend bind.
-3. In `App.tsx`, load `GET /api/scenario` and retain its returned `scenario_id` (`chile-sen-5node-demo` by default), timestamps, topology and modification menu. Current `scenarioData.ts` imports are offline fixture previews; they must not be the source of a live result. Label any retained preview visibly as offline fixtures.
-4. Replace `AgentCopilotDrawer.tsx::runLiveInvestigationReplay` and its timer/static trace with `POST /api/agent/run` and polling `GET /api/agent/runs/{run_id}`. Request `execution_mode="live"`, `settings.allow_cached_fallback=false` for the live demo. Display HTTP errors and terminal failed/infeasible states; clear stale prior results when starting a new run. Do not label the animation as a model execution.
-5. Drive map, comparison, validation and recommendation from the **same completed run**. `run.baseline` and `run.candidate` are native solutions (`timeseries`, `metrics`, `binding_constraints`); crisis equivalents are under `run.crisis_analysis`. Native candidate IDs include `north_bess`, `south_bess`, `uprate_l2`; do not assume the fixture IDs `c1_battery_norte_grande` etc. Accept other returned candidate IDs. Render check names/counts from the response, not the fixed “16/16” string.
-6. Show `execution_mode`, `provenance.live_gemini`, actual `provenance.model_execution.model`, fallback/error and synthetic-input provenance. An unmodified current frontend says “Gemini 4 Argon” even though its data is local; replace this with actual mode/model evidence. Keep hourly timestamps as hourly results; 15-minute interpolation must be labelled as display interpolation.
-7. Enable approval only when status is completed, validation passed and approval status pending. Call `client.decision(run, 'approved', operator)` using the latest `revision`; update from the returned run. On 409 fetch again and show the conflict. `setApprovalStatus('approved')` alone does not persist a decision. `src/api/client.ts::postOperatorDecision` currently names a nonexistent `/api/investigations/...` route and returns success on network failure: remove that success fallback. Do not add a backend compatibility route for an unverified local action.
-8. Replace `App.tsx::handleExportRioReport`'s locally assembled JSON with the backend report download for the current run. It contains actual decision, run ID, scenario snapshot and validation. Do not label a frontend fixture export as “CEN audited”. Display simulation-only scope and `legal_compliance_status=not_certified`.
+Files to change: `frontend/src/App.tsx`, `frontend/src/api/client.ts`, and, as needed, `frontend/src/components/ChileIsoMaquette.tsx`. The older drawer/map components were removed; do not implement fixes against their old paths.
 
-Minimal client sequence (inside an async handler; keep React state and error handling around it):
+1. Import the shared `contracts/native-client.ts` and its `contracts/client.ts` dependency. The base URL is a server origin such as `http://127.0.0.1:8000`, or `""` with the Vite `/api` proxy. Do not pass a base ending in `/api`, which doubles the prefix. Set the proxy target to `http://127.0.0.1:8000` to match the documented backend IPv4 bind.
+2. Load `GET /api/scenario`, retain its actual ID, topology, timestamps and modification menu. Default ID is `chile-sen-5node-demo`. Do not substitute the sandbox's local demand, solar or cable values into the fixed native scenario: those sliders have no agreed backend request representation. Keep that sandbox explicitly labelled as a local educational illustration, or disable its local calculations while a verified run is displayed.
+3. Add/connect the analysis action using `POST /api/agent/run`, then poll `GET /api/agent/runs/{run_id}`. For live demo acceptance, use `execution_mode="live"` and `settings.allow_cached_fallback=false`. Clear old results on a new run and display HTTP/terminal errors. Do not translate a timer or `agentEnabled` into a claim that Gemini executed.
+4. Render the same completed run's native `baseline`, `candidate`, `comparison`, `validation`, trace and report. Crisis data is in `crisis_analysis`. Use `timeseries`, `metrics` and `binding_constraints`; native candidate IDs are returned dynamically (defaults include `north_bess`, `south_bess`, `uprate_l2`). Do not combine sandbox arithmetic or looping SOC with verified solver arrays. A schematic aggregation needs a visible, correct mapping to model assets; retain nodal results if no mapping is implemented.
+5. Show actual `execution_mode`, `provenance.live_gemini`, `provenance.model_execution.model`, fallback/error, synthetic profile provenance and numerical units. Display hourly timestamps in `America/Santiago`; interpolated animation does not constitute a new solved interval. Household equivalents come from the backend mapping/window, not a decorative house count.
+6. Enable approval only on a completed, validated, pending run. Call `api.decision(run, 'approved', operatorName)` with the latest revision; update from the returned run. Handle 409 by reloading. Do not use the leftover `postOperatorDecision` implementation: it targets nonexistent `/api/investigations/...` and returns true on network failure. Local state changes are not persisted approvals.
+7. Download the current run using `api.reportUrl(run.run_id)`. Do not generate a replacement report in the browser. Verify the report contains that run ID, validation and the persisted simulation-only decision. Show `legal_compliance_status=not_certified` rather than claiming official certification.
+
+Minimal sequence (inside async UI handlers with loading/error state):
 
 ```ts
-const api = nativeGridPilotClient(""); // Vite /api proxy, no Gemini key
+const api = nativeGridPilotClient(""); // same-origin Vite /api proxy
 const scenario = await api.scenario();
 let run = await api.start("live", {allow_cached_fallback: false},
   "operator_approval", scenario.scenario_id as string);
@@ -37,51 +40,39 @@ while (run.status === "queued" || run.status === "running") {
 }
 if (run.status !== "completed" || !run.validation.passed ||
     run.execution_mode !== "live" || !run.provenance?.live_gemini) {
-  throw new Error("Live investigation did not pass; show the returned error");
+  throw new Error("Live investigation failed; display the returned error");
 }
-// Render this run first; approval happens only on a separate user click:
+// Render this run. A separate operator click performs:
 run = await api.decision(run, "approved", operatorName);
-// A separate download click uses api.reportUrl(run.run_id).
+// A separate report click downloads api.reportUrl(run.run_id).
 ```
 
-A build gate in `.github/workflows/frontend-integration.yml` now runs the standard build. It is expected to fail until item 1 is committed; a passing backend job does not certify the UI.
+This exact shared client's network/persistence/download methods have been exercised against the real API with Node, not just type-checked. That verifies the client/backend boundary, not the current React screen.
 
-## Person 2 — required changes in agent
+## Person 2 — remaining provider/tool loop work
 
-1. Keep `run_investigation(scenario_id, settings)` but implement the native v2 path from `docs/contracts-v2.md`. Load the snapshot through `backend.runtime.load_scenario` and `inspect_evidence`. The current agent can load that snapshot, but its returned candidate fails `NativeSolution`: native scenario/candidate IDs, timeseries and other fields are absent at the top level.
-2. Use actual Gemini function calling: submit tool declarations and the scenario/evidence context, execute the returned `functionCall` via the bounded backend tools, send the matching `functionResponse`, then continue the model loop. The current `plan_candidates_and_crisis` is Python selection logic and the only Google call is a final one-sentence synthesis; this is not evidence that Gemini called the solver. See [Google function calling](https://ai.google.dev/gemini-api/docs/generate-content/function-calling) and [generateContent response fields](https://ai.google.dev/api/generate-content).
-3. Call native tools, without recursively calling HTTP from the worker:
-   - `load_scenario(scenario_id)` → immutable request snapshot copy.
-   - `inspect_evidence(scenario_id)` → historical evidence, native modification menu and assumptions.
-   - `await run_optimisation(scenario_id, candidate, events, options)` → native solution with validation.
-   - `await validate_candidate(scenario_id, solution)` → independent native acceptance.
-   - `compare_results(baseline, candidate)` → native comparison after revalidation.
-   - Record your actual `generate_operator_report` synthesis/tool execution.
-   Read modification bounds from the real menu, not the standalone fallback's alternate `allowed_types` layout.
-4. Native baseline preserves the scenario's existing assets. Do not disable the existing battery as a legacy “baseline policy”. Candidate means a bounded asset intervention; native options are `allow_unserved` and `time_limit_s`, not `battery_policy` or `allow_load_shedding`. Honour `settings.candidates`, `settings.crisis_events`, `settings.options`. The backend already computes and verifies the crisis stage; return normal native arrays and selected `candidate_definition` so that stage can execute consistently.
-5. Return native `baseline`, `candidate`, selected `candidate_definition`, actual timestamped six-tool trace, `operator_report`, and `model_execution`. The backend independently validates results and will reject mismatched assets, inputs or hindsight. A local solver fallback is deterministic software execution, not Google execution.
-6. Missing key, HTTP error, quota error or timeout must raise a truthful failure, not synthesize a successful provider result. `GeminiArgonClient.synthesise_investigation` currently produces `resp-argon-<hash>` offline; `_call_google_rest_api` can also synthesize `resp-google-<hash>`. Both are now rejected by backend live acceptance. Return the response ID and actual model/version from the real successful response. The current default `gemini-4-argon` is silently sent as `gemini-2.5-flash` while still reported as Argon: remove that mismatch. Set an explicit supported model available to your account and report the model actually used.
-7. Do not claim full regulatory certification, a real reconnection or invented household totals in the narrative. Backend numeric comparisons and the explicit household mapping are authoritative. Test the native contract in addition to the current five offline unit tests.
+Native output compatibility is now verified. Keep that implementation and close these remaining items:
 
-The backend's rejection of known fake metadata is a guard, not independent verification of every future adapter attestation. Final acceptance requires a real successful provider exchange, model-selected tool calls and the resulting verified native arrays.
+1. In `agent/gemini_client.py`, use actual model-selected function calls. Submit tool declarations, execute returned `functionCall` arguments through the bounded numerical tools, send matching `functionResponse` results, and continue the model loop. Current native orchestration enumerates candidates in Python and invokes Gemini only to summarise the final results. See [Google function calling](https://ai.google.dev/gemini-api/docs/generate-content/function-calling) and [generateContent fields](https://ai.google.dev/api/generate-content).
+2. Remove the successful Google impersonation on missing credentials or provider failure. `synthesise_investigation` still creates `resp-argon-<hash>` without a provider request, and `_call_google_rest_api` may create `resp-google-<hash>` if `responseId` is absent. The backend rejects both. Raise a truthful error instead; backend fallback, if explicitly allowed, labels the whole result replay.
+3. Return the actual provider response ID and model/version. The client currently sends the default `gemini-4-argon` request as `gemini-2.5-flash` but reports the configured Argon name. Use a supported model accessible to the account and report the model actually invoked. Keep secrets in backend environment variables only.
+4. Preserve native baseline assets and requested candidates/events/options; do not reintroduce the v1 disabled-battery comparison. The actual v2 results now pass `backend.native_service.check_solution`; a focused backend integration test exercises the real agent against the request snapshot.
+5. Do not swallow numerical/validator errors into a less restrictive standalone fallback in the integrated live path. Let the backend surface failure. The backend independently revalidates all accepted results regardless of the agent's own check.
+6. Use backend household metrics and explicit model limitations in the narrative. Local household summaries are not unique reconnected customers, and passed mathematical checks do not establish full legal/N-1 certification. Keep actual model-selected tool events timestamped and distinguish them from deterministic backend verification.
 
-## Person 3 — current handoff
+`run_investigation(scenario_id, settings)` remains the agreed entrypoint. See `docs/contracts-v2.md` for the full native return shape. The backend independently validates normal results, computes/verifies crisis results, persists the decision and exports the authoritative report.
 
-Your branch is integrated unchanged, including the new validator and emergency runback fields. No numerical changes are requested for this path. The full numerical suite and stress sweep pass. Backend replay/examples were regenerated because old results lack `emergency_runback_mwh` and the objective runback term. Deterministic dispatch within a degenerate optimum can change individual hourly values; UI household figures must come from the returned run, not the older fixtures.
+## Person 3 — no solver change requested
 
-## Person 4 — completed integration work
+The latest numerical branch and example index are integrated. The complete test suite and the 532-case stress sweep are rerun. The new matrix exposed only two stale generated `c2_battery_sur` crisis files: different valid hourly discharge/flow allocation, same aggregate metrics. They were regenerated using your script; solver, validator and tests were not edited. A different platform producing a different degenerate optimum would need an owner decision on exact snapshot equality versus semantic validation, not manually altered metrics or relaxed physics.
 
-- Integrated all three current remote workstreams on the existing feature branch; preserved owner source files.
-- Resolved runtime import dependencies (`httpx`, SciPy) for the actual imported agent, including in the container.
-- Regenerated native cache and contract examples using the current numerical module; retained actual independent verification.
-- Blocked strict live requests without credentials. Allowed cache fallback explicitly reports `gemini_credentials_missing`, `execution_mode=replay`, requested mode live, and `live_gemini=false`.
-- Rejected current locally generated Google response IDs on both API protocols.
-- Fixed the HTTP release smoke so live mode disables fallback, checks the **returned** mode/provenance and refuses substituted execution. It can save the actual approved backend reports with `--report-dir`.
-- Included agent unit tests in the integrated suite, added runtime import/pip checks and deterministic HTTP checks to backend CI, and added the real frontend build gate.
+## Person 4 — completed and remaining boundary
 
-## Reproduce and close the demo gate
+Completed: merge current sources on our branch; preserve teammate implementation; verify native agent snapshot compatibility; regenerate generated examples with owner tooling; validate standard frontend build; verify real Python HTTP calls and the shared TypeScript client's run/decision/report flow; enforce truthful live/fallback labels; update automated checks and handoff.
 
-From the repository root:
+No alternative UI, slider API, provider implementation or new product features were introduced. P1/P2 still own the UI wiring and genuine Gemini tool loop. No public deployment or messages to teammates were made. Source and instructions are visible in PR #1.
+
+## Reproduce the verified backend/client path
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -91,19 +82,27 @@ python scripts/export_contracts.py --check
 python -m uvicorn backend.main:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
-In another terminal:
+In another terminal, run Python HTTP checks:
 
 ```bash
-python scripts/smoke.py --mode deterministic --report-dir var/demo-verification
-python scripts/smoke.py --mode replay --report-dir var/demo-verification
-# Only after P2's fixes and backend environment credentials are configured:
-python scripts/smoke.py --mode live --report-dir var/demo-verification
+python scripts/smoke.py --mode deterministic --report-dir var/integration-latest/python
+python scripts/smoke.py --mode replay --report-dir var/integration-latest/python
 ```
 
-Configure `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) and an agreed `GRIDPILOT_GEMINI_MODEL` in the backend process environment; restart the backend after configuration. No credentials were found in this workspace/environment. Do not commit them or place them in `VITE_*` variables. Missing credentials are not evidence of a Google outage. No successful Google call has been observed here.
+Compile and exercise the actual frontend contract client (Node 22+, no frontend source changes):
 
-Then run `cd frontend && npm ci && npm run build && npm run dev`, open the app, and exercise the exact live path twice. Browser Network must show scenario GET, run POST (202), polling GET, decision POST (200) and report GET (200), all tied to the same run ID. Confirm the result is live, validated and has the actual provider/model response metadata; confirm approval is persisted after page reload and the downloaded report includes that decision. Repeat with a stopped backend: the UI must show failure, not success. Only then record the integrated demo.
+```bash
+npx --yes --package typescript@5.9.3 tsc --strict --lib DOM,ES2022 --target ES2022 \
+  --moduleResolution node --module commonjs --outDir /tmp/gridpilot-contract-client \
+  contracts/client.ts contracts/native-client.ts
+node scripts/smoke-client.cjs /tmp/gridpilot-contract-client http://127.0.0.1:8000 deterministic
+node scripts/smoke-client.cjs /tmp/gridpilot-contract-client http://127.0.0.1:8000 replay
+```
 
-Browser UI verification in this session was blocked by the browser authorization gate for localhost. It was not bypassed. The HTTP numerical/persistence path is tested separately; no claim is made that a browser click completed it.
+Both checkers require the returned mode to match the request and verify persisted approval and downloaded report. Backend CI repeats these shared-client checks against Uvicorn and the container. They do not simulate or certify React clicks.
 
-Ready now: real numerical/backend demonstration with explicit deterministic or replay labels. Not ready: the complete Gemini-driven UI demonstration. Remaining blockers are P1's wiring/build, P2's native tool-calling/provenance changes, a valid Gemini credential/model, and final browser verification. Hosting/video are unnecessary to prove the local integration path and were not started.
+For live testing, configure `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) and an agreed `GRIDPILOT_GEMINI_MODEL` in the backend process environment, restart it, and run both checkers with `live`. No key was found locally and both live attempts correctly returned HTTP 503. Do not put provider keys in `VITE_*`, git or chat. A key alone does not fix P2's tool loop or model metadata.
+
+After the remaining P1/P2 changes, use `cd frontend && npm ci && npm run build && npm run dev`, then exercise the exact browser path twice. Network must show scenario GET, run POST (202), polling GET, decision POST (200), report GET (200), all for the same run. Reload to verify approval persisted. Repeat with the API stopped: the UI must report failure. Only then record the complete live demo.
+
+The earlier browser authorization for localhost was denied; it has not been retried or bypassed. Current UI remains unverified by browser interaction. Hosting/video are unnecessary to establish the local path and were not started.

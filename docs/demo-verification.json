@@ -1,8 +1,8 @@
 {
   "verified_on": "2026-10-24",
-  "frontend_commit": "d481a6a",
-  "agent_commit": "bc1d3d4",
-  "numerical_commit": "c9306bb",
+  "frontend_commit": "260744a",
+  "agent_commit": "d0acb32",
+  "numerical_commit": "e60d223",
   "backend_runtime_only_environment": true,
   "adapters": {
     "agent": true,
@@ -16,8 +16,9 @@
     "code": "http_503",
     "message": "Live mode requires Gemini credentials and installed agent/solver/validator; no live execution was started"
   },
+  "shared_typescript_client_strict_live_http_status": 503,
   "allowed_fallback": {
-    "run_id": "2670957f-0f9f-4310-8d8f-adb570d5f268",
+    "run_id": "dece57d7-8e82-4e3f-b734-4c8aec789647",
     "requested_execution_mode": "live",
     "execution_mode": "replay",
     "reason": "gemini_credentials_missing",
@@ -25,49 +26,82 @@
   },
   "approved_backend_http_runs": [
     {
-      "run_id": "352a7160-e3c8-40e2-bb8f-8ca882158ce7",
+      "client": "Python HTTP checker",
+      "run_id": "65a3fbda-cc41-4e2c-8ff8-c57c00e2c3b3",
       "execution_mode": "deterministic",
       "validation_passed": true,
       "approval_status": "approved",
-      "report_sha256": "4a4d7818d829b4d83055aefa2e1fcb0aed34a7f210d1e64d0d14a01b1b10f147",
-      "local_report": "var/demo-verification/deterministic-352a7160-e3c8-40e2-bb8f-8ca882158ce7.json"
+      "report_sha256": "1d5ed205ae1d44c0e3d400c031676ce5eac2a2fc223d17e92ffb4f0b512fe4cf",
+      "local_report": "var/integration-latest/python/deterministic-65a3fbda-cc41-4e2c-8ff8-c57c00e2c3b3.json"
     },
     {
-      "run_id": "b4805792-70b9-4d0d-8883-5c0e459a0146",
+      "client": "Python HTTP checker",
+      "run_id": "90d7dca4-8fde-4d7b-81d4-4491f430b3eb",
       "execution_mode": "deterministic",
       "validation_passed": true,
       "approval_status": "approved",
-      "report_sha256": "56794a7e4222a6c84f662e9522af715ebbd7311496704c026b142ef6ae2a452e",
-      "local_report": "var/demo-verification/deterministic-b4805792-70b9-4d0d-8883-5c0e459a0146.json"
+      "report_sha256": "31b7158f82f2f4172fd730ce26359535a5ecb78c7f77bbbabffea37dcdb11b8a",
+      "local_report": "var/integration-latest/python/deterministic-90d7dca4-8fde-4d7b-81d4-4491f430b3eb.json"
     },
     {
-      "run_id": "37713ec3-4151-4d7c-bad9-680f2f68842f",
+      "client": "Python HTTP checker",
+      "run_id": "05c1f1fd-0a81-4685-b059-d26e61b8c933",
       "execution_mode": "replay",
       "validation_passed": true,
       "approval_status": "approved",
-      "report_sha256": "03885a3868f07bcd1e011e260680db43c676d58f9e71518c2d74aa73f2c46490",
-      "local_report": "var/demo-verification/replay-37713ec3-4151-4d7c-bad9-680f2f68842f.json"
+      "report_sha256": "1bd574695dfce545f0e63f6a1944e16c18fda43bd7edbf06f223c0c2e75d1e12",
+      "local_report": "var/integration-latest/python/replay-05c1f1fd-0a81-4685-b059-d26e61b8c933.json"
     },
     {
-      "run_id": "4c01be49-a846-4e2e-ab1f-221fdb03e7b4",
+      "client": "Python HTTP checker",
+      "run_id": "4b1b18e1-b460-48d3-9a87-87efa464bf09",
       "execution_mode": "replay",
       "validation_passed": true,
       "approval_status": "approved",
-      "report_sha256": "efe1e503f2581c0d0ffee7996097dbb15cdcb7435b243aa59d971cabd29fe240",
-      "local_report": "var/demo-verification/replay-4c01be49-a846-4e2e-ab1f-221fdb03e7b4.json"
+      "report_sha256": "84e673a125efd8e965b60f9ad1b42125aaee3bf5f5ac16fc216b1bdc2053dd71",
+      "local_report": "var/integration-latest/python/replay-4b1b18e1-b460-48d3-9a87-87efa464bf09.json"
+    },
+    {
+      "client": "shared TypeScript client",
+      "run_id": "1587f341-c662-433e-a359-8042ddcc092f",
+      "execution_mode": "deterministic",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "1aac9ceba10974edcc1d531b3574f9b52f96a91409963f37ab8b8982cc043e5d",
+      "local_report": "var/integration-latest/typescript/deterministic-1587f341-c662-433e-a359-8042ddcc092f.json"
+    },
+    {
+      "client": "shared TypeScript client",
+      "run_id": "da4ca571-8112-4706-9ca6-4e1386647a02",
+      "execution_mode": "replay",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "96edf6343d2e87de13da562670460335d2d6bd37b7380d0b09d91bf4faec30a9",
+      "local_report": "var/integration-latest/typescript/replay-da4ca571-8112-4706-9ca6-4e1386647a02.json"
     }
   ],
-  "frontend_standard_build": {
-    "passed": false,
-    "error": "src/api/client.ts(6,30): TS2339 ImportMeta.env"
+  "actual_native_agent_offline_contract": {
+    "baseline_passed": true,
+    "candidate_passed": true,
+    "candidate_id": "north_bess",
+    "trace_events": 53,
+    "provider_metadata_accepted": false,
+    "real_google_call_observed": false
   },
-  "frontend_build_with_external_vite_types": {
+  "frontend_standard_build": {
     "passed": true,
     "owner_source_edited": false
   },
+  "frontend_backend_wiring": {
+    "implemented": false,
+    "source": "frontend/src/App.tsx",
+    "current_behavior": "Local JavaScript sandbox calculations and timer-based SOC; no backend scenario/run/decision/report calls"
+  },
+  "numerical_generated_examples_refreshed": 2,
+  "numerical_solver_validator_tests_source_modified": false,
   "browser_verification": {
     "completed": false,
-    "reason": "Browser authorization denied localhost access; no workaround attempted"
+    "reason": "Earlier browser authorization denied localhost access; not retried or bypassed"
   },
   "integrated_live_demo_ready": false
 }

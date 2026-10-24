@@ -96,4 +96,6 @@ Adapter exception text is not returned because provider exceptions can contain s
 
 ## Current integration gate
 
-The actual teammate modules are imported on this branch. Follow [demo integration handoff](../docs/demo-integration-handoff.md). Runtime requirements include the current agent imports; its native output and real Google tool loop still need P2 changes. Strict live requests require credentials. Known local hash response IDs are rejected. `scripts/smoke.py --mode live` disables fallback and checks actual execution mode; a replay cannot pass this release gate. Health adapter readiness does not certify provider access or contract compatibility.
+The actual teammate modules are imported on this branch. Follow [demo integration handoff](../docs/demo-integration-handoff.md). Runtime requirements include the current agent imports; its native output now passes snapshot compatibility checks; the real Google tool loop still needs P2 changes. Strict live requests require credentials. Known local hash response IDs are rejected. `scripts/smoke.py --mode live` disables fallback and checks actual execution mode; a replay cannot pass this release gate. Health adapter readiness does not certify provider access or contract compatibility.
+
+The actual shared frontend client is also tested over HTTP with `scripts/smoke-client.cjs` after compiling contracts to a scratch CommonJS directory; see the handoff commands. This tests scenario/run/decision/report integration independently of the React screen.

@@ -2,8 +2,9 @@
 
 ## Demo integration audit, 24 October 2026
 
-All three teammate sources are now merged on `feature/data-backend`: frontend `d481a6a`, agent `bc1d3d4`, numerical `c9306bb`. See [the precise demo handoff](demo-integration-handoff.md) for current blockers and owner-specific changes. Real numerical/backend HTTP execution, persisted approval and report download pass in deterministic/replay modes. The current frontend is fixture-based and its standard build fails; the agent emits legacy results and has an offline Google-attestation bug. Missing Gemini credentials prevent a real live provider test. The following native/v1 notes are contract history, not a claim that the integrated UI works.
+Latest merged sources: frontend `260744a`, agent `d0acb32`, numerical `e60d223`. See [the precise demo handoff](demo-integration-handoff.md). Standard frontend build now passes and actual native agent outputs pass snapshot-aware backend checks. Six real HTTP investigations (four Python, two using the shared TypeScript client) verified persisted simulation approval and downloaded reports. Frontend `App.tsx` remains a local JavaScript sandbox with no backend calls; Gemini tool selection/provenance and credentials are still blocking complete live demo acceptance. The earlier frontend-build/v1-agent blockers are resolved. No browser click-through or real Google execution is certified.
 
+The following native/v1 notes describe contract history, not a claim that the integrated UI works.
 
 ## Current native v2 path
 

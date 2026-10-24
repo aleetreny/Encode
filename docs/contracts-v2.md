@@ -82,3 +82,5 @@ Person 2: retain `run_investigation(scenario_id, settings)`. Call snapshot-aware
 V1 four-node fixtures and `contracts/client.ts` remain for compatibility when explicitly selected. They are not the current default demo. Use `native-*.schema.json` as the v2 schemas; the unprefixed v1 schemas remain versioned historical interfaces.
 
 The live HTTP smoke explicitly disables cache fallback and rejects a different returned execution mode. Missing Gemini credentials prevent strict live execution from starting. Known locally derived provider response IDs from the current agent are rejected. Adapter metadata alone remains an attestation; verify actual Google requests and model-selected function calls before certifying the final live demo.
+
+Latest agent integration (`d0acb32`) now returns native baseline/candidate and a bounded selected definition that pass backend snapshot checks. This resolves the earlier v1 shape mismatch, but does not certify actual Gemini function calling. `scripts/smoke-client.cjs` exercises this contract client over actual HTTP in deterministic/replay modes and refuses live-mode substitution. See `docs/demo-integration-handoff.md`.
