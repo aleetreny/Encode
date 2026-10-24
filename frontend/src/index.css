@@ -15,23 +15,23 @@ html, body {
   min-height: 100vh;
   background: var(--anatomy-page);
   color: var(--anatomy-text);
-  font: 14px/1.6 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font: 14px/1.55 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   transition: background-color 220ms var(--anatomy-ease), color 220ms var(--anatomy-ease);
 }
 
 .anatomy-page {
-  width: min(820px, 100% - 32px);
+  width: min(860px, 100% - 32px);
   margin: 0 auto;
-  padding: 40px 0 88px;
+  padding: 28px 0 64px;
 }
 
-/* Header */
+/* 1. Header */
 .anatomy-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .anatomy-eyebrow {
@@ -40,98 +40,29 @@ html, body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--anatomy-muted);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .anatomy-title {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: -0.02em;
-  line-height: 1.25;
+  line-height: 1.22;
   color: var(--anatomy-strong);
 }
 
 .anatomy-subtitle {
   margin: 0;
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--anatomy-text);
-  max-width: 640px;
+  max-width: 680px;
 }
 
 .anatomy-subtitle strong {
   color: var(--anatomy-strong);
-  font-weight: 500;
-}
-
-/* Tactile Control Strip */
-.anatomy-controls-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.anatomy-seg-group {
-  display: inline-flex;
-  flex-wrap: wrap;
-  background: var(--anatomy-card);
-  box-shadow: 0 0 0 1px var(--anatomy-faint);
-  padding: 2px;
-  gap: 2px;
-}
-
-.anatomy-seg-btn {
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: var(--anatomy-muted);
-  font-family: var(--anatomy-mono);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  padding: 6px 9px;
-  cursor: pointer;
-  transition: color 140ms ease, background-color 140ms ease;
-  white-space: nowrap;
-}
-
-.anatomy-seg-btn:hover {
-  color: var(--anatomy-strong);
-}
-
-.anatomy-seg-btn[data-active="true"] {
-  background: var(--anatomy-top);
-  color: var(--anatomy-strong);
-  box-shadow: 0 0 0 1px var(--anatomy-mid);
-}
-
-.anatomy-seg-btn[data-alert="true"][data-active="true"] {
-  color: var(--anatomy-red);
-  box-shadow: 0 0 0 1px var(--anatomy-red);
-}
-
-/* Override figure margin so scrubber attaches cleanly below plate */
-.anatomy-shell .iso-figure {
-  margin: 0 0 20px;
-}
-
-.anatomy-shell .iso-plate {
-  padding: 46px 20px 38px;
-}
-
-/* Scrubber bar */
-.anatomy-scrubber {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  background: var(--anatomy-card);
-  box-shadow: 0 0 0 1px var(--anatomy-faint);
-  margin-bottom: 18px;
+  font-weight: 600;
 }
 
 .anatomy-play-btn {
@@ -142,148 +73,474 @@ html, body {
   font-family: var(--anatomy-mono);
   font-size: 11px;
   letter-spacing: 0.05em;
-  padding: 5px 11px;
+  padding: 6px 12px;
   cursor: pointer;
-  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .anatomy-play-btn:hover {
   border-color: var(--anatomy-hi);
 }
 
-.anatomy-slider-wrap {
+/* 2. Two-Moment Story Bar */
+.story-moment-bar {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.anatomy-range {
-  width: 100%;
-  accent-color: var(--anatomy-hi);
-  cursor: pointer;
-  margin: 0;
-}
-
-.anatomy-presets {
-  display: flex;
-  gap: 6px;
   flex-wrap: wrap;
-}
-
-/* 3-Column Metric Strip */
-.anatomy-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
   background: var(--anatomy-card);
   box-shadow: 0 0 0 1px var(--anatomy-faint);
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
-.anatomy-metric-cell {
-  padding: 14px 16px;
-  border-right: 1px solid var(--anatomy-faint);
-}
-
-.anatomy-metric-cell:last-child {
-  border-right: none;
-}
-
-.anatomy-metric-label {
+.story-moment-label {
   font-family: var(--anatomy-mono);
-  font-size: 10.5px;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--anatomy-muted);
-  margin-bottom: 4px;
 }
 
-.anatomy-metric-value {
-  font-family: var(--anatomy-mono);
-  font-size: 20px;
-  font-weight: 600;
+.story-moment-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.story-moment-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 7px 12px;
+  border: 1px solid var(--anatomy-faint);
+  background: var(--anatomy-page);
+  color: var(--anatomy-text);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.story-moment-btn:hover {
+  border-color: var(--anatomy-mid);
+}
+
+.story-moment-btn[data-active="true"] {
+  background: var(--anatomy-top);
+  border-color: var(--anatomy-hi);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.story-moment-btn[data-alert="true"][data-active="true"] {
+  border-color: var(--anatomy-red);
+}
+
+.story-moment-icon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.story-moment-btn strong {
+  display: block;
+  font-size: 12.5px;
   color: var(--anatomy-strong);
-  font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
 
-.anatomy-metric-delta {
-  font-family: var(--anatomy-mono);
+.story-moment-btn span {
+  display: block;
   font-size: 11px;
-  margin-top: 4px;
   color: var(--anatomy-muted);
-  font-variant-numeric: tabular-nums;
 }
 
-.anatomy-metric-delta[data-tone="green"] {
+.story-play-pill {
+  appearance: none;
+  border: 1px solid var(--anatomy-mid);
+  background: var(--anatomy-top);
+  color: var(--anatomy-strong);
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  padding: 9px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.story-play-pill[data-playing="true"] {
+  border-color: var(--anatomy-green);
   color: var(--anatomy-green);
 }
-.anatomy-metric-delta[data-tone="red"] {
-  color: var(--anatomy-red);
-}
-.anatomy-metric-delta[data-tone="blue"] {
-  color: var(--anatomy-blue);
+
+/* 3. Maquette Stage & Floating Callout Pins */
+.anatomy-shell .iso-figure {
+  margin: 0 0 16px;
 }
 
-/* Zone Inspector Bar */
-.anatomy-zone-bar {
-  background: var(--anatomy-card);
-  box-shadow: 0 0 0 1px var(--anatomy-faint);
-  padding: 12px 16px;
-  margin-bottom: 18px;
+.anatomy-shell .iso-plate {
+  padding: 44px 16px 38px;
 }
 
-.anatomy-zone-tabs {
+.maquette-stage {
+  position: relative;
+  width: 100%;
+}
+
+.maquette-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.maquette-pin {
+  pointer-events: auto;
+  position: absolute;
+  transform: translate(-50%, -95%);
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid var(--anatomy-faint);
-}
-
-.anatomy-zone-stats {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-  font-family: var(--anatomy-mono);
-  font-size: 11.5px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Details drawer */
-.anatomy-details {
-  background: var(--anatomy-card);
-  box-shadow: 0 0 0 1px var(--anatomy-faint);
-  padding: 10px 16px;
-  font-size: 13px;
-}
-
-.anatomy-details summary {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 6px 10px;
+  background: var(--anatomy-top);
+  border: 1px solid var(--anatomy-mid);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
   cursor: pointer;
+  text-align: left;
+  min-width: 175px;
+  max-width: 225px;
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.maquette-pin:hover {
+  transform: translate(-50%, -98%) scale(1.02);
+}
+
+.maquette-pin--bottom {
+  transform: translate(-50%, 8%);
+}
+
+.maquette-pin--bottom:hover {
+  transform: translate(-50%, 5%) scale(1.02);
+}
+
+.maquette-pin[data-tone="green"] {
+  border-left: 3px solid var(--anatomy-green);
+}
+
+.maquette-pin[data-tone="red"] {
+  border-left: 3px solid var(--anatomy-red);
+}
+
+.maquette-pin[data-tone="blue"] {
+  border-left: 3px solid var(--anatomy-blue);
+}
+
+.maquette-pin-zone {
+  font-family: var(--anatomy-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--anatomy-muted);
+  text-transform: uppercase;
+}
+
+.maquette-pin-badge {
   font-family: var(--anatomy-mono);
   font-size: 11px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--anatomy-muted);
-  user-select: none;
-}
-
-.anatomy-details summary:hover {
+  font-weight: 650;
   color: var(--anatomy-strong);
 }
 
-@media (max-width: 680px) {
-  .anatomy-metrics {
-    grid-template-columns: 1fr;
-  }
-  .anatomy-metric-cell {
-    border-right: none;
-    border-bottom: 1px solid var(--anatomy-faint);
-  }
-  .anatomy-scrubber {
-    grid-template-columns: 1fr;
-  }
-  .anatomy-zone-stats {
+.maquette-pin[data-tone="green"] .maquette-pin-badge {
+  color: var(--anatomy-green);
+}
+
+.maquette-pin[data-tone="red"] .maquette-pin-badge {
+  color: var(--anatomy-red);
+}
+
+.maquette-pin[data-tone="blue"] .maquette-pin-badge {
+  color: var(--anatomy-blue);
+}
+
+.maquette-pin-sub {
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--anatomy-text);
+}
+
+/* Direct Interactive Socket Buttons on Maquette */
+.maquette-socket-btn {
+  pointer-events: auto;
+  position: absolute;
+  transform: translate(-50%, 15%);
+  appearance: none;
+  padding: 6px 11px;
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  font-weight: 650;
+  background: var(--anatomy-top);
+  color: var(--anatomy-strong);
+  border: 1.5px dashed var(--anatomy-mid);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.09);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.maquette-socket-btn[data-recommended="true"] {
+  border-color: var(--anatomy-green);
+  color: var(--anatomy-green);
+}
+
+.maquette-socket-btn:hover {
+  transform: translate(-50%, 10%) scale(1.04);
+}
+
+.maquette-socket-btn[data-active="true"] {
+  border-style: solid;
+  border-color: var(--anatomy-green);
+  background: var(--anatomy-green);
+  color: #ffffff;
+}
+
+/* Zone Click Toast inside Maquette */
+.maquette-zone-toast {
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: var(--anatomy-top);
+  border: 1px solid var(--anatomy-mid);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.maquette-zone-toast strong {
+  display: block;
+  font-size: 13px;
+  color: var(--anatomy-strong);
+}
+
+.maquette-zone-toast p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--anatomy-text);
+}
+
+.maquette-toast-close {
+  appearance: none;
+  border: 1px solid var(--anatomy-faint);
+  background: var(--anatomy-card);
+  color: var(--anatomy-muted);
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 4. Step 2: 4 Visual Decision Cards */
+.decision-section {
+  margin-bottom: 16px;
+}
+
+.decision-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--anatomy-muted);
+}
+
+.decision-hint {
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.decision-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.decision-card {
+  appearance: none;
+  text-align: left;
+  padding: 11px 12px;
+  background: var(--anatomy-card);
+  border: 1px solid var(--anatomy-faint);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 150ms ease;
+}
+
+.decision-card:hover {
+  border-color: var(--anatomy-mid);
+}
+
+.decision-card[data-active="true"] {
+  background: var(--anatomy-top);
+  border-color: var(--anatomy-hi);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.decision-card[data-active="true"][data-tone="green"] {
+  border-color: var(--anatomy-green);
+  box-shadow: 0 0 0 1px var(--anatomy-green);
+}
+
+.decision-card[data-active="true"][data-tone="red"] {
+  border-color: var(--anatomy-red);
+}
+
+.decision-card[data-active="true"][data-tone="blue"] {
+  border-color: var(--anatomy-blue);
+}
+
+.decision-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.decision-badge {
+  font-family: var(--anatomy-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--anatomy-muted);
+}
+
+.decision-badge[data-tone="green"] {
+  color: var(--anatomy-green);
+}
+
+.decision-badge[data-tone="red"] {
+  color: var(--anatomy-red);
+}
+
+.decision-badge[data-tone="blue"] {
+  color: var(--anatomy-blue);
+}
+
+.decision-radio {
+  font-family: var(--anatomy-mono);
+  font-size: 12px;
+  color: var(--anatomy-strong);
+}
+
+.decision-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--anatomy-strong);
+}
+
+.decision-verdict {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--anatomy-muted);
+}
+
+/* 5. Two Visual Impact Scorecards */
+.impact-strip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.impact-card {
+  padding: 14px 16px;
+  background: var(--anatomy-card);
+  border: 1px solid var(--anatomy-faint);
+}
+
+.impact-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.impact-label {
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--anatomy-strong);
+}
+
+.impact-score {
+  font-family: var(--anatomy-mono);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.impact-score[data-tone="green"] {
+  color: var(--anatomy-green);
+}
+
+.impact-score[data-tone="red"] {
+  color: var(--anatomy-red);
+}
+
+.impact-bar-track {
+  width: 100%;
+  height: 7px;
+  background: var(--anatomy-faint);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.impact-bar-fill {
+  height: 100%;
+  transition: width 360ms var(--anatomy-ease), background-color 240ms ease;
+}
+
+.impact-bar-fill[data-tone="green"] {
+  background: var(--anatomy-green);
+}
+
+.impact-bar-fill[data-tone="red"] {
+  background: var(--anatomy-red);
+}
+
+.impact-explain {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--anatomy-text);
+  line-height: 1.4;
+}
+
+@media (max-width: 740px) {
+  .decision-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .impact-strip {
+    grid-template-columns: 1fr;
+  }
+  .maquette-overlay {
+    position: static;
+    display: grid;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .maquette-pin,
+  .maquette-socket-btn {
+    position: static;
+    transform: none !important;
+    max-width: none;
   }
 }
