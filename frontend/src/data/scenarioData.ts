@@ -71,7 +71,7 @@ export const NODES: GridNode[] = [
   {
     id: 'n_sur',
     label: 'Sur',
-    shortName: 'Sur · Araucanía/Lagos',
+    shortName: 'Sur · Austral',
     regionCode: 'CL-SU',
     subtitle: 'Southern Hydro-Wind Zone (200 MW Hydro + 200 MW Wind)',
     lat: -41.5,
