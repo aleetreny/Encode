@@ -311,7 +311,7 @@ def _solve_lp_window(
 
     # Battery bounds & costs (use eff_c_thr in LP objective so battery never simultaneously
     # charges & discharges in the same hour to dissipate curtailed energy via round-trip loss)
-    eff_c_thr = max(c_thr, 0.25 * max(1.0, c_curt))
+    eff_c_thr = c_thr if c_thr > 0.0 else max(0.05, 0.25 * max(1.0, c_curt))
     for b_i, b in enumerate(bats):
         bid = b["id"]
         p_cap = float(b["power_capacity_mw"])
@@ -557,6 +557,7 @@ def _solve_lp_window(
         "transmission_tiebreak_usd": round(
             sum(sum(abs(v) for v in vals) for vals in flow_mw.values()) * dt * c_tx, 6
         ),
+        "emergency_runback_penalty_usd": 0.0,
     }
 
     return {
@@ -591,6 +592,7 @@ def _solve_lp_window(
             "battery_discharge_mwh": dis_total,
             "battery_losses_mwh": losses_total,
             "assumed_cost_proxy_usd": disp_cost,
+            "emergency_runback_mwh": 0.0,
             "line_hours_at_limit": line_hours_at_limit,
         },
         "objective": {
@@ -611,6 +613,8 @@ def solve_native(
     t0 = time.perf_counter()
     opts = options or {}
     allow_unserved = bool(opts.get("allow_unserved", opts.get("allow_load_shedding", True)))
+    time_limit_s = float(opts.get("time_limit_s", 30.0))
+    norm_options = {"allow_unserved": allow_unserved, "time_limit_s": time_limit_s}
     native_scen = _normalise_to_native_scenario(scenario, opts)
 
     try:
@@ -623,7 +627,7 @@ def solve_native(
             "candidate_id": (candidate or {}).get("candidate_id", "baseline"),
             "modifications": [],
             "events": [],
-            "options": {"allow_unserved": allow_unserved},
+            "options": norm_options,
             "time_step_hours": native_scen.get("time_step_hours", 1),
             "timestamps_utc": native_scen.get("timestamps_utc", []),
             "solver": {"name": "SciPy-HiGHS", "version": "1.0", "solve_time_s": 0.0, "solves": 0},
@@ -683,7 +687,7 @@ def solve_native(
             "candidate_id": cand_id,
             "modifications": applied_mods,
             "events": merged_events,
-            "options": {"allow_unserved": allow_unserved},
+            "options": norm_options,
             "time_step_hours": eff["time_step_hours"],
             "timestamps_utc": eff["timestamps_utc"],
             "solver": {"name": "SciPy-HiGHS", "version": "1.0", "solve_time_s": elapsed, "solves": solves_count},
@@ -701,7 +705,7 @@ def solve_native(
         "candidate_id": cand_id,
         "modifications": applied_mods,
         "events": merged_events,
-        "options": {"allow_unserved": allow_unserved},
+        "options": norm_options,
         "time_step_hours": eff["time_step_hours"],
         "timestamps_utc": eff["timestamps_utc"],
         "solver": {"name": "SciPy-HiGHS", "version": "1.0", "solve_time_s": elapsed, "solves": solves_count},
