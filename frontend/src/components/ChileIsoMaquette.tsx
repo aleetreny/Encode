@@ -632,11 +632,6 @@ export const ChileIsoMaquette: React.FC = () => {
       triggerTwoStageReaction('substation', true);
     }
     void startBackendAgentRun(preset);
-    void postOperatorDecision({
-      investigation_id: `sen-${preset}`,
-      candidate_id: preset === 'planned_maintenance' ? 'c3_uprate_l2' : 'c1_battery_norte_grande',
-      decision: 'approved',
-    });
   };
 
   // Live two-stage narrative text for top borderless telemetry bar
