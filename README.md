@@ -12,7 +12,7 @@ pip install -r requirements-dev.txt
 python -m uvicorn backend.main:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
-Open [API documentation](http://127.0.0.1:8000/docs). In another terminal, run `python scripts/smoke.py` for two complete HTTP investigations with validation, simulated approval and report export. Use `python -m pytest -q` for the automated checks. This branch contains Person 4's backend/data/integration work; the live Gemini agent, production optimiser and dashboard are separate team workstreams. Live calls fail explicitly until their adapters are installed.
+Open [API documentation](http://127.0.0.1:8000/docs). In another terminal, run `python scripts/smoke.py` for two complete HTTP investigations with validation, simulated approval and report export. Use `python -m pytest -q` for the automated checks. This branch contains Person 4's backend/data/integration work; Person 3's production HiGHS solver and validator are integrated on this branch. The Gemini agent and dashboard remain separate team workstreams. Live agent calls fail explicitly until the real agent is installed.
 
 Read [backend operations](backend/README.md), [the implemented v1 contract](contracts/README.md), [research and source findings](docs/task-4-research.md), [72 detailed subtasks](docs/task-4-work-breakdown.md), and [the release runbook](docs/release-runbook.md). Historical source evidence and synthetic simulation inputs are kept separate. A cached replay is never labelled as a live Gemini run.
 

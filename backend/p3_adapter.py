@@ -29,12 +29,14 @@ def native_scenario(scenario, options):
     native.pop("schema_version")
     native.pop("network_model")
     native.pop("curtailment_penalty_usd_per_mwh")
+    native.pop("battery_throughput_cost_usd_per_mwh")
     native.pop("load_shedding_penalty_usd_per_mwh")
     native["display_timezone"] = "America/Santiago"
     native["objective"] = {
         "unserved_energy_penalty_usd_per_mwh": s.load_shedding_penalty_usd_per_mwh,
         "curtailment_penalty_usd_per_mwh": s.curtailment_penalty_usd_per_mwh,
-        "battery_throughput_cost_usd_per_mwh": 0,
+        "battery_throughput_cost_usd_per_mwh": s.battery_throughput_cost_usd_per_mwh,
+        "transmission_tiebreak_usd_per_mwh": 0,
     }
     batteries = []
     for battery in s.batteries:
@@ -42,6 +44,7 @@ def native_scenario(scenario, options):
             raise ValueError("P3 bridge currently requires final SOC equal to initial SOC")
         item = wire(battery)
         item.pop("final_soc_mwh")
+        item.pop("final_soc_policy")
         item.pop("round_trip_efficiency")
         item.update(
             min_soc_mwh=0,

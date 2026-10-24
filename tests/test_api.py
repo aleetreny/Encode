@@ -68,9 +68,32 @@ def test_missing_live_fails_honestly(client):
     assert (
         client.post("/api/agent/run", json={"scenario_id": BODY["scenario_id"]}).status_code == 503
     )
-    assert (
-        client.post("/api/optimise", json={"scenario_id": BODY["scenario_id"]}).status_code == 503
-    )
+
+
+def test_real_solver_and_independent_validator_through_api(client):
+    state = client.get("/api/health").json()
+    assert state["adapters"]["solver"] and state["adapters"]["validator"]
+    for policy in ("disabled", "optimised"):
+        body = dict(scenario_id=BODY["scenario_id"], options={"battery_policy": policy})
+        response = client.post("/api/optimise", json=body)
+        assert response.status_code == 200
+        result = response.json()
+        assert result["status"] == "optimal" and result["validation"]["passed"]
+        assert result["solution"]["native_result"]["solver"]["name"] == "HiGHS"
+        checked = client.post("/api/validate", json={**body, "solution": result["solution"]})
+        assert checked.status_code == 200 and checked.json()["passed"]
+        assert checked.json()["metrics"]["assumed_cost_usd"] == pytest.approx(
+            result["solution"]["native_result"]["objective"]["total_usd"], abs=1e-3
+        )
+
+
+def test_missing_solver_is_reported(settings):
+    settings.solve_callable = "not_installed_gridpilot:solve"
+    with TestClient(create_app(settings)) as client:
+        assert (
+            client.post("/api/optimise", json={"scenario_id": BODY["scenario_id"]}).status_code
+            == 503
+        )
 
 
 def test_replay_options_mismatch(client):
@@ -214,7 +237,7 @@ def test_validation_adapter_and_boundary(settings, replay):
 
 def test_report_summary_uses_verified_numbers(client):
     doc = finish(client, client.post("/api/agent/run", json=BODY).json()["run_id"])
-    assert "78.432740 MWh" in doc["operator_report"]["summary"]
+    assert "77.777778 MWh" in doc["operator_report"]["summary"]
     assert "agent_commentary" in doc["operator_report"]
 
 

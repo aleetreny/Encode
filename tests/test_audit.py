@@ -13,7 +13,7 @@ def test_reference_comparison(scenario, replay):
     candidate = audit(scenario, Solution.model_validate(replay["result"]["candidate"]), Options())
     assert baseline.passed and candidate.passed
     assert baseline.metrics.curtailed_energy_mwh == 210
-    assert candidate.metrics.curtailed_energy_mwh == pytest.approx(131.56725957288432)
+    assert candidate.metrics.curtailed_energy_mwh == pytest.approx(132.222222)
     assert candidate.metrics.unserved_energy_mwh == 0
 
 

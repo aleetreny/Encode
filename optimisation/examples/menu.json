@@ -1,0 +1,86 @@
+{
+  "max_modifications": 2,
+  "add_battery": {
+    "node_ids": [
+      "n_norte_grande",
+      "n_norte_chico",
+      "n_centro",
+      "n_centro_sur",
+      "n_sur"
+    ],
+    "power_mw": [
+      10.0,
+      150.0
+    ],
+    "duration_h": [
+      1.0,
+      6.0
+    ],
+    "initial_soc_fraction": 0.5,
+    "charge_efficiency": 0.95,
+    "discharge_efficiency": 0.95
+  },
+  "uprate_line": {
+    "lines": [
+      {
+        "id": "L1",
+        "from": "n_norte_grande",
+        "to": "n_norte_chico",
+        "current_capacity_mw": 400.0,
+        "max_capacity_mw": 600.0
+      },
+      {
+        "id": "L2",
+        "from": "n_norte_chico",
+        "to": "n_centro",
+        "current_capacity_mw": 400.0,
+        "max_capacity_mw": 600.0
+      },
+      {
+        "id": "L3",
+        "from": "n_centro",
+        "to": "n_centro_sur",
+        "current_capacity_mw": 350.0,
+        "max_capacity_mw": 525.0
+      },
+      {
+        "id": "L4",
+        "from": "n_centro_sur",
+        "to": "n_sur",
+        "current_capacity_mw": 300.0,
+        "max_capacity_mw": 450.0
+      }
+    ]
+  },
+  "events": {
+    "types": [
+      "generator_outage",
+      "line_outage"
+    ],
+    "modes": [
+      "planned",
+      "sudden"
+    ],
+    "generator_ids": [
+      "solar_ng",
+      "solar_nc",
+      "wind_nc",
+      "gas_ng",
+      "gas_centro",
+      "coal_cs",
+      "hydro_sur",
+      "wind_sur",
+      "diesel_centro"
+    ],
+    "line_ids": [
+      "L1",
+      "L2",
+      "L3",
+      "L4"
+    ],
+    "hours": [
+      0,
+      24
+    ]
+  }
+}

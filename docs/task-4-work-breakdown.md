@@ -43,7 +43,7 @@
 | 4.25 | Export JSON Schema and actual FastAPI OpenAPI | DONE |
 | 4.26 | Fail CI on schema drift | DONE |
 | 4.27 | Supply historically contextualised and fully synthetic scenarios | DONE |
-| 4.28 | Generate feasible cached baseline/candidate outputs with a reference MILP | DONE |
+| 4.28 | Generate feasible cached baseline/candidate outputs with the production HiGHS module | DONE |
 | 4.29 | Mark cached fixtures and traces explicitly as replay without live Gemini | DONE |
 | 4.30 | Supply a browser TypeScript API client and integration instructions | DONE |
 
@@ -71,7 +71,7 @@
 | 4.48 | Export JSON with source evidence, snapshots, assumptions and validation | DONE |
 | 4.49 | Preserve decision identity label, time, note and simulation-only scope | DONE |
 | 4.50 | Integrate actual Gemini agent implementation | EXTERNAL: Person 2 |
-| 4.51 | Integrate actual solver and its independent validator | EXTERNAL: Person 3 |
+| 4.51 | Integrate actual solver and its independent validator | DONE: merged Person 3 branch into this branch; actual API solve/validate verified |
 | 4.52 | Connect actual frontend through the contract client | EXTERNAL: Person 1 |
 
 ## E. Operational checks

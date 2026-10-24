@@ -36,6 +36,21 @@ def main():
     if not health["worker_enabled"]:
         raise SystemExit("Worker disabled")
     request("/api/ready?mode=" + args.mode)
+    if health["adapters"]["solver"] and health["adapters"]["validator"]:
+        for policy in ("disabled", "optimised"):
+            solve_body = dict(scenario_id=args.scenario, options={"battery_policy": policy})
+            computed = request("/api/optimise", solve_body)
+            assert computed["status"] == "optimal" and computed["validation"]["passed"]
+            checked = request("/api/validate", {**solve_body, "solution": computed["solution"]})
+            assert checked["passed"]
+        print(
+            json.dumps(
+                dict(
+                    numerical_api="production solver and independent validator passed",
+                    policies=["disabled", "optimised"],
+                )
+            )
+        )
     for attempt in range(2):
         body = dict(scenario_id=args.scenario, execution_mode=args.mode)
         key = str(uuid4())

@@ -22,7 +22,7 @@ def test_bridge_preserves_explicit_units_and_policy(scenario_json):
     assert native["batteries"][0]["power_capacity_mw"] == 0
     assert native["batteries"][0]["charge_efficiency"] ** 2 == pytest.approx(0.9)
     assert "final_soc_mwh" not in native["batteries"][0]
-    assert native["objective"]["curtailment_penalty_usd_per_mwh"] == 1
+    assert native["objective"]["curtailment_penalty_usd_per_mwh"] == 0
     assert "curtailment_penalty_usd_per_mwh" not in native
 
 

@@ -110,6 +110,7 @@
       "energy_capacity_mwh": 90.0,
       "initial_soc_mwh": 10.0,
       "final_soc_mwh": 10.0,
+      "final_soc_policy": "at_least",
       "round_trip_efficiency": 0.9
     }
   ],
@@ -165,6 +166,7 @@
       10.0
     ]
   },
-  "curtailment_penalty_usd_per_mwh": 1.0,
+  "curtailment_penalty_usd_per_mwh": 0.0,
+  "battery_throughput_cost_usd_per_mwh": 0.5,
   "load_shedding_penalty_usd_per_mwh": 10000.0
 }

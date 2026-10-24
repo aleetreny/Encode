@@ -8,7 +8,7 @@ from math import sqrt
 
 from backend.models import Metrics, Options, Scenario, Solution, Validation
 
-TOL = 1e-6
+TOL = 1e-4  # Native outputs are rounded to 1e-6; allow accumulation across nodal terms.
 
 
 def audit(scenario: Scenario, solution: Solution, options: Options) -> Validation:
@@ -70,7 +70,12 @@ def audit(scenario: Scenario, solution: Solution, options: Options) -> Validatio
     for b in scenario.batteries:
         values = soc[b.id]
         eta = sqrt(b.round_trip_efficiency)
-        if abs(values[0] - b.initial_soc_mwh) > TOL or abs(values[-1] - b.final_soc_mwh) > TOL:
+        invalid_final = (
+            abs(values[-1] - b.final_soc_mwh) > TOL
+            if b.final_soc_policy == "equal"
+            else values[-1] < b.final_soc_mwh - TOL
+        )
+        if abs(values[0] - b.initial_soc_mwh) > TOL or invalid_final:
             fail(f"battery {b.id}: initial/final SOC")
         if any(v < -TOL or v > b.energy_capacity_mwh + TOL for v in values):
             fail(f"battery {b.id}: SOC capacity")
@@ -85,6 +90,7 @@ def audit(scenario: Scenario, solution: Solution, options: Options) -> Validatio
             if abs(values[t + 1] - expected) > TOL:
                 fail(f"battery {b.id} at {t}: SOC progression (MWh)")
             balances[b.node_id][t] += d - c
+            cost += (c + d) * dt * scenario.battery_throughput_cost_usd_per_mwh
     for node, demand in scenario.demand_mw_by_node.items():
         for t, value in enumerate(shed[node]):
             if value < -TOL or value > demand[t] + TOL:

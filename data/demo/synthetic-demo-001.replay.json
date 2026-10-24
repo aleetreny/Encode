@@ -1,13 +1,13 @@
 {
-  "scenario_sha256": "ff1afdc518f6a60b9269f040f649ce86f0bdfd97af0c465b26e259c04e217db1",
+  "scenario_sha256": "ce8f031ecb523e1701a3a063e0b59b592ab02396823dedc6303967a53f5e16da",
   "settings": {
     "battery_policy": "optimised",
     "allow_load_shedding": false
   },
   "generator": {
     "script": "scripts/build_demo.py",
-    "scipy_version": "1.18.1",
-    "solver": "SciPy milp / HiGHS",
+    "highs_version": "1.15.1",
+    "solver": "Person 3 production HiGHS LP",
     "scope": "offline reference fixture only"
   },
   "result": {
@@ -148,16 +148,298 @@
           0.0
         ]
       },
-      "reason": null
+      "reason": null,
+      "native_result": {
+        "status": "optimal",
+        "message": null,
+        "scenario_id": "synthetic-demo-001",
+        "candidate_id": "baseline",
+        "modifications": [],
+        "events": [],
+        "options": {
+          "allow_unserved": false,
+          "time_limit_s": 30.0
+        },
+        "time_step_hours": 1.0,
+        "timestamps_utc": [
+          "2026-08-01T14:00:00Z",
+          "2026-08-01T15:00:00Z",
+          "2026-08-01T16:00:00Z",
+          "2026-08-01T17:00:00Z",
+          "2026-08-01T18:00:00Z",
+          "2026-08-01T19:00:00Z"
+        ],
+        "solver": {
+          "name": "HiGHS",
+          "version": "1.15.1",
+          "solve_time_s": 0.0004,
+          "solves": 1
+        },
+        "objective": {
+          "total_usd": 15600.0,
+          "terms": {
+            "dispatchable_cost_usd": 15600.0,
+            "unserved_penalty_usd": 0.0,
+            "curtailment_penalty_usd": 0.0,
+            "battery_throughput_cost_usd": 0.0,
+            "transmission_tiebreak_usd": 0.0
+          }
+        },
+        "assets": {
+          "batteries": [
+            {
+              "id": "b1",
+              "node_id": "north",
+              "power_capacity_mw": 0.0,
+              "energy_capacity_mwh": 90.0,
+              "min_soc_mwh": 0.0,
+              "initial_soc_mwh": 10.0,
+              "charge_efficiency": 0.9486832980505138,
+              "discharge_efficiency": 0.9486832980505138
+            }
+          ],
+          "lines": [
+            {
+              "id": "L1",
+              "from": "north",
+              "to": "central",
+              "capacity_mw": 60.0
+            },
+            {
+              "id": "L2",
+              "from": "central",
+              "to": "south",
+              "capacity_mw": 80.0
+            },
+            {
+              "id": "L3",
+              "from": "south",
+              "to": "coast",
+              "capacity_mw": 30.0
+            }
+          ]
+        },
+        "timeseries": {
+          "generation_mw": {
+            "solar1": [
+              80.0,
+              80.0,
+              80.0,
+              70.0,
+              20.0,
+              0.0
+            ],
+            "wind1": [
+              15.0,
+              18.0,
+              20.0,
+              15.0,
+              12.0,
+              10.0
+            ],
+            "thermal1": [
+              15.0,
+              12.0,
+              10.0,
+              25.0,
+              78.0,
+              100.0
+            ]
+          },
+          "available_mw": {
+            "solar1": [
+              140.0,
+              160.0,
+              150.0,
+              70.0,
+              20.0,
+              0.0
+            ],
+            "wind1": [
+              15.0,
+              18.0,
+              20.0,
+              15.0,
+              12.0,
+              10.0
+            ],
+            "thermal1": [
+              150.0,
+              150.0,
+              150.0,
+              150.0,
+              150.0,
+              150.0
+            ]
+          },
+          "curtailment_mw": {
+            "solar1": [
+              60.0,
+              80.0,
+              70.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "wind1": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "battery_charge_mw": {
+            "b1": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "battery_discharge_mw": {
+            "b1": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "battery_soc_mwh": {
+            "b1": [
+              10.0,
+              10.0,
+              10.0,
+              10.0,
+              10.0,
+              10.0,
+              10.0
+            ]
+          },
+          "line_flow_mw": {
+            "L1": [
+              60.0,
+              60.0,
+              60.0,
+              50.0,
+              0.0,
+              -20.0
+            ],
+            "L2": [
+              30.0,
+              30.0,
+              30.0,
+              20.0,
+              -30.0,
+              -50.0
+            ],
+            "L3": [
+              -5.0,
+              -8.0,
+              -10.0,
+              -5.0,
+              -2.0,
+              0.0
+            ]
+          },
+          "unserved_mw": {
+            "north": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "central": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "south": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "coast": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "metrics": {
+          "curtailment_mwh": 210.0,
+          "curtailment_mwh_by_generator": {
+            "solar1": 210.0,
+            "wind1": 0.0
+          },
+          "unserved_mwh": 0.0,
+          "unserved_mwh_by_node": {
+            "north": 0.0,
+            "central": 0.0,
+            "south": 0.0,
+            "coast": 0.0
+          },
+          "renewable_used_mwh": 420.0,
+          "dispatchable_mwh": 240.0,
+          "demand_mwh": 660.0,
+          "battery_charge_mwh": 0.0,
+          "battery_discharge_mwh": 0.0,
+          "battery_losses_mwh": 0.0,
+          "assumed_cost_proxy_usd": 15600.0,
+          "line_hours_at_limit": {
+            "L1": 3.0,
+            "L2": 0.0,
+            "L3": 0.0
+          }
+        },
+        "binding_constraints": [
+          {
+            "type": "line_limit",
+            "id": "L1",
+            "hours": [
+              0,
+              1,
+              2
+            ],
+            "detail": "flow north -> central at 60 MW limit"
+          },
+          {
+            "type": "renewable_curtailed",
+            "id": "solar1",
+            "hours": [
+              0,
+              1,
+              2
+            ],
+            "detail": "available renewable output not used"
+          }
+        ]
+      }
     },
     "candidate": {
       "status": "optimal",
       "generation_mw_by_generator": {
         "solar1": [
+          97.777778,
           110.0,
-          104.3274042711568,
           110.0,
-          64.1053361559589,
+          70.0,
           20.0,
           0.0
         ],
@@ -180,10 +462,10 @@
       },
       "curtailment_mw_by_generator": {
         "solar1": [
-          30.0,
-          55.672595728843206,
+          42.222222,
+          50.0,
           40.0,
-          5.894663844041105,
+          0.0,
           0.0,
           0.0
         ],
@@ -224,8 +506,8 @@
       },
       "charge_mw_by_battery": {
         "b1": [
-          29.999999999999996,
-          24.32740427115679,
+          17.777778,
+          30.0,
           30.0,
           0.0,
           0.0,
@@ -237,7 +519,7 @@
           0.0,
           0.0,
           0.0,
-          15.894663844041098,
+          10.0,
           30.0,
           30.0
         ]
@@ -245,11 +527,11 @@
       "soc_mwh_by_battery": {
         "b1": [
           10.0,
-          38.46049894151541,
-          61.53950105848459,
-          90.0,
-          73.24555320336759,
-          41.622776601683796,
+          26.865481,
+          55.32598,
+          83.786479,
+          73.245553,
+          41.622777,
           10.0
         ]
       },
@@ -287,15 +569,313 @@
           0.0
         ]
       },
-      "reason": null
+      "reason": null,
+      "native_result": {
+        "status": "optimal",
+        "message": null,
+        "scenario_id": "synthetic-demo-001",
+        "candidate_id": "baseline",
+        "modifications": [],
+        "events": [],
+        "options": {
+          "allow_unserved": false,
+          "time_limit_s": 30.0
+        },
+        "time_step_hours": 1.0,
+        "timestamps_utc": [
+          "2026-08-01T14:00:00Z",
+          "2026-08-01T15:00:00Z",
+          "2026-08-01T16:00:00Z",
+          "2026-08-01T17:00:00Z",
+          "2026-08-01T18:00:00Z",
+          "2026-08-01T19:00:00Z"
+        ],
+        "solver": {
+          "name": "HiGHS",
+          "version": "1.15.1",
+          "solve_time_s": 0.0006,
+          "solves": 1
+        },
+        "objective": {
+          "total_usd": 11123.888889,
+          "terms": {
+            "dispatchable_cost_usd": 11050.0,
+            "unserved_penalty_usd": 0.0,
+            "curtailment_penalty_usd": 0.0,
+            "battery_throughput_cost_usd": 73.888889,
+            "transmission_tiebreak_usd": 0.0
+          }
+        },
+        "assets": {
+          "batteries": [
+            {
+              "id": "b1",
+              "node_id": "north",
+              "power_capacity_mw": 30.0,
+              "energy_capacity_mwh": 90.0,
+              "min_soc_mwh": 0.0,
+              "initial_soc_mwh": 10.0,
+              "charge_efficiency": 0.9486832980505138,
+              "discharge_efficiency": 0.9486832980505138
+            }
+          ],
+          "lines": [
+            {
+              "id": "L1",
+              "from": "north",
+              "to": "central",
+              "capacity_mw": 60.0
+            },
+            {
+              "id": "L2",
+              "from": "central",
+              "to": "south",
+              "capacity_mw": 80.0
+            },
+            {
+              "id": "L3",
+              "from": "south",
+              "to": "coast",
+              "capacity_mw": 30.0
+            }
+          ]
+        },
+        "timeseries": {
+          "generation_mw": {
+            "solar1": [
+              97.777778,
+              110.0,
+              110.0,
+              70.0,
+              20.0,
+              0.0
+            ],
+            "wind1": [
+              15.0,
+              18.0,
+              20.0,
+              15.0,
+              12.0,
+              10.0
+            ],
+            "thermal1": [
+              15.0,
+              12.0,
+              10.0,
+              15.0,
+              48.0,
+              70.0
+            ]
+          },
+          "available_mw": {
+            "solar1": [
+              140.0,
+              160.0,
+              150.0,
+              70.0,
+              20.0,
+              0.0
+            ],
+            "wind1": [
+              15.0,
+              18.0,
+              20.0,
+              15.0,
+              12.0,
+              10.0
+            ],
+            "thermal1": [
+              150.0,
+              150.0,
+              150.0,
+              150.0,
+              150.0,
+              150.0
+            ]
+          },
+          "curtailment_mw": {
+            "solar1": [
+              42.222222,
+              50.0,
+              40.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "wind1": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "battery_charge_mw": {
+            "b1": [
+              17.777778,
+              30.0,
+              30.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "battery_discharge_mw": {
+            "b1": [
+              0.0,
+              0.0,
+              0.0,
+              10.0,
+              30.0,
+              30.0
+            ]
+          },
+          "battery_soc_mwh": {
+            "b1": [
+              10.0,
+              26.865481,
+              55.32598,
+              83.786479,
+              73.245553,
+              41.622777,
+              10.0
+            ]
+          },
+          "line_flow_mw": {
+            "L1": [
+              60.0,
+              60.0,
+              60.0,
+              60.0,
+              30.0,
+              10.0
+            ],
+            "L2": [
+              30.0,
+              30.0,
+              30.0,
+              30.0,
+              0.0,
+              -20.0
+            ],
+            "L3": [
+              -5.0,
+              -8.0,
+              -10.0,
+              -5.0,
+              -2.0,
+              0.0
+            ]
+          },
+          "unserved_mw": {
+            "north": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "central": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "south": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "coast": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "metrics": {
+          "curtailment_mwh": 132.222222,
+          "curtailment_mwh_by_generator": {
+            "solar1": 132.222222,
+            "wind1": 0.0
+          },
+          "unserved_mwh": 0.0,
+          "unserved_mwh_by_node": {
+            "north": 0.0,
+            "central": 0.0,
+            "south": 0.0,
+            "coast": 0.0
+          },
+          "renewable_used_mwh": 497.777778,
+          "dispatchable_mwh": 170.0,
+          "demand_mwh": 660.0,
+          "battery_charge_mwh": 77.777778,
+          "battery_discharge_mwh": 70.0,
+          "battery_losses_mwh": 7.777778,
+          "assumed_cost_proxy_usd": 11050.0,
+          "line_hours_at_limit": {
+            "L1": 4.0,
+            "L2": 0.0,
+            "L3": 0.0
+          }
+        },
+        "binding_constraints": [
+          {
+            "type": "line_limit",
+            "id": "L1",
+            "hours": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "detail": "flow north -> central at 60 MW limit"
+          },
+          {
+            "type": "battery_power_limit",
+            "id": "b1",
+            "hours": [
+              1,
+              2,
+              4,
+              5
+            ],
+            "detail": "charging or discharging at 30 MW limit"
+          },
+          {
+            "type": "renewable_curtailed",
+            "id": "solar1",
+            "hours": [
+              0,
+              1,
+              2
+            ],
+            "detail": "available renewable output not used"
+          }
+        ]
+      }
     },
     "tool_trace": [
       {
         "tool": "load_cached_dispatch",
         "status": "success",
+        "timestamp_utc": null,
         "execution_mode": "replay",
         "live_gemini": false,
-        "note": "Reference MILP outputs loaded from a saved fixture. No agent was executed."
+        "note": "Independently validated production HiGHS outputs loaded from a saved fixture. No agent was executed.",
+        "scope": null,
+        "input_summary": null,
+        "output_summary": null
       }
     ],
     "operator_report": {
@@ -304,7 +884,7 @@
       "assumptions": [
         "Transport model with no electrical losses or voltage constraints",
         "Symmetric charge/discharge efficiency = sqrt(round-trip efficiency)",
-        "Final SOC equals initial SOC",
+        "Final SOC is at least initial SOC; no end-of-horizon battery depletion",
         "Baseline disables battery dispatch; candidate enables existing battery; common exogenous inputs and asset ratings"
       ],
       "limitations": [
@@ -312,6 +892,7 @@
         "Not a reconstruction of Chilean dispatch",
         "No claim about real savings, emissions, security or optimal real-world operation"
       ]
-    }
+    },
+    "model_execution": null
   }
 }

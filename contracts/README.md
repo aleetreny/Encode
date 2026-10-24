@@ -44,7 +44,7 @@ Example start body:
 
 ## Person 3: solver and independent validator
 
-The default bridge now targets the native interface documented on `feature/optimisation` at commit `932faea`. Synchronous or async functions are supported:
+The default bridge targets the native interface from `feature/optimisation`; executable code at `fbf0fdf` has been merged into this branch and API-tested. Synchronous or async functions are supported:
 
 ```python
 # optimisation/__init__.py — Person 3's native interface
@@ -54,11 +54,11 @@ def validate(scenario: dict, solution: dict) -> dict: ...
 
 `backend.p3_adapter` maps the current API's fixed-asset subset to that native schema: objective block, explicit one-way efficiencies, `allow_unserved`, native `timeseries` keys and structured validation violations. It retains the full native result in `solution.native_result`, calls the native validator with **two** arguments, checks that normalised arrays match the retained output, and applies the additional backend audit. It does not rewrite Person 3's module. Native `error` maps to API `failed`; infeasibility never becomes zero arrays tagged optimal.
 
-Important scope difference: the current v1 replay compares battery-disabled and battery-enabled dispatch on fixed assets. Person 3's design additionally describes asset additions/uprates, outages and ramping. Those are not accepted silently through this v1 bridge. They need a coordinated effective-scenario contract and corresponding acceptance checks. The bridge rejects native modifications/events. It preserves the API's declared penalties and strict final-SOC equality, even though native defaults/terminal inequality differ; a native result that does not meet those declared API assumptions fails acceptance. See `docs/integration-status.md` before final integration.
+Important scope difference: the current v1 replay compares battery-disabled and battery-enabled dispatch on fixed assets. Person 3's design additionally describes asset additions/uprates, outages and ramping. Those are not accepted silently through this v1 bridge. They need a coordinated effective-scenario contract and corresponding acceptance checks. The bridge rejects native modifications/events. It preserves the API's declared penalties and declared final-SOC policy (the integrated demo uses the initial-SOC floor); a native result that does not meet those declared API assumptions fails acceptance. See `docs/integration-status.md` before final integration.
 
 For a direct custom canonical adapter, configure module:function paths whose signatures are `solve(scenario, options)` and `validate(scenario, solution, options)`, returning `solution.schema.json` and `validation.schema.json`. The default configuration uses the native bridge instead.
 
-All dispatch maps must cover the exact scenario IDs. Generation, curtailment, flow, charge, discharge and shedding arrays have **N** entries. SOC has **N+1** entries: initial state followed by each post-step state. Renewable availability exists only for solar/wind. Non-renewable generation is bounded by rating. Line flow is signed `from → to`. Efficiency is symmetric square root of round-trip efficiency. Final SOC is fixed to the target. Baseline disables battery dispatch; candidate enables it without changing physical ratings, demand, availability or SOC targets. Do not permit simultaneous charge/discharge. Monetary terms are assumed proxies.
+All dispatch maps must cover the exact scenario IDs. Generation, curtailment, flow, charge, discharge and shedding arrays have **N** entries. SOC has **N+1** entries: initial state followed by each post-step state. Renewable availability exists only for solar/wind. Non-renewable generation is bounded by rating. Line flow is signed `from → to`. Efficiency is symmetric square root of round-trip efficiency. Final SOC must meet the declared equal/at_least target; the integrated demo uses at_least initial SOC. Baseline disables battery dispatch; candidate enables it without changing physical ratings, demand, availability or SOC targets. Do not permit simultaneous charge/discharge. Monetary terms are assumed proxies.
 
 `backend/audit.py` is an additional integration check, not a replacement for the independent production validator. Model changes (e.g. DC flow, minimum thermal output, reserves) must extend both contract and acceptance checks before they can be claimed as verified.
 

@@ -11,7 +11,7 @@ pip install -r requirements-dev.txt
 python -m uvicorn backend.main:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
-For API runtime only, install `requirements.txt`. Spreadsheet parsing and SciPy are development/data-preparation dependencies, not required to serve the saved demo. Uvicorn uses the application factory. Do not start `backend.main:app` or add multiple workers.
+For API runtime only, install `requirements.txt`. Spreadsheet parsing is a development/data-preparation dependency, not required to serve the saved demo. Uvicorn uses the application factory. Do not start `backend.main:app` or add multiple workers.
 
 The server listens locally on port 8000. Interactive endpoints are at `/docs`. Full integration instructions are in `contracts/README.md`. The service does not provide the dashboard assigned to Person 1.
 
@@ -30,7 +30,7 @@ The last command requires the server running. It executes two real HTTP investig
 
 `python scripts/prepare_data.py --download` explicitly refreshes the same official source, validates the candidate before replacing the raw bytes and updates retrieval metadata. Review source changes and all anomalies before committing. Do not substitute missing observations with zeros.
 
-`python scripts/build_demo.py` rebuilds two offline scenarios and their cached outputs using a small reference MILP solely for fixture generation. The production optimiser belongs in `optimisation/`. Minor alternate optimal dispatches may vary by solver version; the committed outputs are acceptance-tested with tolerances and served unchanged. Run `scripts/export_contracts.py` after intentional fixture or model changes.
+`python scripts/build_demo.py` rebuilds two offline scenarios and their cached outputs using Person 3's integrated production HiGHS solver and independent validator in `optimisation/`. Minor alternate optimal dispatches may vary by solver version; the committed outputs are acceptance-tested with tolerances and served unchanged. Run `scripts/export_contracts.py` after intentional fixture or model changes.
 
 ## Environment
 
@@ -61,7 +61,7 @@ Polling exposes the final complete trace at completion. Incremental tool streami
 
 ## Validation and reports
 
-Every accepted solution must pass backend acceptance checks. Live mode also requires the external independent validator. IDs and dimensions must match the scenario exactly. SOC must have N+1 values, flows N values, and all numeric values must be finite. A disabled-battery baseline must keep charge/discharge zero and meet the same final SOC target.
+Every accepted solution must pass backend acceptance checks. Live mode also requires the external independent validator. IDs and dimensions must match the scenario exactly. SOC must have N+1 values, flows N values, and all numeric values must be finite. A disabled-battery baseline must keep charge/discharge zero and meet the same declared final SOC policy/target.
 
 Comparison uses independently recomputed metrics. Cost delta is **candidate minus baseline**, so a negative number means a lower assumed-cost proxy. Curtailment reduction is **baseline minus candidate**, so a positive number means less simulated curtailment. Neither is a real-world saving claim.
 

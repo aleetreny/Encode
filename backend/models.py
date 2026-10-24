@@ -55,6 +55,7 @@ class Battery(Model):
     energy_capacity_mwh: Positive
     initial_soc_mwh: NonNegative
     final_soc_mwh: NonNegative
+    final_soc_policy: Literal["equal", "at_least"] = "equal"
     round_trip_efficiency: Annotated[FiniteFloat, Field(gt=0, le=1)]
 
     @model_validator(mode="after")
@@ -79,6 +80,7 @@ class Scenario(Model):
     demand_mw_by_node: dict[str, Series]
     renewable_availability_mw_by_generator: dict[str, Series]
     curtailment_penalty_usd_per_mwh: NonNegative = 1
+    battery_throughput_cost_usd_per_mwh: NonNegative = 0
     load_shedding_penalty_usd_per_mwh: Positive = 10000
 
     @model_validator(mode="after")

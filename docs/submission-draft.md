@@ -8,7 +8,7 @@ GridPilot helps electricity-system analysts investigate renewable curtailment an
 
 ## Implemented backend contribution
 
-The service includes versioned contracts, source preservation and provenance, a reproducible CEN extraction pipeline with quality findings, FastAPI routes, isolated job execution, persistent local run history, idempotency, independent acceptance checks, deterministic comparison metrics, downloadable audit reports and simulation-only approval/rejection. An offline reference MILP supplies honestly labelled replay fixtures and a synthetic fallback.
+The service includes versioned contracts, source preservation and provenance, a reproducible CEN extraction pipeline with quality findings, FastAPI routes, isolated job execution, persistent local run history, idempotency, independent acceptance checks, deterministic comparison metrics, downloadable audit reports and simulation-only approval/rejection. The integrated production HiGHS solver and independent validator supply honestly labelled replay fixtures and a synthetic fallback.
 
 The 1 August 2026 CEN evidence is complete for the extracted solar/wind records. Historical demand and actual generation have not been aligned to calibrate the synthetic model. GridPilot does not operate or reproduce Chile's actual dispatch and does not claim real cost or emissions savings.
 
@@ -19,7 +19,7 @@ The 1 August 2026 CEN evidence is complete for the extracted solar/wind records.
 - Final release commit: **pending team integration**
 - Three-minute video: **pending actual recording**
 - Gemini model and agent tools actually used: **pending Person 2 live execution evidence**
-- Production solver and independent validator: **pending Person 3 integration**
+- Production solver and independent validator: **Person 3 HiGHS 1.15.1 module integrated and API-tested on the fixed-asset path**
 - Frontend: **pending Person 1 integration**
 - Live verification outcome: **pending real live smoke and report**
 

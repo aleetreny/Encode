@@ -4,7 +4,7 @@ Research date: 24 October 2026. Implementation branch: `feature/data-backend`.
 
 ## Repository and ownership
 
-The inspected upstream commit was `62101a7cc795e1f0d8c648873c8052a777555b4f`. It contained only the project README. There were no existing agent, optimiser, frontend, contracts, API, deployment credentials or tests to integrate. This branch implements Person 4's boundary and an offline integration path. Production solver and Gemini orchestration remain owned by Persons 3 and 2.
+The inspected upstream commit was `62101a7cc795e1f0d8c648873c8052a777555b4f`. It contained only the project README. There were no existing agent, optimiser, frontend, contracts, API, deployment credentials or tests to integrate. This branch implements Person 4's boundary and an offline integration path. Production solver and Gemini orchestration remain owned by Persons 3 and 2. During integration, executable Person 3 code arrived at `fbf0fdf` and was merged unchanged into this branch; the native solver/validator are now API-tested.
 
 ## Evidence selected
 
@@ -31,7 +31,7 @@ Unknown layout changes, invalid numeric values, duplicate plant/day keys, broken
 
 The export's hour headings do not, on their own, establish UTC interval boundaries. Observed data therefore retain the original date and hour labels. No observed UTC conversion is asserted. `America/Santiago` is the contextual time zone. Simulator timestamps are explicitly synthetic UTC interval starts. Their use of the historical calendar date does not assert alignment with a particular observed hour.
 
-The simulation uses MW for instantaneous/interval-average power and MWh for energy and SOC. Energy is power multiplied by `time_step_hours`. The reference battery uses symmetric efficiency, `eta_charge = eta_discharge = sqrt(round_trip_efficiency)`, and a fixed final SOC equal to the initial SOC. Line flows are signed from `from` to `to`. The network is a lossless transport approximation, with no voltage, reactive power, phase angles, AC physics, reserves or contingency constraints.
+The simulation uses MW for instantaneous/interval-average power and MWh for energy and SOC. Energy is power multiplied by `time_step_hours`. The reference battery uses symmetric efficiency, `eta_charge = eta_discharge = sqrt(round_trip_efficiency)`, and an explicit final-SOC floor equal to the initial SOC in the integrated demo. Line flows are signed from `from` to `to`. The network is a lossless transport approximation, with no voltage, reactive power, phase angles, AC physics, reserves or contingency constraints.
 
 [Python zoneinfo documentation](https://docs.python.org/3/library/zoneinfo.html) is the basis for using IANA time zones instead of fixed offsets in future time alignment. Before joining additional historical series, confirm CEN's interval boundary, DST treatment, whether MW or MWh is reported, and exact plant identities.
 

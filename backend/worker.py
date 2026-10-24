@@ -41,6 +41,18 @@ async def execute(payload, settings=None):
             await invoke(settings.solve_callable, scenario_json, wire(options))
         )
         checked = audit(scenario, solution, options)
+        if solution.status == "optimal":
+            external = Validation.model_validate(
+                await invoke(
+                    settings.validate_callable, scenario_json, wire(solution), wire(options)
+                )
+            )
+            if not external.passed:
+                checked.passed = False
+                checked.metrics = None
+                checked.violations.extend(
+                    external.violations or ["external validator rejected solution"]
+                )
         if solution.status == "optimal" and not checked.passed:
             return dict(status="failed", solution=wire(solution), validation=wire(checked))
         return dict(status=solution.status, solution=wire(solution), validation=wire(checked))
@@ -149,6 +161,8 @@ async def execute(payload, settings=None):
             **provenance,
             "scenario_sha256": fingerprint(scenario_json),
             "mode": scenario.mode,
+            "requested_options": wire(options),
+            "comparison_basis": "fixed_asset_battery_policy",
             "data": wire(scenario.provenance),
         },
         scenario_snapshot=scenario_json,
@@ -189,7 +203,7 @@ async def execute(payload, settings=None):
             assumptions=[
                 "Synthetic transport network; all dispatch inputs are assumptions",
                 "Baseline battery dispatch disabled; candidate policy explicitly recorded",
-                "Identical exogenous inputs, asset ratings and final SOC targets",
+                "Identical exogenous inputs, asset ratings and declared final SOC policies/targets",
             ],
             limitations=[
                 "Simulation only; not an operational dispatch instruction",
