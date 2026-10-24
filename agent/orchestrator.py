@@ -558,11 +558,59 @@ class GridPilotAgent:
             "baseline_metrics": baseline_normal.get("metrics") or {},
             "candidate_metrics": winner["normal_solution"].get("metrics") or {},
         }
+        def _native_tool_executor(fn_name: str, fn_args: dict[str, Any]) -> dict[str, Any]:
+            if fn_name == "load_scenario":
+                return {
+                    "scenario_id": scenario.get("scenario_id", scenario_id),
+                    "schema_version": scenario.get("schema_version", "2.0.0"),
+                    "nodes_count": len(scenario.get("nodes", [])),
+                }
+            if fn_name == "inspect_evidence":
+                return {
+                    "scenario_id": scenario.get("scenario_id", scenario_id),
+                    "modification_menu": evidence.get("modification_menu"),
+                    "household_mapping": scenario.get("household_mapping"),
+                }
+            if fn_name == "run_optimisation":
+                req_cand = fn_args.get("candidate")
+                req_events = fn_args.get("events") or []
+                sol = self.toolkit.run_native_optimisation(
+                    scenario,
+                    candidate=req_cand if isinstance(req_cand, dict) else None,
+                    events=req_events if isinstance(req_events, list) else [],
+                    options=options,
+                    run_label="gemini_function_call_optimise",
+                )
+                return {
+                    "status": sol.get("status"),
+                    "candidate_id": sol.get("candidate_id"),
+                    "metrics": sol.get("metrics"),
+                }
+            if fn_name == "validate_candidate":
+                val = self.toolkit.validate_native_candidate(
+                    scenario,
+                    winner["normal_solution"],
+                    candidate=winner["candidate_definition"],
+                    events=[],
+                    options=options,
+                    run_label="gemini_function_call_validate",
+                )
+                return {"passed": val.get("passed"), "max_residual_mw": val.get("max_residual_mw")}
+            if fn_name == "compare_results":
+                return dict(winner["normal_comparison"])
+            if fn_name == "generate_operator_report":
+                return {
+                    "recommended_candidate_id": winner["candidate_definition"]["candidate_id"],
+                    "status": "ready",
+                }
+            return {"error": f"Unknown tool {fn_name!r}"}
+
         gemini_narrative, model_execution = self.gemini.synthesise_investigation(
             scenario=scenario,
             evidence=evidence,
             comparison=norm_comp_for_report,
             crisis_analysis=crisis_summary,
+            tool_executor=_native_tool_executor,
         )
         operator_report = self.toolkit.generate_operator_report(
             scenario=scenario,
@@ -597,7 +645,14 @@ def run_investigation(
     cfg = dict(settings or {})
     agent = GridPilotAgent()
     is_native_v2 = scenario_id.endswith("-demo") or any(
-        k in cfg for k in ("candidates", "crisis_events", "selection_objective", "options")
+        k in cfg
+        for k in (
+            "candidates",
+            "crisis_events",
+            "selection_objective",
+            "options",
+            "allow_cached_fallback",
+        )
     )
     if is_native_v2:
         return AwaitableDict(

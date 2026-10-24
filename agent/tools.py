@@ -251,7 +251,14 @@ class AgentToolkit:
                 scenario = json.loads(path.read_text(encoding="utf-8"))
 
             self._scenario_cache[scenario_id] = scenario
-            menu = get_modification_menu(scenario)
+            menu = scenario.get("modification_menu")
+            if not isinstance(menu, dict):
+                try:
+                    from optimisation import modification_menu as p3_modification_menu  # type: ignore
+
+                    menu = p3_modification_menu(scenario)
+                except Exception:
+                    menu = get_modification_menu(scenario)
             nodes_count = len(scenario.get("nodes", []))
             gens_count = len(scenario.get("generators", []))
             lines_count = len(scenario.get("lines", []))
@@ -259,6 +266,11 @@ class AgentToolkit:
             horizon = len(scenario.get("timestamps_utc", []))
             prov = scenario.get("provenance") or {}
             evidence_id = prov.get("evidence_id") or scenario.get("source_id") or "cen-2026-08-01"
+            allowed_mod_types = [
+                t["type"]
+                for t in menu.get("allowed_types", [])
+                if isinstance(t, dict) and "type" in t
+            ] or [k for k in ("add_battery", "uprate_line") if k in menu]
 
             self.recorder.succeed(
                 "load_scenario",
@@ -270,9 +282,7 @@ class AgentToolkit:
                     "lines_count": lines_count,
                     "batteries_count": bats_count,
                     "horizon_steps": horizon,
-                    "allowed_modification_types": [
-                        t["type"] for t in menu.get("allowed_types", [])
-                    ],
+                    "allowed_modification_types": allowed_mod_types,
                 },
                 scope=scenario_id,
                 note=f"Loaded {nodes_count}-node scenario `{scenario_id}` ({horizon} steps).",
@@ -325,7 +335,17 @@ class AgentToolkit:
                 evidence = json.loads(path.read_text(encoding="utf-8"))
 
             self._evidence_cache[target_source] = evidence
-            menu = get_modification_menu(scenario) if scenario else {"allowed_types": []}
+            menu = evidence.get("modification_menu") if isinstance(evidence, dict) else None
+            if not isinstance(menu, dict):
+                if scenario:
+                    try:
+                        from optimisation import modification_menu as p3_modification_menu  # type: ignore
+
+                        menu = p3_modification_menu(scenario)
+                    except Exception:
+                        menu = get_modification_menu(scenario)
+                else:
+                    menu = {"allowed_types": []}
             enriched = {
                 **evidence,
                 "regulatory_framework_ids": list(CHILEAN_LEGAL_FRAMEWORK.keys()),
@@ -600,10 +620,11 @@ class AgentToolkit:
                 )
                 crisis_clause = (
                     f" Under the simulated N-1 crisis ({event_desc}), unmitigated emergency redispatch "
-                    f"experiences {crisis_unserved:.1f} MWh of unserved energy (~{hh_affected:,} Chilean "
-                    f"households affected under NTSyCS EDAC); applying `{best_fix}` reduces unserved energy "
-                    f"to {mitigated_unserved:.1f} MWh and reconnects ~{hh_reconnected:,} households "
-                    f"({reconnect_pct:.1f}% restoration)."
+                    f"experiences {crisis_unserved:.1f} MWh of unserved energy (~{hh_affected:,} residential-equivalent "
+                    f"households under the synthetic mapping); applying simulated intervention `{best_fix}` "
+                    f"reduces unserved energy to {mitigated_unserved:.1f} MWh (~{hh_reconnected:,} residential-equivalent "
+                    f"households restored in simulation, {reconnect_pct:.1f}% reduction; simulation-only, "
+                    f"legal_compliance_status=not_certified)."
                 )
 
             llm_insight = ""
@@ -611,13 +632,13 @@ class AgentToolkit:
                 llm_insight = f" {gemini_narrative['executive_note'].strip()}"
 
             summary = (
-                f"GridPilot (Gemini 4 Argon) SCED investigation for `{scenario.get('scenario_id')}`: "
-                f"Co-optimising grid-scale BESS under Ley N° 21.505 and DS N° 32/2026 Art. 117 bis "
-                f"reduces renewable curtailment from {b_curt:.1f} MWh to {c_curt:.1f} MWh "
+                f"GridPilot (Gemini 4 Argon) SCED simulation for `{scenario.get('scenario_id')}`: "
+                f"Co-optimising grid-scale BESS under modelled Ley N° 21.505 and DS N° 32/2026 Art. 117 bis "
+                f"constraints reduces renewable curtailment from {b_curt:.1f} MWh to {c_curt:.1f} MWh "
                 f"(-{curt_red:.1f} MWh, -{curt_pct:.1f}%) and lowers dispatchable thermal generation cost "
                 f"by ${cost_savings:,.2f} USD (delta {cost_delta:+.2f} USD), with 0.0 MWh unserved load "
                 f"and independent physics validation passed (max nodal residual "
-                f"{candidate_validation.get('max_residual_mw', 0.0):.2e} MW)."
+                f"{candidate_validation.get('max_residual_mw', 0.0):.2e} MW; legal_compliance_status=not_certified)."
                 f"{crisis_clause}{llm_insight}"
             )[:6000]
 
@@ -637,7 +658,7 @@ class AgentToolkit:
                 + [
                     "SCED security-constrained economic dispatch formulated as a deterministic linear program (HiGHS) with nodal balance, thermal line ratings, generator ramp limits, and BESS state-of-charge physics.",
                     "Sudden contingency simulations lock pre-event dispatch and battery SOC up to the fault hour (no hindsight) before solving the post-contingency emergency redispatch.",
-                    "Equivalent residential impact uses the Chilean SEC/CNE urban feeder benchmark of 1,000 households per MW of peak unserved demand (220 V / 50 Hz).",
+                    "Equivalent residential impact uses the scenario's synthetic household_mapping assumption (1,000 residential-equivalent households per MW; not unique identified customers).",
                 ]
             )[:30]
 
@@ -646,7 +667,7 @@ class AgentToolkit:
                 + list(evidence.get("limitations") or [])
                 + [
                     "DC transport-flow approximation omits reactive power (MVAr), AC voltage phase angles, and sub-second primary frequency control (AGC/governor inertia).",
-                    "GridPilot acts strictly as an auditable decision-support co-pilot; physical SCADA breaker actuation remains under human Coordinator control per LGSE Art. 72°-1.",
+                    "Modelled constraints are not a certification of Chilean legal compliance (legal_compliance_status=not_certified); no physical SCADA breaker actuation or feeder switching is executed.",
                 ]
             )[:30]
 
@@ -688,7 +709,7 @@ class AgentToolkit:
         options: dict[str, Any] | None = None,
         run_label: str | None = None,
     ) -> dict[str, Any]:
-        """Run native v2 LP dispatch (`optimisation.solve` or `solve_native`) and record `run_optimisation`."""
+        """Run native v2 LP dispatch (`solve_checked`, `optimisation.solve`, or `solve_native`) and record `run_optimisation`."""
         cand_id = (candidate or {}).get("candidate_id", "baseline")
         label = run_label or cand_id
         opts = dict(options or {"allow_unserved": True, "time_limit_s": 20.0})
@@ -704,11 +725,21 @@ class AgentToolkit:
         )
         try:
             try:
-                from optimisation import solve as p3_solve  # type: ignore
+                from backend.native_service import solve_checked  # type: ignore
 
-                native = p3_solve(scenario, candidate=candidate, events=events, options=opts)
+                native = solve_checked(scenario, candidate=candidate, events=events, options=opts)
             except Exception:
-                native = solve_native(scenario, candidate=candidate, events=events, options=opts)
+                try:
+                    from optimisation import solve as p3_solve  # type: ignore
+                    from optimisation import validate as p3_validate  # type: ignore
+
+                    sol = p3_solve(scenario, candidate=candidate, events=events, options=opts)
+                    checked = p3_validate(scenario, sol)
+                    native = {**sol, "validation": checked, "accepted": bool(checked.get("passed"))}
+                except Exception:
+                    sol = solve_native(scenario, candidate=candidate, events=events, options=opts)
+                    checked = validate_solution(scenario, sol, options=opts)
+                    native = {**sol, "validation": checked, "accepted": bool(checked.get("passed"))}
 
             status = native.get("status", "error")
             metrics = native.get("metrics") or {}
@@ -780,6 +811,8 @@ class AgentToolkit:
                     )
 
             passed = bool(validation.get("passed", False))
+            solution["validation"] = validation
+            solution["accepted"] = passed
             detail = {
                 "scenario_id": scenario.get("scenario_id", "unknown"),
                 "run_label": run_label,
@@ -828,16 +861,23 @@ class AgentToolkit:
         )
         try:
             try:
-                from optimisation import compare as p3_compare  # type: ignore
+                from backend.runtime import compare_results as p4_compare  # type: ignore
 
-                comp = p3_compare(baseline, candidate, baseline_validation, candidate_validation)
+                comp = p4_compare(baseline, candidate, baseline_validation, candidate_validation)
             except Exception:
-                comp = compare_solutions(
-                    baseline,
-                    candidate,
-                    baseline_validation=baseline_validation,
-                    candidate_validation=candidate_validation,
-                )
+                try:
+                    from optimisation import compare as p3_compare  # type: ignore
+
+                    comp = p3_compare(
+                        baseline, candidate, baseline_validation, candidate_validation
+                    )
+                except Exception:
+                    comp = compare_solutions(
+                        baseline,
+                        candidate,
+                        baseline_validation=baseline_validation,
+                        candidate_validation=candidate_validation,
+                    )
             self.recorder.succeed(
                 "compare_results",
                 {
