@@ -1,0 +1,482 @@
+{
+  "comparable": true,
+  "reason": null,
+  "baseline_id": "baseline",
+  "candidate_id": "c2_battery_sur",
+  "modifications": [
+    {
+      "type": "add_battery",
+      "node_id": "n_sur",
+      "power_mw": 150.0,
+      "energy_mwh": 600.0,
+      "battery_id": "c2_battery_sur_bat1"
+    }
+  ],
+  "events": [
+    {
+      "type": "generator_outage",
+      "id": "gas_centro",
+      "from_hour": 18,
+      "to_hour": 22,
+      "mode": "planned"
+    }
+  ],
+  "both_valid": true,
+  "metrics": {
+    "curtailment_mwh": {
+      "baseline": 1368.2,
+      "candidate": 1368.2,
+      "delta": 0.0
+    },
+    "unserved_mwh": {
+      "baseline": 1921.925,
+      "candidate": 1501.55,
+      "delta": -420.375
+    },
+    "renewable_used_mwh": {
+      "baseline": 9737.3,
+      "candidate": 9737.3,
+      "delta": 0.0
+    },
+    "dispatchable_mwh": {
+      "baseline": 22626.178947,
+      "candidate": 23091.968421,
+      "delta": 465.789474
+    },
+    "battery_losses_mwh": {
+      "baseline": 6.003947,
+      "candidate": 51.418421,
+      "delta": 45.414474
+    },
+    "assumed_cost_proxy_usd": {
+      "baseline": 1556802.999965,
+      "candidate": 1612302.999995,
+      "delta": 55500.00003
+    }
+  },
+  "curtailment_reduction_mwh": 0.0,
+  "unserved_reduction_mwh": 420.375,
+  "assumed_cost_delta_usd": 55500.00003,
+  "objective_delta_usd": -4147806.692023,
+  "line_hours_at_limit": {
+    "L1": {
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "delta": 0.0
+    },
+    "L2": {
+      "baseline": 8.0,
+      "candidate": 8.0,
+      "delta": 0.0
+    },
+    "L3": {
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "delta": 0.0
+    },
+    "L4": {
+      "baseline": 0.0,
+      "candidate": 0.0,
+      "delta": 0.0
+    }
+  },
+  "binding_constraints": {
+    "baseline": [
+      {
+        "type": "outage",
+        "id": "gas_centro",
+        "hours": [
+          18,
+          19,
+          20,
+          21
+        ],
+        "detail": "planned generator outage"
+      },
+      {
+        "type": "line_limit",
+        "id": "L2",
+        "hours": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "detail": "flow n_norte_chico -> n_centro at 400 MW limit"
+      },
+      {
+        "type": "battery_full",
+        "id": "b_centro",
+        "hours": [
+          17
+        ],
+        "detail": "state of charge at 60 MWh capacity (end of hour)"
+      },
+      {
+        "type": "battery_power_limit",
+        "id": "b_centro",
+        "hours": [
+          18,
+          23
+        ],
+        "detail": "charging or discharging at 30 MW limit"
+      },
+      {
+        "type": "renewable_curtailed",
+        "id": "solar_ng",
+        "hours": [
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "detail": "available renewable output not used"
+      },
+      {
+        "type": "dispatchable_at_capacity",
+        "id": "gas_ng",
+        "hours": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "detail": "output at 350 MW capacity"
+      },
+      {
+        "type": "ramp_limit",
+        "id": "gas_ng",
+        "hours": [
+          9,
+          17
+        ],
+        "detail": "output changing at the 150 MW/h ramp limit"
+      },
+      {
+        "type": "ramp_limit",
+        "id": "gas_centro",
+        "hours": [
+          22
+        ],
+        "detail": "output changing at the 250 MW/h ramp limit"
+      },
+      {
+        "type": "dispatchable_at_capacity",
+        "id": "coal_cs",
+        "hours": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "detail": "output at 350 MW capacity"
+      },
+      {
+        "type": "dispatchable_at_capacity",
+        "id": "hydro_sur",
+        "hours": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "detail": "output at 200 MW capacity"
+      },
+      {
+        "type": "dispatchable_at_capacity",
+        "id": "diesel_centro",
+        "hours": [
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "detail": "output at 150 MW capacity"
+      },
+      {
+        "type": "unserved_energy",
+        "id": "n_centro",
+        "hours": [
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "detail": "demand not served"
+      }
+    ],
+    "candidate": [
+      {
+        "type": "outage",
+        "id": "gas_centro",
+        "hours": [
+          18,
+          19,
+          20,
+          21
+        ],
+        "detail": "planned generator outage"
+      },
+      {
+        "type": "line_limit",
+        "id": "L2",
+        "hours": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "detail": "flow n_norte_chico -> n_centro at 400 MW limit"
+      },
+      {
+        "type": "battery_full",
+        "id": "b_centro",
+        "hours": [
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "detail": "state of charge at 60 MWh capacity (end of hour)"
+      },
+      {
+        "type": "battery_power_limit",
+        "id": "b_centro",
+        "hours": [
+          15,
+          21,
+          23
+        ],
+        "detail": "charging or discharging at 30 MW limit"
+      },
+      {
+        "type": "battery_full",
+        "id": "c2_battery_sur_bat1",
+        "hours": [
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "detail": "state of charge at 600 MWh capacity (end of hour)"
+      },
+      {
+        "type": "battery_power_limit",
+        "id": "c2_battery_sur_bat1",
+        "hours": [
+          13,
+          20,
+          22,
+          23
+        ],
+        "detail": "charging or discharging at 150 MW limit"
+      },
+      {
+        "type": "renewable_curtailed",
+        "id": "solar_ng",
+        "hours": [
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "detail": "available renewable output not used"
+      },
+      {
+        "type": "dispatchable_at_capacity",
+        "id": "gas_ng",
+        "hours": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "detail": "output at 350 MW capacity"
+      },
+      {
+        "type": "ramp_limit",
+        "id": "gas_ng",
+        "hours": [
+          9,
+          17
+        ],
+        "detail": "output changing at the 150 MW/h ramp limit"
+      },
+      {
+        "type": "ramp_limit",
+        "id": "gas_centro",
+        "hours": [
+          22,
+          23
+        ],
+        "detail": "output changing at the 250 MW/h ramp limit"
+      },
+      {
+        "type": "dispatchable_at_capacity",
+        "id": "coal_cs",
+        "hours": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "detail": "output at 350 MW capacity"
+      },
+      {
+        "type": "dispatchable_at_capacity",
+        "id": "hydro_sur",
+        "hours": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "detail": "output at 200 MW capacity"
+      },
+      {
+        "type": "dispatchable_at_capacity",
+        "id": "diesel_centro",
+        "hours": [
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "detail": "output at 150 MW capacity"
+      },
+      {
+        "type": "unserved_energy",
+        "id": "n_centro",
+        "hours": [
+          18,
+          19,
+          20,
+          21
+        ],
+        "detail": "demand not served"
+      }
+    ]
+  },
+  "notes": [
+    "Investment cost of the modifications is not modelled.",
+    "Costs are an assumed-cost proxy on a synthetic, illustrative network, not CEN costs.",
+    "Hourly transport model on a radial network; sub-hourly dynamics and reserves are not modelled."
+  ]
+}

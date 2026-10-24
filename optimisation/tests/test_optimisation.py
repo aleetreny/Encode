@@ -528,10 +528,15 @@ def test_examples_match_current_code():
     with contextlib.redirect_stdout(io.StringIO()):
         results = demo.run(write=False)
     for name, data in results.items():
-        if name.startswith("solution_"):
-            data = {**data, "solver": {**data["solver"], "solve_time_s": 0.0}}
         stored = json.loads((demo.EXAMPLES / f"{name}.json").read_text())
-        assert stored == json.loads(json.dumps(data)), f"examples/{name}.json is stale: run python -m optimisation.demo --write"
+        assert stored == json.loads(json.dumps(demo.stable(data))), (
+            f"examples/{name}.json is stale: run python -m optimisation.demo --write")
+    # every exported case is a real, validated solution
+    index = results["index"]["situations"]
+    assert set(index) == {"normal", "sudden_outage", "planned_maintenance"}
+    for situation in index.values():
+        assert set(situation["options"]) == {"baseline", "c1_battery_norte_grande", "c2_battery_sur", "c3_uprate_l2"}
+        assert all(entry["valid"] for entry in situation["options"].values())
 
 
 # ------------------------------------------------------------------ outage sweep
