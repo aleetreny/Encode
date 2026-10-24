@@ -226,6 +226,7 @@ def apply_candidate(scenario: dict, candidate: dict | None) -> tuple[dict, str, 
                     "energy_capacity_mwh": energy,
                     "min_soc_mwh": 0.0,
                     "initial_soc_mwh": energy * lim["initial_soc_fraction"],
+                    "final_soc_mwh": None,
                     "charge_efficiency": lim["charge_efficiency"],
                     "discharge_efficiency": lim["discharge_efficiency"],
                     "added_by_candidate": cid,
@@ -438,6 +439,9 @@ def build_grid(
         E = _num(b.get("energy_capacity_mwh"), f"battery {bid}.energy_capacity_mwh", lo=0.0)
         smin = _num(b.get("min_soc_mwh", 0.0), f"battery {bid}.min_soc_mwh", lo=0.0, hi=E)
         s0 = _num(b.get("initial_soc_mwh"), f"battery {bid}.initial_soc_mwh", lo=smin, hi=E)
+        s_end = b.get("final_soc_mwh")
+        if s_end is not None:
+            s_end = _num(s_end, f"battery {bid}.final_soc_mwh", lo=smin, hi=E)
         if "charge_efficiency" in b or "discharge_efficiency" in b:
             eta_c = _num(b.get("charge_efficiency"), f"battery {bid}.charge_efficiency", lo=1e-6, hi=1.0)
             eta_d = _num(b.get("discharge_efficiency"), f"battery {bid}.discharge_efficiency", lo=1e-6, hi=1.0)
@@ -448,7 +452,7 @@ def build_grid(
             _fail(f"battery {bid} needs charge_efficiency and discharge_efficiency")
         batteries.append(
             {"id": bid, "node_id": b["node_id"], "power_capacity_mw": P, "energy_capacity_mwh": E,
-             "min_soc_mwh": smin, "initial_soc_mwh": s0, "charge_efficiency": eta_c,
+             "min_soc_mwh": smin, "initial_soc_mwh": s0, "final_soc_mwh": s_end, "charge_efficiency": eta_c,
              "discharge_efficiency": eta_d, "added_by_candidate": b.get("added_by_candidate")}
         )
 

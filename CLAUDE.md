@@ -76,5 +76,5 @@ Layout:
 - `optimisation/tests/` — pytest suite
 
 Conventions: keep functions pure and JSON-in/JSON-out (no NumPy types in outputs); keep the problem
-an LP (no binaries); any change to inputs/outputs must be reflected in `optimisation/DESIGN.md` and the
+an LP (binaries only in the automatic charge/discharge exclusivity fallback); any change to inputs/outputs must be reflected in `optimisation/DESIGN.md` and the
 example files in the same commit; run the full test suite before every push.

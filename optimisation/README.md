@@ -54,8 +54,9 @@ plan that respects every rule:
 - supply equals demand at every location, every hour
 - no plant above its capacity; solar and wind no higher than the weather allows
 - no line above its limit
-- batteries stay between empty and full, lose about 10 % of the energy they store, and must end the
-  day at least as full as they started (so they can't "borrow" energy from tomorrow)
+- batteries stay between empty and full, lose about 10 % of the energy they store, never charge and
+  discharge in the same hour, and must end the day at least as full as they started (so they can't
+  "borrow" energy from tomorrow) — or exactly at `final_soc_mwh` if the scenario sets it
 - gas, coal and hydro can only change output so fast (ramp limits)
 
 If demand truly cannot be met, it says so: it reports **unserved demand** (where and when) or, in
@@ -118,7 +119,7 @@ can explain, and every number behind it is computed and checked.
 ```bash
 python -m venv .venv && . .venv/bin/activate
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q            # 101 tests, ~1 s
+pytest optimisation/tests -q            # 104 tests, ~1 s
 python -m optimisation.demo             # the story above
 python -m optimisation.demo --write     # also regenerate examples/*.json
 ```
@@ -160,6 +161,7 @@ Example outputs for all of these live in [`examples/`](examples/).
 | Field | Meaning |
 |---|---|
 | `status` | `optimal` (good), `infeasible` (demand can't be met in strict mode), `error` (bad input; see `message`) |
+| `solver.method` | `LP` normally; `MILP (...)` if it had to forbid simultaneous battery charge/discharge |
 | `metrics.curtailment_mwh` | Solar/wind energy available but not used |
 | `metrics.unserved_mwh` | Demand that could not be supplied |
 | `metrics.assumed_cost_proxy_usd` | Fuel cost of gas/coal/hydro/diesel under our assumed prices — **not real CEN costs** |
@@ -191,5 +193,5 @@ Hours are step indices 0–23; `timestamps_utc[i]` gives the UTC start time of h
 | `demo.py` | The end-to-end demo story |
 | `fixtures/` | Synthetic demo scenario and the script that generates it |
 | `examples/` | Saved outputs for teammates to code against |
-| `tests/` | 101 automated tests |
+| `tests/` | 104 automated tests |
 | `DESIGN.md` | Full technical specification |

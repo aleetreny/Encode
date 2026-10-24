@@ -171,7 +171,11 @@ def validate(scenario: dict, solution: dict) -> dict:
         resid = np.abs(s[1:] - expected)
         rep.residual(resid.max(initial=0.0))
         _over(rep, "soc_dynamics", bid, resid, "state of charge does not follow charge/discharge")
-        if s[-1] < b["initial_soc_mwh"] - TOL_MW:
+        if b["final_soc_mwh"] is not None:
+            if abs(s[-1] - b["final_soc_mwh"]) > TOL_MW:
+                rep.fail("soc_final", bid, T, abs(s[-1] - b["final_soc_mwh"]),
+                         f"battery must end the horizon at exactly {b['final_soc_mwh']:g} MWh")
+        elif s[-1] < b["initial_soc_mwh"] - TOL_MW:
             rep.fail("soc_final", bid, T, b["initial_soc_mwh"] - s[-1], "battery ends the horizon below its initial charge")
         _over(rep, "simultaneous_charge_discharge", bid, np.minimum(c, d), "charging and discharging in the same hour")
 

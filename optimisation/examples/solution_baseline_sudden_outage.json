@@ -1,7 +1,7 @@
 {
   "status": "optimal",
   "message": null,
-  "scenario_id": "chile-demo-001",
+  "scenario_id": "chile-sen-5node-demo",
   "candidate_id": "baseline",
   "modifications": [],
   "events": [
@@ -47,6 +47,7 @@
   "solver": {
     "name": "HiGHS",
     "version": "1.15.1",
+    "method": "LP",
     "solve_time_s": 0.0,
     "solves": 2
   },
@@ -69,6 +70,7 @@
         "energy_capacity_mwh": 60.0,
         "min_soc_mwh": 0.0,
         "initial_soc_mwh": 30.0,
+        "final_soc_mwh": null,
         "charge_efficiency": 0.95,
         "discharge_efficiency": 0.95
       }

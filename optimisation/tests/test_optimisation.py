@@ -466,3 +466,35 @@ def test_random_radial_scenarios_solve_and_validate(seed):
     s = _random_radial(np.random.default_rng(seed))
     sol = solve(s)
     ok(s, sol)
+
+
+# ------------------------------------------------------------------ backend compatibility
+
+
+def test_exact_final_soc():
+    s = tiny_scenario()
+    s["batteries"][0]["node_id"] = "a"
+    s["batteries"][0]["final_soc_mwh"] = 20
+    sol = solve(s)
+    ok(s, sol)
+    assert sol["timeseries"]["battery_soc_mwh"]["bat"][-1] == pytest.approx(20)
+    bad = copy.deepcopy(sol)
+    bad["timeseries"]["battery_soc_mwh"]["bat"][-1] = 25.0
+    assert "soc_final" in {x["check"] for x in validate(s, bad)["violations"]}
+
+
+def test_curtailment_penalty_cannot_buy_battery_cycling():
+    """A curtailment penalty with zero throughput cost rewards wasting surplus through
+    simultaneous charge/discharge losses; the solver must forbid that exactly."""
+    s = tiny_scenario(objective={"curtailment_penalty_usd_per_mwh": 5, "battery_throughput_cost_usd_per_mwh": 0})
+    s["batteries"][0].update(node_id="a", initial_soc_mwh=40, final_soc_mwh=40)  # full: can only burn energy
+    sol = solve(s)
+    ok(s, sol)
+    assert sol["solver"]["method"].startswith("MILP")
+    ch = sol["timeseries"]["battery_charge_mw"]["bat"]
+    dis = sol["timeseries"]["battery_discharge_mw"]["bat"]
+    assert all(min(c, d) <= 1e-6 for c, d in zip(ch, dis))
+
+
+def test_plain_lp_when_no_cycling_incentive(base):
+    assert base["solver"]["method"] == "LP"
