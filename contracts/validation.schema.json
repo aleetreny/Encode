@@ -1,0 +1,68 @@
+{
+  "$defs": {
+    "Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "assumed_cost_usd": {
+          "minimum": 0,
+          "title": "Assumed Cost Usd",
+          "type": "number"
+        },
+        "curtailed_energy_mwh": {
+          "minimum": 0,
+          "title": "Curtailed Energy Mwh",
+          "type": "number"
+        },
+        "unserved_energy_mwh": {
+          "minimum": 0,
+          "title": "Unserved Energy Mwh",
+          "type": "number"
+        }
+      },
+      "required": [
+        "curtailed_energy_mwh",
+        "assumed_cost_usd",
+        "unserved_energy_mwh"
+      ],
+      "title": "Metrics",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "max_residual_mw": {
+      "minimum": 0,
+      "title": "Max Residual Mw",
+      "type": "number"
+    },
+    "metrics": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Metrics"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "passed": {
+      "title": "Passed",
+      "type": "boolean"
+    },
+    "violations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Violations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "passed",
+    "violations",
+    "max_residual_mw"
+  ],
+  "title": "Validation",
+  "type": "object"
+}

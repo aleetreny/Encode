@@ -1,6 +1,21 @@
 # GridPilot
 ### An AI copilot for renewable curtailment investigation and **verified** electricity-dispatch simulations
 
+### Run the implemented backend
+
+Python 3.13 is the tested runtime. No provider credentials are needed for the explicitly labelled offline replay.
+
+```bash
+python3.13 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m uvicorn backend.main:create_app --factory --host 127.0.0.1 --port 8000
+```
+
+Open [API documentation](http://127.0.0.1:8000/docs). In another terminal, run `python scripts/smoke.py` for two complete HTTP investigations with validation, simulated approval and report export. Use `python -m pytest -q` for the automated checks. This branch contains Person 4's backend/data/integration work; the live Gemini agent, production optimiser and dashboard are separate team workstreams. Live calls fail explicitly until their adapters are installed.
+
+Read [backend operations](backend/README.md), [the implemented v1 contract](contracts/README.md), [research and source findings](docs/task-4-research.md), [72 detailed subtasks](docs/task-4-work-breakdown.md), and [the release runbook](docs/release-runbook.md). Historical source evidence and synthetic simulation inputs are kept separate. A cached replay is never labelled as a live Gemini run.
+
 **Encode London Hackathon · 24–25 October 2026 · Team of 4**
 
 > **Mission:** Turn a real Chilean renewable-curtailment episode into an explainable, reproducible *what-if* study. Gemini investigates the evidence, calls a constrained optimisation model, checks the proposed solution and produces an operator-readable recommendation. A human approves any proposed action **inside a simulation**.

@@ -1,0 +1,51 @@
+name: Backend, contracts and data
+on:
+  push:
+    branches: [main, feature/data-backend]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check backend scripts tests
+      - run: ruff format --check backend scripts tests
+      - run: python -m pytest -q
+      - run: python scripts/export_contracts.py --check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: TypeScript contract client
+        run: npx --yes --package typescript@5.9.3 tsc --strict --noEmit --lib DOM,ES2022 --target ES2022 contracts/client.ts
+      - name: Reproduce CEN transformation without network
+        run: |
+          python scripts/prepare_data.py
+          git diff --exit-code -- data/processed
+      - name: Real HTTP smoke twice
+        run: |
+          python -m uvicorn backend.main:create_app --factory --host 127.0.0.1 --port 8000 > /tmp/gridpilot.log 2>&1 &
+          api_pid=$!
+          trap 'kill "$api_pid"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent 'http://127.0.0.1:8000/api/ready?mode=replay'; then break; fi
+            sleep 1
+          done
+          python scripts/smoke.py
+      - name: Container build
+        run: docker build -t gridpilot-api:ci .
+      - name: Container smoke
+        run: |
+          docker run -d --name gridpilot-ci -p 8001:8000 gridpilot-api:ci
+          trap 'docker logs gridpilot-ci; docker stop gridpilot-ci' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent 'http://127.0.0.1:8001/api/ready?mode=replay'; then break; fi
+            sleep 1
+          done
+          python scripts/smoke.py --base-url http://127.0.0.1:8001

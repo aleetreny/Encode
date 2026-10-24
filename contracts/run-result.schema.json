@@ -1,0 +1,979 @@
+{
+  "$defs": {
+    "Battery": {
+      "additionalProperties": false,
+      "properties": {
+        "energy_capacity_mwh": {
+          "exclusiveMinimum": 0,
+          "title": "Energy Capacity Mwh",
+          "type": "number"
+        },
+        "final_soc_mwh": {
+          "minimum": 0,
+          "title": "Final Soc Mwh",
+          "type": "number"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "initial_soc_mwh": {
+          "minimum": 0,
+          "title": "Initial Soc Mwh",
+          "type": "number"
+        },
+        "node_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Node Id",
+          "type": "string"
+        },
+        "power_capacity_mw": {
+          "exclusiveMinimum": 0,
+          "title": "Power Capacity Mw",
+          "type": "number"
+        },
+        "round_trip_efficiency": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Round Trip Efficiency",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "node_id",
+        "power_capacity_mw",
+        "energy_capacity_mwh",
+        "initial_soc_mwh",
+        "final_soc_mwh",
+        "round_trip_efficiency"
+      ],
+      "title": "Battery",
+      "type": "object"
+    },
+    "Comparison": {
+      "additionalProperties": false,
+      "properties": {
+        "assumed_cost_delta_usd": {
+          "title": "Assumed Cost Delta Usd",
+          "type": "number"
+        },
+        "curtailment_reduction_mwh": {
+          "title": "Curtailment Reduction Mwh",
+          "type": "number"
+        },
+        "unserved_energy_delta_mwh": {
+          "title": "Unserved Energy Delta Mwh",
+          "type": "number"
+        }
+      },
+      "required": [
+        "curtailment_reduction_mwh",
+        "assumed_cost_delta_usd",
+        "unserved_energy_delta_mwh"
+      ],
+      "title": "Comparison",
+      "type": "object"
+    },
+    "DispatchResult": {
+      "additionalProperties": false,
+      "properties": {
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Metrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "solution": {
+          "$ref": "#/$defs/Solution"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "solution",
+        "valid",
+        "metrics"
+      ],
+      "title": "DispatchResult",
+      "type": "object"
+    },
+    "Generator": {
+      "additionalProperties": false,
+      "properties": {
+        "capacity_mw": {
+          "exclusiveMinimum": 0,
+          "title": "Capacity Mw",
+          "type": "number"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "node_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Node Id",
+          "type": "string"
+        },
+        "technology": {
+          "enum": [
+            "solar",
+            "wind",
+            "thermal",
+            "hydro"
+          ],
+          "title": "Technology",
+          "type": "string"
+        },
+        "variable_cost_usd_per_mwh": {
+          "minimum": 0,
+          "title": "Variable Cost Usd Per Mwh",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "node_id",
+        "technology",
+        "capacity_mw",
+        "variable_cost_usd_per_mwh"
+      ],
+      "title": "Generator",
+      "type": "object"
+    },
+    "Line": {
+      "additionalProperties": false,
+      "properties": {
+        "capacity_mw": {
+          "exclusiveMinimum": 0,
+          "title": "Capacity Mw",
+          "type": "number"
+        },
+        "from": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "From",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "to": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "from",
+        "to",
+        "capacity_mw"
+      ],
+      "title": "Line",
+      "type": "object"
+    },
+    "Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "assumed_cost_usd": {
+          "minimum": 0,
+          "title": "Assumed Cost Usd",
+          "type": "number"
+        },
+        "curtailed_energy_mwh": {
+          "minimum": 0,
+          "title": "Curtailed Energy Mwh",
+          "type": "number"
+        },
+        "unserved_energy_mwh": {
+          "minimum": 0,
+          "title": "Unserved Energy Mwh",
+          "type": "number"
+        }
+      },
+      "required": [
+        "curtailed_energy_mwh",
+        "assumed_cost_usd",
+        "unserved_energy_mwh"
+      ],
+      "title": "Metrics",
+      "type": "object"
+    },
+    "Node": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 160,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "title": "Node",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "derived_fields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Derived Fields",
+          "type": "array"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "gaps": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Gaps",
+          "type": "array"
+        },
+        "historical_event_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Historical Event Date"
+        },
+        "notes": {
+          "title": "Notes",
+          "type": "string"
+        },
+        "observed_fields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Observed Fields",
+          "type": "array"
+        },
+        "observed_source_urls": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Observed Source Urls",
+          "type": "array"
+        },
+        "source_timezone": {
+          "default": "America/Santiago",
+          "title": "Source Timezone",
+          "type": "string"
+        },
+        "synthetic_fields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Synthetic Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "notes"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "RunValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Validation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "candidate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Validation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "max_residual_mw": {
+          "minimum": 0,
+          "title": "Max Residual Mw",
+          "type": "number"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "violations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Violations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "passed",
+        "violations",
+        "max_residual_mw"
+      ],
+      "title": "RunValidation",
+      "type": "object"
+    },
+    "Scenario": {
+      "additionalProperties": false,
+      "properties": {
+        "batteries": {
+          "items": {
+            "$ref": "#/$defs/Battery"
+          },
+          "maxItems": 2,
+          "title": "Batteries",
+          "type": "array"
+        },
+        "curtailment_penalty_usd_per_mwh": {
+          "default": 1,
+          "minimum": 0,
+          "title": "Curtailment Penalty Usd Per Mwh",
+          "type": "number"
+        },
+        "demand_mw_by_node": {
+          "additionalProperties": {
+            "items": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "maxItems": 24,
+            "minItems": 1,
+            "type": "array"
+          },
+          "title": "Demand Mw By Node",
+          "type": "object"
+        },
+        "generators": {
+          "items": {
+            "$ref": "#/$defs/Generator"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Generators",
+          "type": "array"
+        },
+        "lines": {
+          "items": {
+            "$ref": "#/$defs/Line"
+          },
+          "maxItems": 7,
+          "minItems": 1,
+          "title": "Lines",
+          "type": "array"
+        },
+        "load_shedding_penalty_usd_per_mwh": {
+          "default": 10000,
+          "exclusiveMinimum": 0,
+          "title": "Load Shedding Penalty Usd Per Mwh",
+          "type": "number"
+        },
+        "mode": {
+          "enum": [
+            "synthetic",
+            "historically_anchored_simulation"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "network_model": {
+          "const": "transport",
+          "default": "transport",
+          "title": "Network Model",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/Node"
+          },
+          "maxItems": 6,
+          "minItems": 2,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "renewable_availability_mw_by_generator": {
+          "additionalProperties": {
+            "items": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "maxItems": 24,
+            "minItems": 1,
+            "type": "array"
+          },
+          "title": "Renewable Availability Mw By Generator",
+          "type": "object"
+        },
+        "scenario_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "time_step_hours": {
+          "exclusiveMinimum": 0,
+          "maximum": 24,
+          "title": "Time Step Hours",
+          "type": "number"
+        },
+        "timestamps_utc": {
+          "items": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "maxItems": 24,
+          "minItems": 1,
+          "title": "Timestamps Utc",
+          "type": "array"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "mode",
+        "time_step_hours",
+        "timestamps_utc",
+        "provenance",
+        "nodes",
+        "lines",
+        "generators",
+        "batteries",
+        "demand_mw_by_node",
+        "renewable_availability_mw_by_generator"
+      ],
+      "title": "Scenario",
+      "type": "object"
+    },
+    "Solution": {
+      "additionalProperties": false,
+      "properties": {
+        "charge_mw_by_battery": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Charge Mw By Battery",
+          "type": "object"
+        },
+        "curtailment_mw_by_generator": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Curtailment Mw By Generator",
+          "type": "object"
+        },
+        "discharge_mw_by_battery": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Discharge Mw By Battery",
+          "type": "object"
+        },
+        "generation_mw_by_generator": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Generation Mw By Generator",
+          "type": "object"
+        },
+        "line_flows_mw_by_line": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Line Flows Mw By Line",
+          "type": "object"
+        },
+        "load_shedding_mw_by_node": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Load Shedding Mw By Node",
+          "type": "object"
+        },
+        "native_result": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Result"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "soc_mwh_by_battery": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Soc Mwh By Battery",
+          "type": "object"
+        },
+        "status": {
+          "enum": [
+            "optimal",
+            "infeasible",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "Solution",
+      "type": "object"
+    },
+    "ToolEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "execution_mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "live",
+                "replay"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Execution Mode"
+        },
+        "input_summary": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Summary"
+        },
+        "live_gemini": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Live Gemini"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "output_summary": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Summary"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scope"
+        },
+        "status": {
+          "enum": [
+            "started",
+            "success",
+            "failed",
+            "retry"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "timestamp_utc": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timestamp Utc"
+        },
+        "tool": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Tool",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool",
+        "status"
+      ],
+      "title": "ToolEvent",
+      "type": "object"
+    },
+    "Validation": {
+      "additionalProperties": false,
+      "properties": {
+        "max_residual_mw": {
+          "minimum": 0,
+          "title": "Max Residual Mw",
+          "type": "number"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Metrics"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "violations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Violations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "passed",
+        "violations",
+        "max_residual_mw"
+      ],
+      "title": "Validation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "approval_status": {
+      "enum": [
+        "unavailable",
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "title": "Approval Status",
+      "type": "string"
+    },
+    "baseline": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DispatchResult"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "candidate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DispatchResult"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "comparison": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Comparison"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "decision": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decision"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Error"
+    },
+    "execution_mode": {
+      "enum": [
+        "live",
+        "replay"
+      ],
+      "title": "Execution Mode",
+      "type": "string"
+    },
+    "historical_evidence": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Historical Evidence"
+    },
+    "operator_report": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Operator Report"
+    },
+    "provenance": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provenance"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "integer"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "scenario_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "scenario_snapshot": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Scenario"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "running",
+        "completed",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "tool_trace": {
+      "items": {
+        "$ref": "#/$defs/ToolEvent"
+      },
+      "title": "Tool Trace",
+      "type": "array"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    },
+    "validation": {
+      "$ref": "#/$defs/RunValidation"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "scenario_id",
+    "execution_mode",
+    "status",
+    "created_at",
+    "updated_at",
+    "revision",
+    "approval_status",
+    "tool_trace",
+    "baseline",
+    "candidate",
+    "comparison",
+    "validation",
+    "operator_report",
+    "error"
+  ],
+  "title": "RunDocument",
+  "type": "object"
+}

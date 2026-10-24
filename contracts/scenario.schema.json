@@ -1,0 +1,373 @@
+{
+  "$defs": {
+    "Battery": {
+      "additionalProperties": false,
+      "properties": {
+        "energy_capacity_mwh": {
+          "exclusiveMinimum": 0,
+          "title": "Energy Capacity Mwh",
+          "type": "number"
+        },
+        "final_soc_mwh": {
+          "minimum": 0,
+          "title": "Final Soc Mwh",
+          "type": "number"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "initial_soc_mwh": {
+          "minimum": 0,
+          "title": "Initial Soc Mwh",
+          "type": "number"
+        },
+        "node_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Node Id",
+          "type": "string"
+        },
+        "power_capacity_mw": {
+          "exclusiveMinimum": 0,
+          "title": "Power Capacity Mw",
+          "type": "number"
+        },
+        "round_trip_efficiency": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Round Trip Efficiency",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "node_id",
+        "power_capacity_mw",
+        "energy_capacity_mwh",
+        "initial_soc_mwh",
+        "final_soc_mwh",
+        "round_trip_efficiency"
+      ],
+      "title": "Battery",
+      "type": "object"
+    },
+    "Generator": {
+      "additionalProperties": false,
+      "properties": {
+        "capacity_mw": {
+          "exclusiveMinimum": 0,
+          "title": "Capacity Mw",
+          "type": "number"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "node_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Node Id",
+          "type": "string"
+        },
+        "technology": {
+          "enum": [
+            "solar",
+            "wind",
+            "thermal",
+            "hydro"
+          ],
+          "title": "Technology",
+          "type": "string"
+        },
+        "variable_cost_usd_per_mwh": {
+          "minimum": 0,
+          "title": "Variable Cost Usd Per Mwh",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "node_id",
+        "technology",
+        "capacity_mw",
+        "variable_cost_usd_per_mwh"
+      ],
+      "title": "Generator",
+      "type": "object"
+    },
+    "Line": {
+      "additionalProperties": false,
+      "properties": {
+        "capacity_mw": {
+          "exclusiveMinimum": 0,
+          "title": "Capacity Mw",
+          "type": "number"
+        },
+        "from": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "From",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "to": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "from",
+        "to",
+        "capacity_mw"
+      ],
+      "title": "Line",
+      "type": "object"
+    },
+    "Node": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 160,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "title": "Node",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "derived_fields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Derived Fields",
+          "type": "array"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "gaps": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Gaps",
+          "type": "array"
+        },
+        "historical_event_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Historical Event Date"
+        },
+        "notes": {
+          "title": "Notes",
+          "type": "string"
+        },
+        "observed_fields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Observed Fields",
+          "type": "array"
+        },
+        "observed_source_urls": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Observed Source Urls",
+          "type": "array"
+        },
+        "source_timezone": {
+          "default": "America/Santiago",
+          "title": "Source Timezone",
+          "type": "string"
+        },
+        "synthetic_fields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Synthetic Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "notes"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "batteries": {
+      "items": {
+        "$ref": "#/$defs/Battery"
+      },
+      "maxItems": 2,
+      "title": "Batteries",
+      "type": "array"
+    },
+    "curtailment_penalty_usd_per_mwh": {
+      "default": 1,
+      "minimum": 0,
+      "title": "Curtailment Penalty Usd Per Mwh",
+      "type": "number"
+    },
+    "demand_mw_by_node": {
+      "additionalProperties": {
+        "items": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "maxItems": 24,
+        "minItems": 1,
+        "type": "array"
+      },
+      "title": "Demand Mw By Node",
+      "type": "object"
+    },
+    "generators": {
+      "items": {
+        "$ref": "#/$defs/Generator"
+      },
+      "maxItems": 6,
+      "minItems": 1,
+      "title": "Generators",
+      "type": "array"
+    },
+    "lines": {
+      "items": {
+        "$ref": "#/$defs/Line"
+      },
+      "maxItems": 7,
+      "minItems": 1,
+      "title": "Lines",
+      "type": "array"
+    },
+    "load_shedding_penalty_usd_per_mwh": {
+      "default": 10000,
+      "exclusiveMinimum": 0,
+      "title": "Load Shedding Penalty Usd Per Mwh",
+      "type": "number"
+    },
+    "mode": {
+      "enum": [
+        "synthetic",
+        "historically_anchored_simulation"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "network_model": {
+      "const": "transport",
+      "default": "transport",
+      "title": "Network Model",
+      "type": "string"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/Node"
+      },
+      "maxItems": 6,
+      "minItems": 2,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "renewable_availability_mw_by_generator": {
+      "additionalProperties": {
+        "items": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "maxItems": 24,
+        "minItems": 1,
+        "type": "array"
+      },
+      "title": "Renewable Availability Mw By Generator",
+      "type": "object"
+    },
+    "scenario_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "time_step_hours": {
+      "exclusiveMinimum": 0,
+      "maximum": 24,
+      "title": "Time Step Hours",
+      "type": "number"
+    },
+    "timestamps_utc": {
+      "items": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "maxItems": 24,
+      "minItems": 1,
+      "title": "Timestamps Utc",
+      "type": "array"
+    }
+  },
+  "required": [
+    "scenario_id",
+    "mode",
+    "time_step_hours",
+    "timestamps_utc",
+    "provenance",
+    "nodes",
+    "lines",
+    "generators",
+    "batteries",
+    "demand_mw_by_node",
+    "renewable_availability_mw_by_generator"
+  ],
+  "title": "Scenario",
+  "type": "object"
+}

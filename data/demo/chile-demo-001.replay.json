@@ -1,0 +1,320 @@
+{
+  "scenario_sha256": "74382ba2c9f08341ed64e879120059707cc1635e9c7d782f45450978a6cde8c2",
+  "settings": {
+    "battery_policy": "optimised",
+    "allow_load_shedding": false
+  },
+  "generator": {
+    "script": "scripts/build_demo.py",
+    "scipy_version": "1.18.1",
+    "solver": "SciPy milp / HiGHS",
+    "scope": "offline reference fixture only"
+  },
+  "result": {
+    "baseline": {
+      "status": "optimal",
+      "generation_mw_by_generator": {
+        "solar1": [
+          80.0,
+          80.0,
+          80.0,
+          70.0,
+          20.0,
+          0.0
+        ],
+        "wind1": [
+          15.0,
+          18.0,
+          20.0,
+          15.0,
+          12.0,
+          10.0
+        ],
+        "thermal1": [
+          15.0,
+          12.0,
+          10.0,
+          25.0,
+          78.0,
+          100.0
+        ]
+      },
+      "curtailment_mw_by_generator": {
+        "solar1": [
+          60.0,
+          80.0,
+          70.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wind1": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "line_flows_mw_by_line": {
+        "L1": [
+          60.0,
+          60.0,
+          60.0,
+          50.0,
+          0.0,
+          -20.0
+        ],
+        "L2": [
+          30.0,
+          30.0,
+          30.0,
+          20.0,
+          -30.0,
+          -50.0
+        ],
+        "L3": [
+          -5.0,
+          -8.0,
+          -10.0,
+          -5.0,
+          -2.0,
+          0.0
+        ]
+      },
+      "charge_mw_by_battery": {
+        "b1": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "discharge_mw_by_battery": {
+        "b1": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "soc_mwh_by_battery": {
+        "b1": [
+          10.0,
+          10.0,
+          10.0,
+          10.0,
+          10.0,
+          10.0,
+          10.0
+        ]
+      },
+      "load_shedding_mw_by_node": {
+        "north": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "central": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "south": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "coast": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "reason": null
+    },
+    "candidate": {
+      "status": "optimal",
+      "generation_mw_by_generator": {
+        "solar1": [
+          110.0,
+          104.3274042711568,
+          110.0,
+          64.1053361559589,
+          20.0,
+          0.0
+        ],
+        "wind1": [
+          15.0,
+          18.0,
+          20.0,
+          15.0,
+          12.0,
+          10.0
+        ],
+        "thermal1": [
+          15.0,
+          12.0,
+          10.0,
+          15.0,
+          48.0,
+          70.0
+        ]
+      },
+      "curtailment_mw_by_generator": {
+        "solar1": [
+          30.0,
+          55.672595728843206,
+          40.0,
+          5.894663844041105,
+          0.0,
+          0.0
+        ],
+        "wind1": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "line_flows_mw_by_line": {
+        "L1": [
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          30.0,
+          10.0
+        ],
+        "L2": [
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          0.0,
+          -20.0
+        ],
+        "L3": [
+          -5.0,
+          -8.0,
+          -10.0,
+          -5.0,
+          -2.0,
+          0.0
+        ]
+      },
+      "charge_mw_by_battery": {
+        "b1": [
+          29.999999999999996,
+          24.32740427115679,
+          30.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "discharge_mw_by_battery": {
+        "b1": [
+          0.0,
+          0.0,
+          0.0,
+          15.894663844041098,
+          30.0,
+          30.0
+        ]
+      },
+      "soc_mwh_by_battery": {
+        "b1": [
+          10.0,
+          38.46049894151541,
+          61.53950105848459,
+          90.0,
+          73.24555320336759,
+          41.622776601683796,
+          10.0
+        ]
+      },
+      "load_shedding_mw_by_node": {
+        "north": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "central": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "south": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "coast": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "reason": null
+    },
+    "tool_trace": [
+      {
+        "tool": "load_cached_dispatch",
+        "status": "success",
+        "execution_mode": "replay",
+        "live_gemini": false,
+        "note": "Reference MILP outputs loaded from a saved fixture. No agent was executed."
+      }
+    ],
+    "operator_report": {
+      "summary": "Offline reference scenario: inspect the independently verified simulated baseline and battery alternative. All dispatch inputs are synthetic.",
+      "sources": [
+        "https://www.coordinador.cl/wp-content/uploads/2026/10/Reducciones-de-Energia-Eolica-Solar-Hidro-en-el-SEN_Agosto-26-PE-PFV_Publicar.xlsx",
+        "https://www.coordinador.cl/operacion/documentos/reducciones-de-generacion-renovable/reducciones-erv-2026/"
+      ],
+      "assumptions": [
+        "Transport model with no electrical losses or voltage constraints",
+        "Symmetric charge/discharge efficiency = sqrt(round-trip efficiency)",
+        "Final SOC equals initial SOC",
+        "Baseline disables battery dispatch; candidate enables existing battery; common exogenous inputs and asset ratings"
+      ],
+      "limitations": [
+        "Cached replay is not a live Gemini investigation",
+        "Not a reconstruction of Chilean dispatch",
+        "No claim about real savings, emissions, security or optimal real-world operation"
+      ]
+    }
+  }
+}

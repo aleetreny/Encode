@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0.0",
+  "scenario_id": "synthetic-demo-001",
+  "mode": "synthetic",
+  "network_model": "transport",
+  "time_step_hours": 1.0,
+  "timestamps_utc": [
+    "2026-08-01T14:00:00Z",
+    "2026-08-01T15:00:00Z",
+    "2026-08-01T16:00:00Z",
+    "2026-08-01T17:00:00Z",
+    "2026-08-01T18:00:00Z",
+    "2026-08-01T19:00:00Z"
+  ],
+  "provenance": {
+    "observed_source_urls": [],
+    "observed_fields": [],
+    "derived_fields": [],
+    "synthetic_fields": [
+      "network_topology",
+      "line_limits",
+      "battery_parameters",
+      "demand_mw_by_node",
+      "renewable_availability_mw_by_generator",
+      "generator_ratings",
+      "cost_parameters",
+      "timestamps_utc"
+    ],
+    "historical_event_date": null,
+    "source_timezone": "America/Santiago",
+    "notes": "Historical evidence is separate context only. All dispatch inputs, including generation availability and demand, are synthetic. The network is not calibrated to Chile.",
+    "evidence_id": null,
+    "gaps": [
+      "Observed demand and generation have not been aligned",
+      "No actual transmission model",
+      "Observed hour boundaries unverified; simulation clock is assumed"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "north",
+      "label": "North — illustrative"
+    },
+    {
+      "id": "central",
+      "label": "Central — illustrative"
+    },
+    {
+      "id": "south",
+      "label": "South — illustrative"
+    },
+    {
+      "id": "coast",
+      "label": "Coast — illustrative"
+    }
+  ],
+  "lines": [
+    {
+      "id": "L1",
+      "from": "north",
+      "to": "central",
+      "capacity_mw": 60.0
+    },
+    {
+      "id": "L2",
+      "from": "central",
+      "to": "south",
+      "capacity_mw": 80.0
+    },
+    {
+      "id": "L3",
+      "from": "south",
+      "to": "coast",
+      "capacity_mw": 30.0
+    }
+  ],
+  "generators": [
+    {
+      "id": "solar1",
+      "node_id": "north",
+      "technology": "solar",
+      "capacity_mw": 160.0,
+      "variable_cost_usd_per_mwh": 0.0
+    },
+    {
+      "id": "wind1",
+      "node_id": "coast",
+      "technology": "wind",
+      "capacity_mw": 30.0,
+      "variable_cost_usd_per_mwh": 0.0
+    },
+    {
+      "id": "thermal1",
+      "node_id": "south",
+      "technology": "thermal",
+      "capacity_mw": 150.0,
+      "variable_cost_usd_per_mwh": 65.0
+    }
+  ],
+  "batteries": [
+    {
+      "id": "b1",
+      "node_id": "north",
+      "power_capacity_mw": 30.0,
+      "energy_capacity_mwh": 90.0,
+      "initial_soc_mwh": 10.0,
+      "final_soc_mwh": 10.0,
+      "round_trip_efficiency": 0.9
+    }
+  ],
+  "demand_mw_by_node": {
+    "north": [
+      20.0,
+      20.0,
+      20.0,
+      20.0,
+      20.0,
+      20.0
+    ],
+    "central": [
+      30.0,
+      30.0,
+      30.0,
+      30.0,
+      30.0,
+      30.0
+    ],
+    "south": [
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0
+    ],
+    "coast": [
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0
+    ]
+  },
+  "renewable_availability_mw_by_generator": {
+    "solar1": [
+      140.0,
+      160.0,
+      150.0,
+      70.0,
+      20.0,
+      0.0
+    ],
+    "wind1": [
+      15.0,
+      18.0,
+      20.0,
+      15.0,
+      12.0,
+      10.0
+    ]
+  },
+  "curtailment_penalty_usd_per_mwh": 1.0,
+  "load_shedding_penalty_usd_per_mwh": 10000.0
+}

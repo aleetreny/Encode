@@ -1,0 +1,358 @@
+{
+  "$defs": {
+    "ModelExecution": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "provider": {
+          "const": "google",
+          "title": "Provider",
+          "type": "string"
+        },
+        "response_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Response Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "response_id"
+      ],
+      "title": "ModelExecution",
+      "type": "object"
+    },
+    "OperatorReport": {
+      "additionalProperties": false,
+      "properties": {
+        "assumptions": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 30,
+          "title": "Assumptions",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 30,
+          "title": "Limitations",
+          "type": "array"
+        },
+        "sources": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 30,
+          "title": "Sources",
+          "type": "array"
+        },
+        "summary": {
+          "maxLength": 6000,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "summary",
+        "sources",
+        "assumptions",
+        "limitations"
+      ],
+      "title": "OperatorReport",
+      "type": "object"
+    },
+    "Solution": {
+      "additionalProperties": false,
+      "properties": {
+        "charge_mw_by_battery": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Charge Mw By Battery",
+          "type": "object"
+        },
+        "curtailment_mw_by_generator": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Curtailment Mw By Generator",
+          "type": "object"
+        },
+        "discharge_mw_by_battery": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Discharge Mw By Battery",
+          "type": "object"
+        },
+        "generation_mw_by_generator": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Generation Mw By Generator",
+          "type": "object"
+        },
+        "line_flows_mw_by_line": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Line Flows Mw By Line",
+          "type": "object"
+        },
+        "load_shedding_mw_by_node": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Load Shedding Mw By Node",
+          "type": "object"
+        },
+        "native_result": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Result"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "soc_mwh_by_battery": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Soc Mwh By Battery",
+          "type": "object"
+        },
+        "status": {
+          "enum": [
+            "optimal",
+            "infeasible",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "Solution",
+      "type": "object"
+    },
+    "ToolEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "execution_mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "live",
+                "replay"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Execution Mode"
+        },
+        "input_summary": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Summary"
+        },
+        "live_gemini": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Live Gemini"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "output_summary": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Summary"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scope"
+        },
+        "status": {
+          "enum": [
+            "started",
+            "success",
+            "failed",
+            "retry"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "timestamp_utc": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timestamp Utc"
+        },
+        "tool": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Tool",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool",
+        "status"
+      ],
+      "title": "ToolEvent",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Agent output is untrusted until backend independently validates both solutions.",
+  "properties": {
+    "baseline": {
+      "$ref": "#/$defs/Solution"
+    },
+    "candidate": {
+      "$ref": "#/$defs/Solution"
+    },
+    "model_execution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelExecution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "operator_report": {
+      "$ref": "#/$defs/OperatorReport"
+    },
+    "tool_trace": {
+      "items": {
+        "$ref": "#/$defs/ToolEvent"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Tool Trace",
+      "type": "array"
+    }
+  },
+  "required": [
+    "baseline",
+    "candidate",
+    "tool_trace",
+    "operator_report"
+  ],
+  "title": "AgentResult",
+  "type": "object"
+}

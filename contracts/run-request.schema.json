@@ -1,0 +1,50 @@
+{
+  "$defs": {
+    "Options": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_load_shedding": {
+          "default": false,
+          "title": "Allow Load Shedding",
+          "type": "boolean"
+        },
+        "battery_policy": {
+          "default": "optimised",
+          "enum": [
+            "disabled",
+            "optimised"
+          ],
+          "title": "Battery Policy",
+          "type": "string"
+        }
+      },
+      "title": "Options",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "execution_mode": {
+      "default": "live",
+      "enum": [
+        "live",
+        "replay"
+      ],
+      "title": "Execution Mode",
+      "type": "string"
+    },
+    "scenario_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "settings": {
+      "$ref": "#/$defs/Options"
+    }
+  },
+  "required": [
+    "scenario_id"
+  ],
+  "title": "RunRequest",
+  "type": "object"
+}
