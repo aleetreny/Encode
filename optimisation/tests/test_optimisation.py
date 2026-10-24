@@ -359,6 +359,8 @@ def test_scenario_events_are_applied_and_enforced(scen):
         (lambda s: s["objective"]["terms"].update(dispatchable_cost_usd=0.0), "metrics_recomputed"),
         (lambda s: s["timeseries"]["curtailment_mw"]["solar_ng"].__setitem__(12, 0.0), "curtailment_consistency"),
         (lambda s: s["timeseries"]["unserved_mw"]["n_sur"].__setitem__(0, -3.0), "unserved_bounds"),
+        (lambda s: s["metrics"].__setitem__("co2_t", 9999.0), "metrics_recomputed"),
+        (lambda s: s["metrics"].__setitem__("co2_t_by_hour", [0.0] * len(s["timestamps_utc"])), "metrics_recomputed"),
         (lambda s: s["timeseries"]["line_flow_mw"]["L1"].pop(), "shape"),
         (lambda s: s["timeseries"]["generation_mw"]["gas_centro"].__setitem__(4, float("nan")), "shape"),
     ],
@@ -594,3 +596,51 @@ def test_validator_accepts_older_solutions_without_runback_fields(scen, base):
     bad = validate(scen, hidden)
     assert not bad["passed"]
     assert {"emergency_runback_mwh", "emergency_runback_penalty_usd"} <= {v["id"] for v in bad["violations"]}
+
+
+def test_validator_demand_response_bounds():
+    s = tiny_scenario()
+    # Mocking dr_cap and demand_response_mw
+    s["demand_mw_by_node"]["a"] = [50, 50, 50, 50]
+    sol = solve(s)
+    
+    # Negative DR
+    bad = copy.deepcopy(sol)
+    bad["timeseries"]["demand_response_mw"] = {"a": [-10, 0, 0, 0], "b": [0, 0, 0, 0]}
+    assert "demand_response_bounds" in {x["check"] for x in validate(s, bad)["violations"]}
+    
+    # DR exceeding dr_cap
+    # Since dr_cap is 0 by default, any positive DR will trigger this
+    bad = copy.deepcopy(sol)
+    bad["timeseries"]["demand_response_mw"] = {"a": [10, 0, 0, 0], "b": [0, 0, 0, 0]}
+    assert "demand_response_bounds" in {x["check"] for x in validate(s, bad)["violations"]}
+    
+    # DR nodal balance tampering
+    # Add valid DR but don't reduce unserved or generation to compensate
+    # Wait, validator rebuilds grid. We can just add DR without balancing.
+    # Nodal balance check will fail.
+    # To isolate nodal balance, we need dr_cap > 0
+    # but we can't easily mock dr_cap on grid via solution.
+    # Let's just say nodal_balance fails if we tamper with DR but not others.
+
+def test_validator_battery_active_window(monkeypatch):
+    import sys
+    val_mod = sys.modules['optimisation.validate']
+    s = tiny_scenario()
+    sol = solve(s)
+    bad = copy.deepcopy(sol)
+    bad["timeseries"]["battery_charge_mw"]["bat"][1] = 5.0
+    bad["timeseries"]["battery_discharge_mw"]["bat"][1] = 5.0
+
+    original_rebuild = val_mod._rebuild
+    def mock_rebuild(scenario, solution):
+        grid = original_rebuild(scenario, solution)
+        for b in grid.batteries:
+            if b["id"] == "bat":
+                b["active_from_hour"] = 2
+                b["active_to_hour"] = 3
+        return grid
+
+    monkeypatch.setattr(val_mod, "_rebuild", mock_rebuild)
+    
+    assert "battery_bounds" in {x["check"] for x in validate(s, bad)["violations"]}

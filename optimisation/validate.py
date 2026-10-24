@@ -21,7 +21,7 @@ TOL_ABS_METRIC = 1e-3
 
 # Fields added after the first released output format. A solution produced before they existed
 # omits them; that is accepted only when the recomputed value is 0 (nothing was hidden).
-ADDED_LATER = {"emergency_runback_mwh", "emergency_runback_penalty_usd"}
+ADDED_LATER = {"emergency_runback_mwh", "emergency_runback_penalty_usd", "demand_response_mwh", "demand_response_cost_usd"}
 
 
 class _Report:
@@ -86,11 +86,18 @@ def _rebuild(scenario: dict, solution: dict) -> Grid:
     mods = solution.get("modifications") or []
     candidate = None
     if solution.get("candidate_id", "baseline") != "baseline" or mods:
+        new_mods = []
+        for m in mods:
+            m_copy = dict(m)
+            if m_copy.get("type") == "add_battery":
+                m_copy.pop("battery_id", None)
+            if m_copy.get("type") == "uprate_line":
+                m_copy.pop("previous_capacity_mw", None)
+            new_mods.append(m_copy)
+
         candidate = {
             "candidate_id": solution.get("candidate_id"),
-            "modifications": [
-                {k: v for k, v in m.items() if k not in ("battery_id", "previous_capacity_mw")} for m in mods
-            ],
+            "modifications": new_mods,
         }
     return build_grid(
         scenario, candidate, solution.get("events") or [], solution.get("options") or {},
@@ -158,9 +165,26 @@ def validate(scenario: dict, solution: dict, options: dict | None = None) -> dic
     f = {ln["id"]: _series(rep, ts.get("line_flow_mw"), ln["id"], T, "line_flow_mw") for ln in lines}
     u = {n: _series(rep, ts.get("unserved_mw"), n, T, "unserved_mw") for n in grid.node_ids}
     curt = {g["id"]: _series(rep, ts.get("curtailment_mw"), g["id"], T, "curtailment_mw") for g in gens if g["renewable"]}
+    
+    dr_cap = getattr(grid, "dr_cap", np.zeros((len(grid.node_ids), T)))
+    has_dr = "demand_response_mw" in ts or dr_cap.max(initial=0.0) > 0
+    if has_dr:
+        dr = {n: _series(rep, ts.get("demand_response_mw"), n, T, "demand_response_mw") for n in grid.node_ids}
+    else:
+        dr = {n: np.zeros(T, dtype=float) for n in grid.node_ids}
+
     series = [*p.values(), *ch.values(), *dis.values(), *soc.values(), *f.values(), *u.values(), *curt.values()]
+    if has_dr:
+        series.extend(dr.values())
     if any(s is None for s in series):
         return rep.result()
+        
+    if has_dr:
+        rep.check("demand_response_bounds")
+        for n_i, n in enumerate(grid.node_ids):
+            _over(rep, "demand_response_bounds", n, -dr[n], "negative demand response")
+            _over(rep, "demand_response_bounds", n, dr[n] - dr_cap[n_i], "demand response above contracted limit")
+            _over(rep, "demand_response_bounds", n, dr[n] - grid.demand[n_i], "demand response above nodal demand")
 
     # generators
     rep.check("generator_bounds")
@@ -179,9 +203,12 @@ def validate(scenario: dict, solution: dict, options: dict | None = None) -> dic
     for b in bats:
         bid, P, E = b["id"], b["power_capacity_mw"], b["energy_capacity_mwh"]
         c, d, s = ch[bid], dis[bid], soc[bid]
+        af = int(b.get("active_from_hour", 0))
+        at = int(b.get("active_to_hour", T))
+        p_max_t = np.array([P if (af <= t < at) else 0.0 for t in range(T)], dtype=float)
         for arr, what in ((c, "charge"), (d, "discharge")):
             _over(rep, "battery_bounds", bid, -arr, f"negative {what}")
-            _over(rep, "battery_bounds", bid, arr - P, f"{what} above {P:g} MW")
+            _over(rep, "battery_bounds", bid, arr - p_max_t, f"{what} above limit or outside active window")
         _over(rep, "battery_bounds", bid, s - E, f"state of charge above {E:g} MWh")
         _over(rep, "battery_bounds", bid, b["min_soc_mwh"] - s, f"state of charge below {b['min_soc_mwh']:g} MWh")
         if abs(s[0] - b["initial_soc_mwh"]) > TOL_MW:
@@ -215,7 +242,7 @@ def validate(scenario: dict, solution: dict, options: dict | None = None) -> dic
     # nodal balance
     rep.check("nodal_balance")
     for n_i, n in enumerate(grid.node_ids):
-        net = u[n].copy()
+        net = u[n].copy() + dr[n]
         for g in gens:
             if g["node_id"] == n:
                 net += p[g["id"]]
@@ -249,11 +276,11 @@ def validate(scenario: dict, solution: dict, options: dict | None = None) -> dic
 
     # metrics
     rep.check("metrics_recomputed")
-    _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt)
+    _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt, dr)
     return rep.result()
 
 
-def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
+def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt, dr) -> None:
     dt, obj = grid.dt, grid.objective
     gens, bats = grid.generators, grid.batteries
     m = solution.get("metrics") or {}
@@ -263,7 +290,11 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
     uns_mwh = sum(float(u[n].sum()) for n in u) * dt
     ren = sum(float(p[g["id"]].sum()) for g in gens if g["renewable"]) * dt
     disp = sum(float(p[g["id"]].sum()) for g in gens if not g["renewable"]) * dt
-    cost = sum(float(p[g["id"]].sum()) * g["variable_cost_usd_per_mwh"] for g in gens if not g["renewable"]) * dt
+    gen_cost = getattr(grid, "gen_cost", np.array([[g.get("variable_cost_usd_per_mwh", 0.0)] * grid.T for g in gens], dtype=float))
+    cost = sum(float(np.dot(p[g["id"]], gen_cost[i])) for i, g in enumerate(gens) if not g["renewable"]) * dt
+    dr_cost_arr = getattr(grid, "dr_cost", np.full((len(grid.node_ids), grid.T), 300.0))
+    dr_mwh = sum(float(dr[n].sum()) for n in grid.node_ids) * dt
+    dr_cost_usd = sum(float(np.dot(dr[n], dr_cost_arr[i])) for i, n in enumerate(grid.node_ids)) * dt
     ch_tot = sum(float(ch[b["id"]].sum()) for b in bats) * dt
     dis_tot = sum(float(dis[b["id"]].sum()) for b in bats) * dt
     losses = sum(
@@ -282,6 +313,7 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
     expected = {
         "curtailment_mwh": curt_mwh,
         "emergency_runback_mwh": runback,
+        "demand_response_mwh": dr_mwh,
         "unserved_mwh": uns_mwh,
         "renewable_used_mwh": ren,
         "dispatchable_mwh": disp,
@@ -307,12 +339,13 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
         if not isinstance(got, (int, float)) or not _close(float(got), val):
             rep.fail("metrics_recomputed", n, None, val, f"unserved_mwh_by_node.{n}={got!r}, recomputed {val:.6f}")
     # energy conservation over the whole system
-    supply = ren + disp + dis_tot - ch_tot + uns_mwh
+    supply = ren + disp + dis_tot - ch_tot + dr_mwh + uns_mwh
     resid = abs(supply - float(grid.demand.sum()) * dt)
     if resid > TOL_MW * grid.T * max(1, len(grid.node_ids)):
         rep.fail("metrics_recomputed", "energy_conservation", None, resid, "total supply != total demand")
     exp_terms = {
         "dispatchable_cost_usd": cost,
+        "demand_response_cost_usd": dr_cost_usd,
         "unserved_penalty_usd": uns_mwh * obj["unserved_energy_penalty_usd_per_mwh"],
         "curtailment_penalty_usd": curt_mwh * obj["curtailment_penalty_usd_per_mwh"],
         "battery_throughput_cost_usd": (ch_tot + dis_tot) * obj["battery_throughput_cost_usd_per_mwh"],
@@ -324,6 +357,29 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
         got = terms.get(key, 0.0 if key in ADDED_LATER else None)
         if not isinstance(got, (int, float)) or not _close(float(got), val):
             rep.fail("metrics_recomputed", key, None, val, f"objective term {key}={got!r}, recomputed {val:.6f}")
+
+    ef_map = getattr(grid, "emission_factors", {"gas": 0.40, "coal": 0.95, "diesel": 0.75, "solar": 0.0, "wind": 0.0, "hydro": 0.0})
+    co2_by_hour = np.zeros(grid.T, dtype=float)
+    for g in gens:
+        ef = float(ef_map.get(str(g.get("technology", "")).lower(), 0.0))
+        co2_by_hour += p[g["id"]] * ef * dt
+    co2_total = float(co2_by_hour.sum())
+
+    if "co2_t" in m:
+        got_co2 = m["co2_t"]
+        if not isinstance(got_co2, (int, float)) or not math.isfinite(got_co2) or not _close(float(got_co2), co2_total):
+            rep.fail("metrics_recomputed", "co2_t", None, abs(float(got_co2) - co2_total) if isinstance(got_co2, (int, float)) else co2_total, f"reported co2_t={got_co2!r}, recomputed {co2_total:.6f}")
+
+    if "co2_t_by_hour" in m:
+        got_co2_h = m["co2_t_by_hour"]
+        if not isinstance(got_co2_h, list) or len(got_co2_h) != grid.T:
+            rep.fail("metrics_recomputed", "co2_t_by_hour", None, 0.0, "co2_t_by_hour must be a list of T numbers")
+        else:
+            for t in range(grid.T):
+                val = got_co2_h[t]
+                if not isinstance(val, (int, float)) or not math.isfinite(val) or not _close(float(val), float(co2_by_hour[t])):
+                    rep.fail("metrics_recomputed", "co2_t_by_hour", t, abs(float(val) - float(co2_by_hour[t])) if isinstance(val, (int, float)) else float(co2_by_hour[t]), f"reported co2_t_by_hour[{t}]={val!r}, recomputed {co2_by_hour[t]:.6f}")
+
     total = o.get("total_usd")
     if not isinstance(total, (int, float)) or not _close(float(total), sum(exp_terms.values())):
         rep.fail("metrics_recomputed", "total_usd", None, 0.0, f"objective total {total!r} != sum of recomputed terms")
