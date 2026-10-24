@@ -43,6 +43,7 @@ from backend.native_models import (
 from backend.store import Conflict, QueueFull, Store
 from backend.worker import failure, fingerprint
 
+from backend.live.router import router as live_ops_router
 log = logging.getLogger("gridpilot")
 
 
@@ -489,4 +490,5 @@ def create_app(settings=None):
             },
         )
 
+    app.include_router(live_ops_router)
     return app
