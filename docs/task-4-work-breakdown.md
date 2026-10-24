@@ -85,11 +85,11 @@
 | 4.57 | Health plus explicit live/replay readiness endpoints | DONE |
 | 4.58 | Request IDs and basic request logs without bodies or authorization | DONE |
 | 4.59 | Pin runtime and development dependencies | DONE |
-| 4.60 | Non-root Docker image, local persistent Compose volume and health check | DONE: image build verification delegated to CI |
+| 4.60 | Non-root Docker image, local persistent Compose volume and health check | DONE: image build and container smoke passed in CI |
 | 4.61 | Free Render blueprint with documented ephemeral-storage behavior | DONE |
 | 4.62 | Meaningful tests for tampering, failure, concurrency and approval | DONE |
 | 4.63 | Real HTTP smoke twice with approval and downloaded report | DONE locally |
-| 4.64 | GitHub workflow for tests, contract drift, data regeneration and container smoke | DONE: remote workflow execution pending push |
+| 4.64 | GitHub workflow for tests, contract drift, data regeneration and container smoke | DONE: push and pull-request runs passed |
 | 4.65 | Public backend URL and remote smoke test | EXTERNAL: hosting account |
 
 ## F. Submission and release

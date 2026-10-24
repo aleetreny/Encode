@@ -12,4 +12,6 @@ Local verification on 24 October 2026, branch `feature/data-backend`:
 
 The test runner emits one dependency deprecation warning: the installed Starlette test client currently supports `httpx` but recommends its newer transport package. This does not affect the actual Uvicorn/HTTP smoke path.
 
-No real Gemini call, production numerical-module execution, final frontend, public hosting deployment, actual demo video or submission is certified by these checks. The native bridge is checked against test doubles based on Person 3's published design; executable solver code was not yet present on its branch. Docker was unavailable locally; image build/smoke is configured in GitHub Actions and must pass there before claiming container verification.
+GitHub Actions also passed on the implementation commit, including the actual Linux Docker image build and two HTTP investigations against the running container: [verified run](https://github.com/aleetreny/Encode/actions/runs/40111205826). The pull-request-triggered run passed independently as well. Docker remained unavailable on the local host.
+
+No real Gemini call, production numerical-module execution, final frontend, public hosting deployment, actual demo video or submission is certified by these checks. The native bridge is checked against test doubles based on Person 3's published design; executable solver code was not yet present on its branch.
