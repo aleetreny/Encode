@@ -5,7 +5,15 @@ Autonomous AI National Grid Coordinator co-pilot for Chile's Sistema Eléctrico 
 
 from __future__ import annotations
 
-from agent.gemini_client import DEFAULT_AGENT_MODEL, GeminiArgonClient
+from agent.gemini_client import (
+    COMPANION_SUBAGENT_MODEL,
+    DEFAULT_AGENT_MODEL,
+    DEFAULT_THINKING_LEVEL,
+    FORBIDDEN_ARGON_PARAMS,
+    GEMINI_TOOL_DECLARATIONS,
+    GeminiArgonClient,
+    build_argon_config,
+)
 from agent.orchestrator import (
     AwaitableDict,
     GridPilotAgent,

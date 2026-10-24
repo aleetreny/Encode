@@ -271,6 +271,10 @@ def test_native_v2_worker_contract_chile_sen_5node_demo() -> None:
 
     assert base["status"] == "optimal"
     assert cand["status"] == "optimal"
+    assert base["accepted"] is True
+    assert cand["accepted"] is True
+    assert base["validation"]["passed"] is True
+    assert cand["validation"]["passed"] is True
     assert base["options"] == {"allow_unserved": True, "time_limit_s": 20.0}
     assert cand["options"] == {"allow_unserved": True, "time_limit_s": 20.0}
     assert cand["candidate_id"] == "north_bess"
@@ -279,4 +283,126 @@ def test_native_v2_worker_contract_chile_sen_5node_demo() -> None:
     # Exact curtailment reduction matches Person 3 & Person 4's native demo (631.578947 MWh)
     curt_red = base["metrics"]["curtailment_mwh"] - cand["metrics"]["curtailment_mwh"]
     assert round(curt_red, 3) == 631.579
+
+
+def test_argon_api_rules_and_function_calling_loop(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify Gemini 4 Argon API rules (thinking_level, background=True, no temperature/top_p/top_k) and function calling."""
+    from agent.gemini_client import (
+        COMPANION_SUBAGENT_MODEL,
+        DEFAULT_AGENT_MODEL,
+        FORBIDDEN_ARGON_PARAMS,
+        GeminiArgonClient,
+        build_argon_config,
+    )
+
+    cfg = build_argon_config(thinking_level="high", background=True, include_tools=True)
+    assert cfg["thinking_level"] == "high"
+    assert cfg["background"] is True
+    assert "tools" in cfg
+    for forbidden in FORBIDDEN_ARGON_PARAMS:
+        assert forbidden not in cfg
+
+    with pytest.raises(ValueError, match="Invalid Gemini 4 Argon thinking_level"):
+        build_argon_config(thinking_level="invalid")
+
+    # Simulate a two-turn Gemini 4 Argon REST exchange: turn 1 emits functionCall, turn 2 emits final text + real responseId
+    captured_bodies: list[dict] = []
+    tool_calls_made: list[tuple[str, dict]] = []
+
+    class _FakeResponse:
+        def __init__(self, status_code: int, payload: dict) -> None:
+            self.status_code = status_code
+            self._payload = payload
+
+        def json(self) -> dict:
+            return self._payload
+
+    class _FakeHttpClient:
+        def __init__(self, *args, **kwargs) -> None:
+            self._turn = 0
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def post(self, url: str, params: dict | None = None, json: dict | None = None) -> _FakeResponse:
+            assert json is not None
+            captured_bodies.append(copy.deepcopy(json))
+            gen_cfg = json.get("generationConfig") or {}
+            # Strictly verify no forbidden parameters are sent over the wire
+            for forbidden in FORBIDDEN_ARGON_PARAMS:
+                assert forbidden not in gen_cfg
+            assert gen_cfg.get("thinkingConfig", {}).get("thinkingLevel") == "HIGH"
+
+            self._turn += 1
+            if self._turn == 1:
+                return _FakeResponse(
+                    200,
+                    {
+                        "candidates": [
+                            {
+                                "content": {
+                                    "parts": [
+                                        {
+                                            "functionCall": {
+                                                "name": "compare_results",
+                                                "args": {
+                                                    "baseline_id": "baseline",
+                                                    "candidate_id": "north_bess",
+                                                },
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                )
+            return _FakeResponse(
+                200,
+                {
+                    "responseId": "gemini4-argon-live-id-998877",
+                    "modelVersion": "gemini-4-argon",
+                    "candidates": [
+                        {
+                            "content": {
+                                "parts": [
+                                    {
+                                        "text": "Verified north_bess reduces curtailment by 631.6 MWh in simulation (legal_compliance_status=not_certified)."
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                },
+            )
+
+    monkeypatch.setattr("agent.gemini_client.httpx.Client", _FakeHttpClient)
+    client = GeminiArgonClient(api_key="test-live-key", thinking_level="high", background=True)
+    assert client.model == DEFAULT_AGENT_MODEL
+    assert client.companion_model == COMPANION_SUBAGENT_MODEL
+
+    def _executor(name: str, args: dict) -> dict:
+        tool_calls_made.append((name, args))
+        return {"comparable": True, "curtailment_reduction_mwh": 631.578947}
+
+    narrative, meta = client.synthesise_investigation(
+        {"scenario_id": "chile-sen-5node-demo"},
+        {},
+        {"curtailment_reduction_mwh": 631.578947, "assumed_cost_delta_usd": -46750.0},
+        tool_executor=_executor,
+    )
+    assert len(captured_bodies) == 2
+    assert tool_calls_made == [
+        ("compare_results", {"baseline_id": "baseline", "candidate_id": "north_bess"})
+    ]
+    assert meta["provider"] == "google"
+    assert meta["model"] == "gemini-4-argon"
+    assert meta["response_id"] == "gemini4-argon-live-id-998877"
+    assert not meta["response_id"].startswith(("resp-argon-", "resp-google-"))
+    assert narrative["thinking_level"] == "high"
+    assert narrative["background"] is True
+
 
