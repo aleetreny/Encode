@@ -31,7 +31,11 @@ export class OfflineSessionController {
   private simHour = 12.0;
   private running = true;
   private speedSPerHour = 4.0;
-  private currentSeq = 0;
+  private currentSeq = 0; // sequence of events sent to the reducer (ticks included)
+  private cursor = 0; // next recorded event to replay
+  private holding = false; // paused at a recorded operator decision, waiting for a real click
+  private skipApplied = false; // drop the recorded plan (and its solution) after a veto or a different choice
+  private lastOptions: Extract<LiveEvent, { type: 'options.ready' }> | null = null;
 
   constructor(onEvent: (ev: LiveEvent) => void) {
     this.onEvent = onEvent;
@@ -45,6 +49,7 @@ export class OfflineSessionController {
       this.speedSPerHour = snapshot.clock.speed_s_per_hour;
       this.onEvent({ ...snapshot, catalog: OFFLINE_CATALOG });
       this.currentSeq = snapshot.seq;
+      this.cursor = this.events.indexOf(snapshot) + 1;
     }
     
     this.startClock();
@@ -73,16 +78,25 @@ export class OfflineSessionController {
   }
 
   private emitPendingEvents() {
-    // Basic offline replay by sequence
-    // It emits all events from demo-stream.jsonl that are scheduled at <= this.simHour
-    // We only care about events seq > currentSeq
-    const nextEvents = this.events.filter(e => 
-      e.seq > this.currentSeq && e.hour <= this.simHour
-    );
-    
-    for (const ev of nextEvents) {
-      this.onEvent(ev);
-      this.currentSeq = ev.seq;
+    // Replay recorded events in order once the clock reaches their hour. Each one gets a fresh
+    // sequence number, so the clock ticks sent in between never make the reducer drop them.
+    while (this.cursor < this.events.length && this.events[this.cursor].hour <= this.simHour) {
+      const ev = this.events[this.cursor];
+      if (ev.type === 'plan.applied' && ev.by === 'operator' && !this.skipApplied) {
+        // The recording contains the operator's click; wait for the real one instead.
+        this.holding = true;
+        this.running = false;
+        break;
+      }
+      this.cursor++;
+      if (ev.type === 'session.snapshot') continue;
+      if (this.skipApplied && (ev.type === 'plan.applied' || ev.type === 'autonomy.countdown')) continue;
+      if (this.skipApplied && ev.type === 'solution.updated' && ev.reason === 'plan_applied') {
+        this.skipApplied = false;
+        continue;
+      }
+      if (ev.type === 'options.ready') this.lastOptions = ev;
+      this.onEvent({ ...ev, seq: ++this.currentSeq } as LiveEvent);
     }
 
     // Always emit clock tick to keep UI interpolated smooth sync
@@ -99,6 +113,7 @@ export class OfflineSessionController {
 
   resetAndPlayDemo() {
     this.currentSeq = 0;
+    this.cursor = 0;
     this.events = parseDemoStream();
     this.start();
   }
@@ -147,29 +162,22 @@ export class OfflineSessionController {
   }
 
   async postDecisionCommand(sessionId: string, cmd: DecideCommandRequest): Promise<void> {
-    this.currentSeq++;
-    
+    const base = { session_id: 'offline', hour: this.simHour, ts_utc: new Date().toISOString() };
+    const chosen = this.lastOptions?.options.find((o) => o.option_id === cmd.option_id);
+    // Whatever the operator does, the recorded plan no longer applies.
+    this.skipApplied = true;
+    if (this.holding && this.events[this.cursor]?.type === 'plan.applied') this.cursor++;
+    this.holding = false;
+    this.running = true;
+
     if (cmd.decision === 'veto') {
-      this.onEvent({
-        seq: this.currentSeq,
-        session_id: 'offline',
-        hour: this.simHour,
-        ts_utc: new Date().toISOString(),
-        type: 'plan.vetoed',
-        incident_id: cmd.incident_id,
-        option_id: cmd.option_id
-      });
-    } else {
-      this.onEvent({
-        seq: this.currentSeq,
-        session_id: 'offline',
-        hour: this.simHour,
-        ts_utc: new Date().toISOString(),
-        type: 'plan.applied',
-        incident_id: cmd.incident_id,
-        option_id: cmd.option_id,
-        by: 'operator'
-      });
+      this.onEvent({ ...base, seq: ++this.currentSeq, type: 'plan.vetoed', incident_id: cmd.incident_id, option_id: cmd.option_id });
+      return;
+    }
+    this.onEvent({ ...base, seq: ++this.currentSeq, type: 'plan.applied', incident_id: cmd.incident_id, option_id: cmd.option_id, by: 'operator' });
+    if (chosen) {
+      // Show the solution the solver computed for the option that was actually chosen.
+      this.onEvent({ ...base, seq: ++this.currentSeq, type: 'solution.updated', reason: 'plan_applied', solution: chosen.solution, grid_state: 'recuperacion' });
     }
   }
 }
