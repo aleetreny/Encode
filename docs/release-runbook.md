@@ -6,12 +6,14 @@ Work stays on `feature/data-backend`. Never merge the backend branch into `main`
 
 ```bash
 python -m pytest -q
+python scripts/build_crisis_demo.py
 python scripts/export_contracts.py --check
 python scripts/prepare_data.py
 git diff --exit-code -- data/processed
 python -m uvicorn backend.main:create_app --factory --host 127.0.0.1 --port 8000
 # In another terminal:
 python scripts/smoke.py
+python scripts/smoke.py --mode deterministic
 ```
 
 The source transformation is deterministic. The raw-source manifest retrieval timestamp changes only on an explicit download. Generated schemas/OpenAPI are checked into `contracts/` for all owners to inspect.
@@ -53,3 +55,7 @@ If provider/network access fails during the demo, explicitly select replay and d
 6. Record the real three-minute video and insert actual service/video URLs and model IDs in the submission draft.
 7. Confirm the deadline against the official event site. The README records Sunday 25 October 2026 at 12:00 Europe/London; London changes clock overnight.
 8. Submit using the team's event account. Do not claim submission from a prepared draft alone.
+
+## Native v2 release checks
+
+The default scenario is `chile-sen-5node-demo`; see [contracts v2](contracts-v2.md). Regenerate native fixtures before exporting contracts. Verify normal and sudden-crisis results, strict infeasibility, no-hindsight checks, household dimensions and crisis approval. A live provider failure may fall back only to a matching replay when enabled; its mode must visibly change to replay. A configured credential alone does not certify a successful live agent run.

@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: '22'
       - name: TypeScript contract client
-        run: npx --yes --package typescript@5.9.3 tsc --strict --noEmit --lib DOM,ES2022 --target ES2022 contracts/client.ts
+        run: npx --yes --package typescript@5.9.3 tsc --strict --noEmit --lib DOM,ES2022 --target ES2022 --moduleResolution node --module esnext contracts/client.ts contracts/native-client.ts
       - name: Reproduce CEN transformation without network
         run: |
           python scripts/prepare_data.py

@@ -60,3 +60,9 @@ The [FastAPI Docker guidance](https://fastapi.tiangolo.com/deployment/docker/) s
 The [Render Blueprint reference](https://render.com/docs/blueprint-spec) supports the provided portable deployment configuration. The default blueprint uses a free service and generates an operator token. It does not create a paid disk. On that configuration, hosted state is ephemeral across redeploys. A paid disk or external database is required for durable hosted history. No hosting account or deploy secret was present, so an actual public deployment cannot be certified until an account is connected. Cold-start services must be warmed and smoke-tested before judging.
 
 The [hackathon page](https://www.encodeclub.com/programmes/encode-london-2026) requires a working demo, repository and video. This branch supplies backend reproducibility and a demo script. A cached replay is explicitly not sufficient evidence of a live Gemini investigation, and cannot be submitted as one.
+
+## Updated README integration, 24 October 2026
+
+Upstream commit `1756d68` changes the default workflow to native five-node dispatch, bounded asset modifications and sudden crises. The P3 numerical design is the executable contract. Backend validation additionally checks requested inputs, exact asset identities and unchanged dispatch before sudden events.
+
+Regulatory references are the [CNE technical standards catalogue](https://www.cne.cl/normativas/electrica/normas-tecnicas/), LGSE (BCN 258171), DS32 (BCN 1225248) and [Ley 21.505](https://www.bcn.cl/leychile/navegar?idNorma=1184572). These provide context, not certification of full regulatory compliance. The household factor 1,000 households/MW is a configurable synthetic assumption, not an official conversion. Event-window household-hours and whole-horizon savings must remain separate; dividing whole-day savings by outage duration misstates the event-window average.

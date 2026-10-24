@@ -1,5 +1,15 @@
 # Backend operations
 
+## Current five-node / crisis workflow
+
+The upstream README update is implemented through native v2 endpoints. The default scenario is `chile-sen-5node-demo`; `GET /api/scenario` returns it with `modification_menu`. Native `POST /api/optimise` accepts `candidate`, `events` and `{allow_unserved, time_limit_s}` options and returns the original numerical envelope plus independent `validation` and `accepted`. `POST /api/compare` revalidates both results before comparing.
+
+`python scripts/smoke.py` verifies normal intervention, strict-crisis infeasibility, valid recovery, two complete cached investigations, approval and export. `python scripts/smoke.py --mode deterministic` executes the whole two-stage solver workflow afresh without an LLM. Live mode requires actual provider execution metadata; provider failure can use the matching cached run only with explicit `execution_mode=replay`, `requested_execution_mode=live` and `fallback` fields. Set `settings.allow_cached_fallback=false` to prohibit this behavior.
+
+Normal dispatch can be applied inside the simulation under `autonomous_sced_with_audit_gate`; crisis recovery always awaits the operator decision. Approval updates both the journal and governance state. Household equivalents are derived from per-step unserved MW and a clearly synthetic mapping, with event-window and whole-horizon household-hours kept separate. The RIO-style report records model checks and unassessed legal/security requirements; it is not an official CEN instruction or compliance certificate.
+
+Use [the v2 handoff](../docs/contracts-v2.md) and `contracts/native-client.ts`. The earlier fixed-asset fixtures remain supported only for compatibility. Native replay fixtures are rebuilt with `python scripts/build_crisis_demo.py` and verified by `tests/test_native.py`.
+
 ## Install and run
 
 Use Python 3.13 for the pinned environment. From the repository root:

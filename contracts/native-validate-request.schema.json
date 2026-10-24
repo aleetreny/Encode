@@ -1,0 +1,232 @@
+{
+  "$defs": {
+    "AddBattery": {
+      "additionalProperties": false,
+      "properties": {
+        "energy_mwh": {
+          "exclusiveMinimum": 0,
+          "title": "Energy Mwh",
+          "type": "number"
+        },
+        "node_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Node Id",
+          "type": "string"
+        },
+        "power_mw": {
+          "exclusiveMinimum": 0,
+          "title": "Power Mw",
+          "type": "number"
+        },
+        "type": {
+          "const": "add_battery",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "node_id",
+        "power_mw",
+        "energy_mwh"
+      ],
+      "title": "AddBattery",
+      "type": "object"
+    },
+    "Candidate": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "maxLength": 1000,
+          "title": "Description",
+          "type": "string"
+        },
+        "modifications": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "add_battery": "#/$defs/AddBattery",
+                "uprate_line": "#/$defs/UprateLine"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/AddBattery"
+              },
+              {
+                "$ref": "#/$defs/UprateLine"
+              }
+            ]
+          },
+          "maxItems": 2,
+          "minItems": 1,
+          "title": "Modifications",
+          "type": "array"
+        }
+      },
+      "required": [
+        "candidate_id",
+        "modifications"
+      ],
+      "title": "Candidate",
+      "type": "object"
+    },
+    "NativeOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_unserved": {
+          "default": true,
+          "title": "Allow Unserved",
+          "type": "boolean"
+        },
+        "time_limit_s": {
+          "default": 20,
+          "exclusiveMinimum": 0,
+          "maximum": 60,
+          "title": "Time Limit S",
+          "type": "number"
+        }
+      },
+      "title": "NativeOptions",
+      "type": "object"
+    },
+    "Outage": {
+      "additionalProperties": false,
+      "properties": {
+        "from_hour": {
+          "maximum": 23,
+          "minimum": 0,
+          "title": "From Hour",
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "mode": {
+          "default": "sudden",
+          "enum": [
+            "planned",
+            "sudden"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "to_hour": {
+          "exclusiveMinimum": 0,
+          "maximum": 24,
+          "title": "To Hour",
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "generator_outage",
+            "line_outage"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "from_hour",
+        "to_hour"
+      ],
+      "title": "Outage",
+      "type": "object"
+    },
+    "UprateLine": {
+      "additionalProperties": false,
+      "properties": {
+        "line_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Line Id",
+          "type": "string"
+        },
+        "new_capacity_mw": {
+          "exclusiveMinimum": 0,
+          "title": "New Capacity Mw",
+          "type": "number"
+        },
+        "type": {
+          "const": "uprate_line",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "line_id",
+        "new_capacity_mw"
+      ],
+      "title": "UprateLine",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "candidate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Candidate"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "events": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Outage"
+          },
+          "maxItems": 2,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Events"
+    },
+    "options": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/NativeOptions"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "scenario_id": {
+      "default": "chile-sen-5node-demo",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "solution": {
+      "additionalProperties": true,
+      "title": "Solution",
+      "type": "object"
+    }
+  },
+  "required": [
+    "solution"
+  ],
+  "title": "NativeValidateRequest",
+  "type": "object"
+}

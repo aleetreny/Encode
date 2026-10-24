@@ -12,8 +12,8 @@ from uuid import uuid4
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="http://127.0.0.1:8000")
-    parser.add_argument("--mode", choices=("replay", "live"), default="replay")
-    parser.add_argument("--scenario", default="chile-demo-001")
+    parser.add_argument("--mode", choices=("replay", "live", "deterministic"), default="replay")
+    parser.add_argument("--scenario", default="chile-sen-5node-demo")
     args = parser.parse_args()
     token = os.getenv("GRIDPILOT_API_TOKEN", "")
 
@@ -40,7 +40,48 @@ def main():
         raise SystemExit(
             "Production numerical adapters are missing; cached replay alone is insufficient for this release smoke"
         )
-    if health["adapters"]["solver"] and health["adapters"]["validator"]:
+    selected = request("/api/scenario?scenario_id=" + args.scenario)
+    if selected["schema_version"] == "2.0.0":
+        candidate = dict(
+            candidate_id="north_bess",
+            modifications=[
+                dict(type="add_battery", node_id="n_norte_grande", power_mw=150, energy_mwh=600)
+            ],
+        )
+        event = dict(
+            type="generator_outage", id="gas_centro", from_hour=18, to_hour=22, mode="sudden"
+        )
+        baseline = request("/api/optimise", dict(scenario_id=args.scenario))
+        alternative = request("/api/optimise", dict(scenario_id=args.scenario, candidate=candidate))
+        for solution in (baseline, alternative):
+            assert (
+                solution["accepted"]
+                and request("/api/validate", dict(scenario_id=args.scenario, solution=solution))[
+                    "passed"
+                ]
+            )
+        comparison = request(
+            "/api/compare",
+            dict(scenario_id=args.scenario, baseline=baseline, candidate=alternative),
+        )
+        assert comparison["comparable"]
+        strict = request(
+            "/api/optimise",
+            dict(scenario_id=args.scenario, events=[event], options={"allow_unserved": False}),
+        )
+        assert strict["status"] == "infeasible" and not strict["accepted"]
+        crisis = request(
+            "/api/optimise", dict(scenario_id=args.scenario, candidate=candidate, events=[event])
+        )
+        assert crisis["accepted"] and "no_hindsight" in crisis["validation"]["checks_run"]
+        print(
+            json.dumps(
+                dict(
+                    numerical_api="native interventions, strict crisis, recovery and independent no-hindsight validation passed"
+                )
+            )
+        )
+    else:
         for policy in ("disabled", "optimised"):
             solve_body = dict(scenario_id=args.scenario, options={"battery_policy": policy})
             computed = request("/api/optimise", solve_body)
@@ -89,7 +130,13 @@ def main():
                     run_id=doc["run_id"],
                     execution_mode=args.mode,
                     validation_passed=True,
-                    comparison=doc["comparison"],
+                    comparison={
+                        k: doc["comparison"].get(k)
+                        for k in ("curtailment_reduction_mwh", "assumed_cost_delta_usd")
+                    },
+                    crisis_unserved_reduction_mwh=(doc.get("crisis_analysis") or {}).get(
+                        "unserved_reduction_mwh"
+                    ),
                 )
             )
         )

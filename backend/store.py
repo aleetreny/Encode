@@ -85,6 +85,12 @@ class Store:
                 operator_report=None,
                 error=None,
             )
+            if request.get("_protocol") == "2.0.0":
+                document.update(
+                    schema_version="2.0.0",
+                    crisis_analysis=None,
+                    governance_mode=request["governance_mode"],
+                )
             db.execute(
                 "INSERT INTO runs VALUES (?,?,?,?,?,?,?)",
                 (
@@ -132,7 +138,12 @@ class Store:
                 raise Conflict("run is no longer running")
             document = json.loads(row["document"])
             document.update(result, updated_at=utc_now(), revision=document["revision"] + 1)
-            RunDocument.model_validate(document)
+            if document["schema_version"] == "2.0.0":
+                from backend.native_models import NativeRunDocument
+
+                NativeRunDocument.model_validate(document)
+            else:
+                RunDocument.model_validate(document)
             db.execute(
                 "UPDATE runs SET state=?,document=? WHERE id=?",
                 (document["status"], json.dumps(document, allow_nan=False), run_id),
@@ -176,6 +187,15 @@ class Store:
                 )
             record = decision.model_dump()
             record.update(decided_at=utc_now(), scope="simulation_only")
+            if doc["schema_version"] == "2.0.0":
+                record["applies_to"] = (
+                    ["crisis_recovery"]
+                    if doc["governance_mode"] == "autonomous_sced_with_audit_gate"
+                    else ["normal_dispatch", "crisis_recovery"]
+                )
+                action = "approved_in_simulation" if decision.decision == "approved" else "rejected"
+                for target in record["applies_to"]:
+                    doc["governance"][target] = action
             db.execute("INSERT INTO decisions VALUES (?,?)", (run_id, json.dumps(record)))
             doc.update(
                 approval_status=decision.decision,

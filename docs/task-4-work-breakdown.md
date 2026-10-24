@@ -100,10 +100,47 @@
 | 4.67 | Handoff guide for all three owners, including exact function signatures | DONE |
 | 4.68 | Demo script and factual submission draft | DONE |
 | 4.69 | Troubleshooting, warm-up, rollback and final release gate | DONE |
-| 4.70 | Final live integrated application tested twice | EXTERNAL: Persons 1–3 and hosting |
+| 4.70 | Final live integrated application tested twice | EXTERNAL: agent, frontend and hosting |
 | 4.71 | Record actual product video with live Gemini and visible verification | EXTERNAL: integrated product |
 | 4.72 | Fill final public URL/video/model fields and submit entry | EXTERNAL: product, video and submission account |
 
 ## Release gate
 
 Do not promote this branch's replay to a live-agent claim. Merge the other workstreams, install their dependencies in the image, validate actual provider execution and deliberately demonstrate a rejected invalid candidate. Run `scripts/smoke.py --mode live` twice against the public URL. Verify the frontend in a fresh browser. Check the exported report and operator decision, record the real video and only then complete the submission.
+
+## G. Updated README: native workflow v2
+
+| ID | Subtask and acceptance criterion | State |
+|---|---|---|
+| 4.73 | Audit upstream README 1756d68 and native P3 design | DONE |
+| 4.74 | Generate five-node, 24-hour SEN-shaped scenario | DONE |
+| 4.75 | Keep historical CEN context separate from synthetic profiles | DONE |
+| 4.76 | Expose native scenario and asset modification menu | DONE |
+| 4.77 | Type bounded battery and line candidates | DONE |
+| 4.78 | Type planned and sudden outages | DONE |
+| 4.79 | Expose native optimisation with requested inputs | DONE |
+| 4.80 | Independently validate native outputs | DONE |
+| 4.81 | Reject unexpected assets in dispatch arrays | DONE |
+| 4.82 | Verify no hindsight before sudden events | DONE |
+| 4.83 | Revalidate both results before comparison | DONE |
+| 4.84 | Define configurable synthetic household factor | DONE |
+| 4.85 | Support per-node residential shares | DONE |
+| 4.86 | Separate instantaneous household equivalents | DONE |
+| 4.87 | Compute event-window household-hours | DONE |
+| 4.88 | Compute whole-horizon household-hours | DONE |
+| 4.89 | Avoid claiming unique households reconnected | DONE |
+| 4.90 | Evaluate normal baseline and alternatives | DONE |
+| 4.91 | Evaluate strict crisis infeasibility explicitly | DONE |
+| 4.92 | Evaluate recovery with load shedding | DONE |
+| 4.93 | Select intervention using verified crisis metrics | DONE |
+| 4.94 | Bind replay to scenario hash and settings | DONE |
+| 4.95 | Provide deterministic full workflow without provider | DONE |
+| 4.96 | Require genuine live agent provenance | DONE |
+| 4.97 | Relabel allowed live failure fallback as replay | DONE |
+| 4.98 | Keep crisis decisions subject to operator approval | DONE |
+| 4.99 | Synchronize decision and governance audit state | DONE |
+| 4.100 | Export RIO-style report without legal certification | DONE |
+| 4.101 | Publish native schemas and strict TypeScript client | DONE |
+| 4.102 | Retain v1 compatibility for existing callers | DONE |
+| 4.103 | Test native contracts, tampering, timeout and fallback | DONE |
+| 4.104 | Update handoff, demo and release documentation | DONE |

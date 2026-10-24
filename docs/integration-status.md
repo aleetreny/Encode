@@ -1,6 +1,14 @@
 # Integration status
 
-Person 3's executable `feature/optimisation` code at `fbf0fdfc360a06043ad619b741894050d6cedf9a` is merged unchanged into `feature/data-backend`. Main has not been merged or modified. The actual HiGHS solver, independent validator and their full test suite are available on this branch.
+## Current native v2 path
+
+Upstream README commit `1756d68` is incorporated into `feature/data-backend`; no merge or push into `main` was performed. The current default is `chile-sen-5node-demo`, preserving Person 3's native scenario and output structures, with candidate modifications, planned/sudden outages, ramp validation and crisis comparisons exposed through FastAPI. `docs/contracts-v2.md` is the current handoff guide. The backend additionally checks exact asset IDs, requested inputs and independent no-hindsight prefix reproduction. Five-node normal/crisis workflows, residential equivalences, RIO-style reports, governance and explicit cached fallback are implemented.
+
+The numerical core remains from Person 3. Its newer explanatory README/demo update from `82e046e` is also incorporated without editing its solver or validator. The following record describes the retained v1 bridge, not the scope of the native v2 API.
+
+## Legacy v1 integration record
+
+Person 3's executable `feature/optimisation` code at `fbf0fdfc360a06043ad619b741894050d6cedf9a` was merged unchanged into `feature/data-backend`. The actual HiGHS solver, independent validator and their full test suite are available on this branch.
 
 The design is more detailed than the original README and identifies interface differences. The backend includes `backend/p3_adapter.py` so the common fixed-asset path can be integrated without changing the numerical package:
 

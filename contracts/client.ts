@@ -44,7 +44,7 @@ export function gridPilotClient(baseUrl: string, operatorToken = "") {
   }
   return {
     health: () => request<Record<string, unknown>>("/api/health"),
-    scenarios: () => request<{ schema_version: string; scenarios: Record<string, unknown>[] }>("/api/scenario"),
+    scenarios: () => request<{ schema_version: string; scenarios: Record<string, unknown>[] }>("/api/scenarios"),
     scenario: (id: string) => request<Record<string, unknown>>(`/api/scenario?scenario_id=${encodeURIComponent(id)}`),
     start: (scenarioId: string, executionMode: ExecutionMode, settings: Options = {}, idempotencyKey = crypto.randomUUID()) =>
       request<Run>("/api/agent/run", { method: "POST", headers: { "Idempotency-Key": idempotencyKey }, body: JSON.stringify({ scenario_id: scenarioId, execution_mode: executionMode, settings }) }),

@@ -1,4 +1,10 @@
-# GridPilot integration contract — v1.0.0
+# GridPilot integration contracts
+
+**Current default: native v2 normal dispatch + crisis recovery.** Read [the complete v2 contract](../docs/contracts-v2.md), use `native-client.ts` and the `native-*.schema.json` / `native-*.example.json` files. `/api/scenario` defaults to `chile-sen-5node-demo` with its intervention menu. `/api/scenarios` lists all scenarios. Native numerical envelopes preserve `optimisation/DESIGN.md` field names.
+
+## Legacy v1 compatibility reference
+
+The sections below describe the retained four-node fixtures selected explicitly by their legacy scenario IDs. Their endpoints coexist with v2 and are not the default project demo.
 
 The implementation in `backend/models.py` is authoritative. JSON Schema/OpenAPI are generated with `python scripts/export_contracts.py`; CI checks drift. Examples are cached offline fixtures, not evidence of a live Gemini invocation. Breaking changes require a version bump and coordinated updates by affected owners.
 
@@ -6,7 +12,7 @@ The implementation in `backend/models.py` is authoritative. JSON Schema/OpenAPI 
 
 | Method | Path | Behavior |
 |---|---|---|
-| GET | `/api/scenario` | `{schema_version, scenarios: [...]}` |
+| GET | `/api/scenarios` | Catalog of v2 and retained v1 scenarios |
 | GET | `/api/scenario?scenario_id=chile-demo-001` | A single scenario |
 | GET | `/api/evidence/cen-2026-08-01` | Source aggregates, original hour labels and limitations |
 | POST | `/api/optimise` | `{scenario_id, options}` → `{status, solution, validation}` |

@@ -30,6 +30,10 @@ def failure(code, message, violations=None):
 
 async def execute(payload, settings=None):
     settings = settings or Settings()
+    if payload["operation"].startswith("native_"):
+        from backend.native_worker import execute as native_execute
+
+        return await native_execute(payload, settings)
     scenario = Scenario.model_validate(payload["scenario"])
     operation = payload["operation"]
     options = Options.model_validate(payload.get("options", {}))

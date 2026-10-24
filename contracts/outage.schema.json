@@ -1,0 +1,47 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "from_hour": {
+      "maximum": 23,
+      "minimum": 0,
+      "title": "From Hour",
+      "type": "integer"
+    },
+    "id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "mode": {
+      "default": "sudden",
+      "enum": [
+        "planned",
+        "sudden"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "to_hour": {
+      "exclusiveMinimum": 0,
+      "maximum": 24,
+      "title": "To Hour",
+      "type": "integer"
+    },
+    "type": {
+      "enum": [
+        "generator_outage",
+        "line_outage"
+      ],
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "id",
+    "from_hour",
+    "to_hour"
+  ],
+  "title": "Outage",
+  "type": "object"
+}

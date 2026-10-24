@@ -23,6 +23,19 @@ from backend.models import (
     Validation,
 )
 from backend.worker import execute
+from backend.native_models import (
+    Candidate,
+    Outage,
+    NativeScenario,
+    NativeScenarioResponse,
+    NativeSolution,
+    NativeRunRequest,
+    NativeRunDocument,
+    NativeSolveRequest,
+    NativeValidateRequest,
+    NativeCompareRequest,
+    HouseholdMapping,
+)
 
 
 def documents():
@@ -76,6 +89,51 @@ def documents():
     )
     RunDocument.model_validate(example)
     output["run-result.example.json"] = example
+    native_models = {
+        "native-scenario": NativeScenario,
+        "native-scenario-response": NativeScenarioResponse,
+        "native-solution": NativeSolution,
+        "native-run-request": NativeRunRequest,
+        "native-run-result": NativeRunDocument,
+        "native-solve-request": NativeSolveRequest,
+        "native-validate-request": NativeValidateRequest,
+        "native-compare-request": NativeCompareRequest,
+        "candidate": Candidate,
+        "outage": Outage,
+        "household-mapping": HouseholdMapping,
+    }
+    output.update(
+        {
+            f"{name}.schema.json": model.model_json_schema(by_alias=True)
+            for name, model in native_models.items()
+        }
+    )
+    native = json.loads((ROOT / "data/demo/chile-sen-5node-demo.native-scenario.json").read_text())
+    output["native-scenario.example.json"] = native
+    result = asyncio.run(
+        execute(
+            dict(
+                operation="native_investigate",
+                scenario=native,
+                execution_mode="replay",
+                settings={},
+                governance_mode="autonomous_sced_with_audit_gate",
+                recorded_at_utc="2026-10-24T00:00:00Z",
+            )
+        )
+    )
+    native_example = dict(
+        schema_version="2.0.0",
+        run_id="example-native-replay-run",
+        scenario_id=native["scenario_id"],
+        created_at="2026-10-24T00:00:00Z",
+        updated_at="2026-10-24T00:00:00Z",
+        revision=2,
+        **result,
+    )
+    NativeRunDocument.model_validate(native_example)
+    output["native-run-result.example.json"] = native_example
+    output["native-solution.example.json"] = result["baseline"]
     return output
 
 

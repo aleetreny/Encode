@@ -1,6 +1,39 @@
 {
   "components": {
     "schemas": {
+      "AddBattery": {
+        "additionalProperties": false,
+        "properties": {
+          "energy_mwh": {
+            "exclusiveMinimum": 0.0,
+            "title": "Energy Mwh",
+            "type": "number"
+          },
+          "node_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Node Id",
+            "type": "string"
+          },
+          "power_mw": {
+            "exclusiveMinimum": 0.0,
+            "title": "Power Mw",
+            "type": "number"
+          },
+          "type": {
+            "const": "add_battery",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "node_id",
+          "power_mw",
+          "energy_mwh"
+        ],
+        "title": "AddBattery",
+        "type": "object"
+      },
       "Battery": {
         "additionalProperties": false,
         "properties": {
@@ -60,6 +93,51 @@
           "round_trip_efficiency"
         ],
         "title": "Battery",
+        "type": "object"
+      },
+      "Candidate": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Description",
+            "type": "string"
+          },
+          "modifications": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "add_battery": "#/components/schemas/AddBattery",
+                  "uprate_line": "#/components/schemas/UprateLine"
+                },
+                "propertyName": "type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AddBattery"
+                },
+                {
+                  "$ref": "#/components/schemas/UprateLine"
+                }
+              ]
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Modifications",
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "modifications"
+        ],
+        "title": "Candidate",
         "type": "object"
       },
       "Comparison": {
@@ -209,6 +287,88 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HouseholdMapping": {
+        "additionalProperties": false,
+        "properties": {
+          "classification": {
+            "const": "synthetic_assumption",
+            "default": "synthetic_assumption",
+            "title": "Classification",
+            "type": "string"
+          },
+          "households_per_mw": {
+            "default": 1000,
+            "exclusiveMinimum": 0.0,
+            "maximum": 10000.0,
+            "title": "Households Per Mw",
+            "type": "number"
+          },
+          "interpretation": {
+            "default": "Residential-equivalent load; not identified customers or actual feeder reconnections.",
+            "title": "Interpretation",
+            "type": "string"
+          },
+          "residential_share_by_node": {
+            "additionalProperties": {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "title": "Residential Share By Node",
+            "type": "object"
+          }
+        },
+        "required": [
+          "residential_share_by_node"
+        ],
+        "title": "HouseholdMapping",
+        "type": "object"
+      },
+      "InvestigationSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_cached_fallback": {
+            "default": true,
+            "title": "Allow Cached Fallback",
+            "type": "boolean"
+          },
+          "candidates": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Candidate"
+                },
+                "maxItems": 4,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          },
+          "crisis_events": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Outage"
+                },
+                "maxItems": 2,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crisis Events"
+          },
+          "options": {
+            "$ref": "#/components/schemas/NativeOptions"
+          }
+        },
+        "title": "InvestigationSettings",
+        "type": "object"
+      },
       "Line": {
         "additionalProperties": false,
         "properties": {
@@ -269,6 +429,791 @@
         "title": "Metrics",
         "type": "object"
       },
+      "NativeCompareRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "baseline": {
+            "additionalProperties": true,
+            "title": "Baseline",
+            "type": "object"
+          },
+          "candidate": {
+            "additionalProperties": true,
+            "title": "Candidate",
+            "type": "object"
+          },
+          "scenario_id": {
+            "default": "chile-sen-5node-demo",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Scenario Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "baseline",
+          "candidate"
+        ],
+        "title": "NativeCompareRequest",
+        "type": "object"
+      },
+      "NativeOptions": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_unserved": {
+            "default": true,
+            "title": "Allow Unserved",
+            "type": "boolean"
+          },
+          "time_limit_s": {
+            "default": 20,
+            "exclusiveMinimum": 0.0,
+            "maximum": 60.0,
+            "title": "Time Limit S",
+            "type": "number"
+          }
+        },
+        "title": "NativeOptions",
+        "type": "object"
+      },
+      "NativeRunDocument": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_status": {
+            "enum": [
+              "unavailable",
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "title": "Approval Status",
+            "type": "string"
+          },
+          "baseline": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline"
+          },
+          "candidate": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate"
+          },
+          "candidate_evaluations": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Candidate Evaluations",
+            "type": "array"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "crisis_analysis": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crisis Analysis"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "execution_mode": {
+            "enum": [
+              "live",
+              "replay",
+              "deterministic"
+            ],
+            "title": "Execution Mode",
+            "type": "string"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback"
+          },
+          "governance": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Governance"
+          },
+          "governance_mode": {
+            "enum": [
+              "operator_approval",
+              "autonomous_sced_with_audit_gate"
+            ],
+            "title": "Governance Mode",
+            "type": "string"
+          },
+          "historical_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Historical Evidence"
+          },
+          "operator_report": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Report"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance"
+          },
+          "requested_execution_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Execution Mode"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "scenario_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "scenario_snapshot": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Snapshot"
+          },
+          "schema_version": {
+            "const": "2.0.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "infeasible"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tool_trace": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Tool Trace",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "validation": {
+            "additionalProperties": true,
+            "title": "Validation",
+            "type": "object"
+          }
+        },
+        "required": [
+          "schema_version",
+          "run_id",
+          "scenario_id",
+          "execution_mode",
+          "governance_mode",
+          "status",
+          "created_at",
+          "updated_at",
+          "revision",
+          "approval_status",
+          "tool_trace",
+          "baseline",
+          "candidate",
+          "comparison",
+          "validation",
+          "operator_report",
+          "error"
+        ],
+        "title": "NativeRunDocument",
+        "type": "object"
+      },
+      "NativeRunRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "execution_mode": {
+            "default": "live",
+            "enum": [
+              "live",
+              "replay",
+              "deterministic"
+            ],
+            "title": "Execution Mode",
+            "type": "string"
+          },
+          "governance_mode": {
+            "default": "operator_approval",
+            "enum": [
+              "operator_approval",
+              "autonomous_sced_with_audit_gate"
+            ],
+            "title": "Governance Mode",
+            "type": "string"
+          },
+          "scenario_id": {
+            "default": "chile-sen-5node-demo",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/InvestigationSettings"
+          }
+        },
+        "title": "NativeRunRequest",
+        "type": "object"
+      },
+      "NativeScenarioResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "batteries": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 4,
+            "title": "Batteries",
+            "type": "array"
+          },
+          "demand_mw_by_node": {
+            "additionalProperties": {
+              "items": {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "title": "Demand Mw By Node",
+            "type": "object"
+          },
+          "display_timezone": {
+            "const": "America/Santiago",
+            "default": "America/Santiago",
+            "title": "Display Timezone",
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Outage"
+            },
+            "maxItems": 2,
+            "title": "Events",
+            "type": "array"
+          },
+          "generators": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Generators",
+            "type": "array"
+          },
+          "household_mapping": {
+            "$ref": "#/components/schemas/HouseholdMapping"
+          },
+          "lines": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 7,
+            "minItems": 1,
+            "title": "Lines",
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "synthetic",
+              "historically_anchored_simulation"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "modification_limits": {
+            "additionalProperties": true,
+            "title": "Modification Limits",
+            "type": "object"
+          },
+          "modification_menu": {
+            "additionalProperties": true,
+            "title": "Modification Menu",
+            "type": "object"
+          },
+          "nodes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Nodes",
+            "type": "array"
+          },
+          "objective": {
+            "additionalProperties": {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "title": "Objective",
+            "type": "object"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "title": "Provenance",
+            "type": "object"
+          },
+          "regulatory_framework": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 10,
+            "title": "Regulatory Framework",
+            "type": "array"
+          },
+          "renewable_availability_mw_by_generator": {
+            "additionalProperties": {
+              "items": {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "title": "Renewable Availability Mw By Generator",
+            "type": "object"
+          },
+          "scenario_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "2.0.0",
+            "default": "2.0.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "time_step_hours": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 24.0,
+            "title": "Time Step Hours",
+            "type": "number"
+          },
+          "timestamps_utc": {
+            "items": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "maxItems": 24,
+            "minItems": 1,
+            "title": "Timestamps Utc",
+            "type": "array"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "mode",
+          "time_step_hours",
+          "timestamps_utc",
+          "provenance",
+          "nodes",
+          "lines",
+          "generators",
+          "batteries",
+          "demand_mw_by_node",
+          "renewable_availability_mw_by_generator",
+          "objective",
+          "household_mapping",
+          "modification_menu"
+        ],
+        "title": "NativeScenarioResponse",
+        "type": "object"
+      },
+      "NativeSolution": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "assets": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assets"
+          },
+          "binding_constraints": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Binding Constraints"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "metrics": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metrics"
+          },
+          "modifications": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Modifications",
+            "type": "array"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective"
+          },
+          "options": {
+            "additionalProperties": true,
+            "title": "Options",
+            "type": "object"
+          },
+          "scenario_id": {
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "solver": {
+            "additionalProperties": true,
+            "title": "Solver",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "optimal",
+              "infeasible",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "time_step_hours": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Step Hours"
+          },
+          "timeseries": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeseries"
+          },
+          "timestamps_utc": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamps Utc"
+          },
+          "validation": {
+            "additionalProperties": true,
+            "title": "Validation",
+            "type": "object"
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "scenario_id",
+          "candidate_id",
+          "modifications",
+          "events",
+          "options",
+          "time_step_hours",
+          "timestamps_utc",
+          "solver",
+          "objective",
+          "assets",
+          "timeseries",
+          "metrics",
+          "binding_constraints",
+          "validation",
+          "accepted"
+        ],
+        "title": "NativeSolution",
+        "type": "object"
+      },
+      "NativeSolveRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Candidate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Outage"
+            },
+            "maxItems": 2,
+            "title": "Events",
+            "type": "array"
+          },
+          "options": {
+            "$ref": "#/components/schemas/NativeOptions"
+          },
+          "scenario_id": {
+            "default": "chile-sen-5node-demo",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Scenario Id",
+            "type": "string"
+          }
+        },
+        "title": "NativeSolveRequest",
+        "type": "object"
+      },
+      "NativeValidateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Candidate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "events": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Outage"
+                },
+                "maxItems": 2,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Events"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeOptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scenario_id": {
+            "default": "chile-sen-5node-demo",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "solution": {
+            "additionalProperties": true,
+            "title": "Solution",
+            "type": "object"
+          }
+        },
+        "required": [
+          "solution"
+        ],
+        "title": "NativeValidateRequest",
+        "type": "object"
+      },
       "Node": {
         "additionalProperties": false,
         "properties": {
@@ -309,6 +1254,53 @@
           }
         },
         "title": "Options",
+        "type": "object"
+      },
+      "Outage": {
+        "additionalProperties": false,
+        "properties": {
+          "from_hour": {
+            "maximum": 23.0,
+            "minimum": 0.0,
+            "title": "From Hour",
+            "type": "integer"
+          },
+          "id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "default": "sudden",
+            "enum": [
+              "planned",
+              "sudden"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "to_hour": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 24.0,
+            "title": "To Hour",
+            "type": "integer"
+          },
+          "type": {
+            "enum": [
+              "generator_outage",
+              "line_outage"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "from_hour",
+          "to_hour"
+        ],
+        "title": "Outage",
         "type": "object"
       },
       "Provenance": {
@@ -802,29 +1794,6 @@
         "title": "Scenario",
         "type": "object"
       },
-      "ScenarioList": {
-        "additionalProperties": false,
-        "properties": {
-          "scenarios": {
-            "items": {
-              "$ref": "#/components/schemas/Scenario"
-            },
-            "title": "Scenarios",
-            "type": "array"
-          },
-          "schema_version": {
-            "const": "1.0.0",
-            "title": "Schema Version",
-            "type": "string"
-          }
-        },
-        "required": [
-          "schema_version",
-          "scenarios"
-        ],
-        "title": "ScenarioList",
-        "type": "object"
-      },
       "Solution": {
         "additionalProperties": false,
         "properties": {
@@ -1103,6 +2072,33 @@
         "title": "ToolEvent",
         "type": "object"
       },
+      "UprateLine": {
+        "additionalProperties": false,
+        "properties": {
+          "line_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+            "title": "Line Id",
+            "type": "string"
+          },
+          "new_capacity_mw": {
+            "exclusiveMinimum": 0.0,
+            "title": "New Capacity Mw",
+            "type": "number"
+          },
+          "type": {
+            "const": "uprate_line",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "line_id",
+          "new_capacity_mw"
+        ],
+        "title": "UprateLine",
+        "type": "object"
+      },
       "ValidateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1207,7 +2203,7 @@
   },
   "info": {
     "title": "GridPilot API",
-    "version": "1.0.0"
+    "version": "2.0.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1253,7 +2249,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RunRequest"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/NativeRunRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RunRequest"
+                  }
+                ],
+                "title": "Body"
               }
             }
           },
@@ -1264,7 +2268,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RunDocument"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RunDocument"
+                    },
+                    {
+                      "$ref": "#/components/schemas/NativeRunDocument"
+                    }
+                  ],
+                  "title": "Response Run Api Agent Run Post"
                 }
               }
             },
@@ -1303,7 +2315,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RunDocument"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RunDocument"
+                    },
+                    {
+                      "$ref": "#/components/schemas/NativeRunDocument"
+                    }
+                  ],
+                  "title": "Response Get Run Api Agent Runs  Run Id  Get"
                 }
               }
             },
@@ -1368,7 +2388,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RunDocument"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RunDocument"
+                    },
+                    {
+                      "$ref": "#/components/schemas/NativeRunDocument"
+                    }
+                  ],
+                  "title": "Response Decide Api Agent Runs  Run Id  Decision Post"
                 }
               }
             },
@@ -1423,6 +2451,60 @@
           }
         },
         "summary": "Report"
+      }
+    },
+    "/api/compare": {
+      "post": {
+        "operationId": "compare_native_api_compare_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NativeCompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Compare Native"
       }
     },
     "/api/evidence/{evidence_id}": {
@@ -1503,7 +2585,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SolveRequest"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/NativeSolveRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SolveRequest"
+                  }
+                ],
+                "title": "Body"
               }
             }
           },
@@ -1514,7 +2604,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SolveResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/NativeSolution"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SolveResponse"
+                    }
+                  ],
+                  "title": "Response Optimise Api Optimise Post"
                 }
               }
             },
@@ -1600,10 +2698,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/Scenario"
+                      "$ref": "#/components/schemas/NativeScenarioResponse"
                     },
                     {
-                      "$ref": "#/components/schemas/ScenarioList"
+                      "$ref": "#/components/schemas/Scenario"
                     }
                   ],
                   "title": "Response Get Scenario Api Scenario Get"
@@ -1624,6 +2722,22 @@
           }
         },
         "summary": "Get Scenario"
+      }
+    },
+    "/api/scenarios": {
+      "get": {
+        "operationId": "list_scenarios_api_scenarios_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Scenarios"
       }
     },
     "/api/validate": {
@@ -1651,7 +2765,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ValidateRequest"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/NativeValidateRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ValidateRequest"
+                  }
+                ],
+                "title": "Body"
               }
             }
           },
@@ -1661,9 +2783,7 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Validation"
-                }
+                "schema": {}
               }
             },
             "description": "Successful Response"

@@ -19,8 +19,10 @@ The 1 August 2026 CEN evidence is complete for the extracted solar/wind records.
 - Final release commit: **pending team integration**
 - Three-minute video: **pending actual recording**
 - Gemini model and agent tools actually used: **pending Person 2 live execution evidence**
-- Production solver and independent validator: **Person 3 HiGHS 1.15.1 module integrated and API-tested on the fixed-asset path**
+- Production solver and independent validator: **Person 3 HiGHS 1.15.1 module integrated and API-tested on native candidate and sudden-crisis paths**
 - Frontend: **pending Person 1 integration**
 - Live verification outcome: **pending real live smoke and report**
 
 Do not describe the offline replay as a live model run. Replace the pending fields using the deployed application's actual report and video. The final entry should state the actual model identifiers, sources, limitations and operator control.
+
+The native workflow evaluates battery additions and line uprates on five nodes over 24 hours, compares normal and crisis dispatch, validates pre-event causality and produces an operator report. Household equivalents use explicit synthetic assumptions. Regulatory references organize model checks; the report is not a legal certification. Actual Gemini and frontend integration remain pending.

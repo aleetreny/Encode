@@ -1,0 +1,178 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "accepted": {
+      "title": "Accepted",
+      "type": "boolean"
+    },
+    "assets": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Assets"
+    },
+    "binding_constraints": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Binding Constraints"
+    },
+    "candidate_id": {
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "events": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Message"
+    },
+    "metrics": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Metrics"
+    },
+    "modifications": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Modifications",
+      "type": "array"
+    },
+    "objective": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Objective"
+    },
+    "options": {
+      "additionalProperties": true,
+      "title": "Options",
+      "type": "object"
+    },
+    "scenario_id": {
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "solver": {
+      "additionalProperties": true,
+      "title": "Solver",
+      "type": "object"
+    },
+    "status": {
+      "enum": [
+        "optimal",
+        "infeasible",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "time_step_hours": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Time Step Hours"
+    },
+    "timeseries": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Timeseries"
+    },
+    "timestamps_utc": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Timestamps Utc"
+    },
+    "validation": {
+      "additionalProperties": true,
+      "title": "Validation",
+      "type": "object"
+    }
+  },
+  "required": [
+    "status",
+    "message",
+    "scenario_id",
+    "candidate_id",
+    "modifications",
+    "events",
+    "options",
+    "time_step_hours",
+    "timestamps_utc",
+    "solver",
+    "objective",
+    "assets",
+    "timeseries",
+    "metrics",
+    "binding_constraints",
+    "validation",
+    "accepted"
+  ],
+  "title": "NativeSolution",
+  "type": "object"
+}
