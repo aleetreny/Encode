@@ -426,6 +426,10 @@ def to_contract_solution(
     }
 
 
+# Canonical alias
+compute_solution_dict = to_contract_solution
+
+
 def compute_incident_impact(solution: dict[str, Any]) -> dict[str, Any]:
     """Compute incident impact summary from the no-action incident Solution."""
     T = len(solution.get("cost_proxy_usd", [])) or 24
