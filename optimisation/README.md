@@ -207,7 +207,7 @@ Hours are step indices 0–23; `timestamps_utc[i]` gives the UTC start time of h
 ```bash
 python -m venv .venv && . .venv/bin/activate
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q            # 114 tests, ~5 s (includes a reduced outage sweep)
+pytest optimisation/tests -q            # 115 tests, ~5 s (includes a reduced outage sweep)
 python -m optimisation.demo             # the story in section 5
 python -m optimisation.demo --write     # also regenerate examples/*.json
 python -m optimisation.stress           # full outage sweep: 532 cases, ~2 000 solves, ~20 s
@@ -321,7 +321,7 @@ and update the numbers in section 5, `DESIGN.md` §14 and the root `README.md`.
 | Unit / behaviour tests | `tests/` | each rule, each error message, each outage mode, compatibility with the backend |
 | Tampering tests | `tests/` (`test_validator_catches_*`) | the validator really catches broken solutions |
 | Random grids | `tests/` (`test_random_radial_scenarios_*`, 40 seeds) | solve → validate holds on arbitrary radial networks, time steps and outages |
-| Example sync | `tests/` (`test_examples_match_current_code`) | `examples/` matches the current code |
+| Example sync | `tests/` (`test_examples_match_current_code`) | `examples/` matches the current code on any platform (metrics, objective, verdicts) and every stored solution still validates |
 | Outage sweep | `stress.py` (reduced version in `tests/`) | every generator and line, planned and sudden, 5 time windows, every candidate, normal and strict mode: solves, validates, outage respected, no hindsight, planned ≤ sudden, losing an asset never helps, adding one never hurts |
 
 The outage sweep has already caught two real bugs (an islanded exporting plant made normal mode
@@ -341,6 +341,12 @@ git log --format='%b' origin/main..HEAD | grep -iE 'co-authored-by|claude-sessio
 
 ## 17. Known gotchas
 
+- **Different machines, different (equally good) hourly schedules.** When several schedules are
+  equally cheap, HiGHS can pick a different one on macOS ARM than on Linux (seen for `south_bess`
+  in the sudden crash). Totals, cost and validation are identical. That is why
+  `test_examples_match_current_code` compares examples *semantically*: metrics, objective, inputs
+  and verdicts must match, every stored solution must validate, but hourly arrays and binding hours
+  may differ. Regenerate examples on Linux (the CI platform) when outputs change.
 - **Degenerate optima.** Many dispatches can be equally cheap. Small tie-break costs (battery
   throughput 0.5, transmission 0.01 USD/MWh) keep results unique and readable; removing them can
   make outputs change between runs or HiGHS versions. `highspy` is pinned in `requirements.txt`.

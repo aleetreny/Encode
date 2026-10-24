@@ -518,8 +518,36 @@ def test_validate_rejects_solution_solved_with_other_options():
     assert "options_consistent" in {v["check"] for v in strict["violations"]}
 
 
-def test_examples_match_current_code():
-    """optimisation/examples/*.json must be regenerated whenever outputs change."""
+# Hour-by-hour dispatch can legitimately differ between platforms: when several schedules are
+# equally cheap (a degenerate optimum), HiGHS on macOS ARM and on Linux may pick different ones.
+# These keys depend on that choice; everything else (status, inputs, metrics, objective,
+# comparisons, validation verdict) must match, and every stored solution must still validate.
+PLATFORM_DEPENDENT = {"timeseries", "binding_constraints", "line_hours_at_limit", "max_residual_mw"}
+
+
+def _same_result(stored, fresh, path="") -> list[str]:
+    """Differences between a stored example and freshly computed output, ignoring PLATFORM_DEPENDENT."""
+    if isinstance(fresh, dict) and isinstance(stored, dict):
+        if set(stored) != set(fresh):
+            return [f"{path}: keys differ {sorted(set(stored) ^ set(fresh))}"]
+        return [d for k in fresh if k not in PLATFORM_DEPENDENT for d in _same_result(stored[k], fresh[k], f"{path}.{k}")]
+    if isinstance(fresh, list) and isinstance(stored, list):
+        if len(stored) != len(fresh):
+            return [f"{path}: length {len(stored)} != {len(fresh)}"]
+        return [d for i, (x, y) in enumerate(zip(stored, fresh)) for d in _same_result(x, y, f"{path}[{i}]")]
+    if isinstance(fresh, float) or isinstance(stored, float):
+        ok_num = isinstance(stored, (int, float)) and isinstance(fresh, (int, float))
+        return [] if ok_num and abs(stored - fresh) <= 1e-6 + 1e-9 * abs(fresh) else [f"{path}: {stored} != {fresh}"]
+    return [] if stored == fresh else [f"{path}: {stored!r} != {fresh!r}"]
+
+
+def test_examples_match_current_code(scen):
+    """optimisation/examples/ must be regenerated whenever outputs change (python -m optimisation.demo --write).
+
+    Compared semantically so the check passes on every platform: hourly allocations of a degenerate
+    optimum may differ, but each stored solution must validate and match status, inputs, metrics and
+    objective exactly (to 1e-6).
+    """
     import contextlib
     import io
 
@@ -529,8 +557,12 @@ def test_examples_match_current_code():
         results = demo.run(write=False)
     for name, data in results.items():
         stored = json.loads((demo.EXAMPLES / f"{name}.json").read_text())
-        assert stored == json.loads(json.dumps(demo.stable(data))), (
-            f"examples/{name}.json is stale: run python -m optimisation.demo --write")
+        fresh = json.loads(json.dumps(demo.stable(data)))
+        diffs = _same_result(stored, fresh)
+        assert not diffs, f"examples/{name}.json is stale (run python -m optimisation.demo --write): {diffs[:5]}"
+        if stored.get("status") == "optimal" and "timeseries" in stored:
+            check = validate(scen, stored, stored["options"])
+            assert check["passed"], f"examples/{name}.json no longer validates: {check['violations'][:3]}"
     # every exported case is a real, validated solution
     index = results["index"]["situations"]
     assert set(index) == {"normal", "sudden_outage", "planned_maintenance"}
@@ -594,3 +626,15 @@ def test_validator_accepts_older_solutions_without_runback_fields(scen, base):
     bad = validate(scen, hidden)
     assert not bad["passed"]
     assert {"emergency_runback_mwh", "emergency_runback_penalty_usd"} <= {v["id"] for v in bad["violations"]}
+
+
+def test_example_check_tolerates_a_different_equally_good_schedule(scen):
+    """Mimics the macOS/Linux difference: same totals, different hourly split -> accepted;
+    a changed metric -> rejected."""
+    sol = solve(scen, SOUTH_BATTERY, [GAS_TRIP])
+    other = copy.deepcopy(sol)
+    other["binding_constraints"] = other["binding_constraints"][::-1]
+    other["timeseries"]["battery_discharge_mw"]["c_south_bat1"][19] += 1.0  # pretend another split
+    assert _same_result(other, sol) == []
+    other["metrics"]["unserved_mwh"] += 1.0
+    assert _same_result(other, sol) != []
