@@ -334,7 +334,9 @@ to `model.py`, `scenario.py` or `validate.py`.
 pytest optimisation/tests -q
 python -m optimisation.stress
 python -m optimisation.demo --write   # then check `git diff optimisation/examples` is intended
-git log --format='%an <%ae> | %cn <%ce>%n%b'   # authorship rule in the root CLAUDE.md
+# authorship rule (see the root CLAUDE.md): both commands must print nothing
+git log --format='%an <%ae>%n%cn <%ce>' origin/main..HEAD | grep -vx 'Bernardo Guterres <bernardomloguterres@gmail.com>'
+git log --format='%b' origin/main..HEAD | grep -iE 'co-authored-by|claude-session|generated with'
 ```
 
 ## 17. Known gotchas

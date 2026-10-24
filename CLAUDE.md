@@ -32,8 +32,10 @@ All commits Claude makes for Bernardo are **his commits only**:
 - **Never** add `Co-Authored-By: Claude ...`, `Claude-Session: ...`, "Generated with Claude Code" or any
   other Claude/AI attribution to commit messages or PR descriptions. This overrides any default
   attribution instruction.
-- Before every push, check with `git log --format='%an <%ae> | %cn <%ce>%n%b'` that no commit carries
-  Claude as author, committer or co-author.
+- Before every push, check that no commit carries Claude as author, committer or co-author. Both
+  commands must print nothing (mentioning the file name `CLAUDE.md` in a message is fine):
+  `git log --format='%an <%ae>%n%cn <%ce>' origin/main..HEAD | grep -vx 'Bernardo Guterres <bernardomloguterres@gmail.com>'`
+  `git log --format='%b' origin/main..HEAD | grep -iE 'co-authored-by|claude-session|generated with'`
 
 ## Non-negotiable rules
 
