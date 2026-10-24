@@ -76,6 +76,10 @@ def build() -> dict:
             "wind": 0.0,
             "hydro": 0.0,
         },
+        # Single canonical household formula across the repo:
+        # households_off(node, hour) = min(households_total, round(unserved_mw(node, hour) * households_per_mw))
+        # Note: households_total on nodes is the static regional census cap (derived / assumption),
+        # NOT households disconnected. households_per_mw = 1000 is an assumption (never multiply MWh by households/MW).
         "nodes": [
             {"id": "n_norte_grande", "label": "Norte Grande (Crucero)", "substation": "S/E Crucero 220 kV", "lat": -22.30, "lon": -69.55, "households_per_mw": 1000, "households_total": 320000},
             {"id": "n_norte_chico", "label": "Norte Chico (Cardones)", "substation": "S/E Cardones 500 kV", "lat": -27.45, "lon": -70.30, "households_per_mw": 1000, "households_total": 280000},

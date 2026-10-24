@@ -50,7 +50,7 @@ Returns the complete operational dossier:
 - `agent_result`: Strict `AgentResult` payload
 - `comparison`: Baseline vs. candidate MWh/USD deltas
 - `candidate_sweeps`: Ranked Modification Menu interventions (`add_battery`, `uprate_line`, combined)
-- `crisis_analysis`: Sudden N-1 contingency (`gas_centro` 600 MW outage at hours 18–22), self-correction trace, and nodal household disconnection/reconnection metrics (`562,000 / 562,000` Chilean households reconnected)
+- `crisis_analysis`: Sudden N-1 contingency (`gas_centro` 600 MW outage at hours 18–22), self-correction trace, and nodal household disconnection/reconnection metrics computed via canonical formula `unserved_mw(node, hour) * households_per_mw` (`1,000 households/MW`, `assumption`, never multiplying MWh by households/MW; `111,900` reconnected out of `562,000` peak disconnected households in the legacy BESS+line sweep, i.e. `562.0 MW * 1,000 households/MW`)
 - `regulatory_compliance`: Structured audit table against `LGSE Art. 72°-1`, `DS N° 32/2026 Art. 117 bis`, `CNE NTSyCS`, and `Ley N° 21.505`.
 
 ---

@@ -640,10 +640,10 @@ export const ChileIsoMaquette: React.FC = () => {
 
   if (unservedMw > 10) {
     stage1Summary = `ALERTA DE RED: Déficit térmico de ${Math.round(rawDeficitMw)} MW hacia 06 · Barrio Residencial`;
-    stage2Summary = `AGENTE IA APAGADO: ${Math.round(unservedMw)} MW sin suministro (${6 - litHousesCount} manzanas a oscuras · Activa IA para rescatar 243,058 hogares)`;
+    stage2Summary = `AGENTE IA APAGADO: ${Math.round(unservedMw)} MW sin suministro (${6 - litHousesCount} manzanas a oscuras · Activa IA para rescatar ${(Math.round(unservedMw) * 1000).toLocaleString('en-US')} hogares)`;
   } else if (aiInjectMw > 0) {
     stage1Summary = `FASE 1 · PERTURBACIÓN: Caída en 03 · Central Gas deja déficit de ${Math.round(rawDeficitMw)} MW en hora punta`;
-    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA: 04 · Batería BESS inyecta +${Math.round(aiInjectMw)} MW de emergencia → 100% hogares iluminados (243,058 hogares protegidos)`;
+    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA: 04 · Batería BESS inyecta +${Math.round(aiInjectMw)} MW de emergencia → 100% hogares iluminados (${(Math.round(aiInjectMw) * 1000).toLocaleString('en-US')} hogares protegidos)`;
   } else if (curtailedSolarMw > 10) {
     stage1Summary = `SATURACIÓN L2: Excedente renovable de +${Math.round(rawCorridorOverflowMw)} MW supera capacidad de 05 · Troncal L2 (${l2CapMw} MW)`;
     stage2Summary = `AGENTE IA APAGADO: Se pierden ${Math.round(curtailedSolarMw)} MW de energía solar limpia (Activa Agente IA para almacenar en BESS)`;
