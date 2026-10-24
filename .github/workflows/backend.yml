@@ -15,6 +15,9 @@ jobs:
           python-version: '3.13'
           cache: pip
       - run: pip install -r requirements-dev.txt
+      - run: pip check
+      - name: Imported teammate agent dependencies
+        run: python -c "import agent"
       - run: ruff check backend scripts tests
       - run: ruff format --check backend scripts tests
       - run: python -m pytest -q
@@ -38,6 +41,7 @@ jobs:
             sleep 1
           done
           python scripts/smoke.py
+          python scripts/smoke.py --mode deterministic
       - name: Container build
         run: docker build -t gridpilot-api:ci .
       - name: Container smoke

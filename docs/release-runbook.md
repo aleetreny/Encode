@@ -59,3 +59,5 @@ If provider/network access fails during the demo, explicitly select replay and d
 ## Native v2 release checks
 
 The default scenario is `chile-sen-5node-demo`; see [contracts v2](contracts-v2.md). Regenerate native fixtures before exporting contracts. Verify normal and sudden-crisis results, strict infeasibility, no-hindsight checks, household dimensions and crisis approval. A live provider failure may fall back only to a matching replay when enabled; its mode must visibly change to replay. A configured credential alone does not certify a successful live agent run.
+
+Before any integrated recording, close the exact remaining [demo integration blockers](demo-integration-handoff.md). Standard `npm run build` currently fails on missing Vite types; a separate build gate makes this visible. The backend smoke saves actual reports with `--report-dir var/demo-verification`. Live smoke must fail when mode is replaced by replay. No key was configured during the current verification, so no Google execution is certified.

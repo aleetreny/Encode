@@ -93,7 +93,8 @@
       "solver": {
         "name": "HiGHS",
         "version": "1.15.1",
-        "solve_time_s": 0.0027,
+        "method": "LP",
+        "solve_time_s": 0.0031,
         "solves": 1
       },
       "objective": {
@@ -103,7 +104,8 @@
           "unserved_penalty_usd": 0.0,
           "curtailment_penalty_usd": 0.0,
           "battery_throughput_cost_usd": 60.078947,
-          "transmission_tiebreak_usd": 193.826
+          "transmission_tiebreak_usd": 193.826,
+          "emergency_runback_penalty_usd": 0.0
         }
       },
       "assets": {
@@ -115,6 +117,7 @@
             "energy_capacity_mwh": 60.0,
             "min_soc_mwh": 0.0,
             "initial_soc_mwh": 30.0,
+            "final_soc_mwh": null,
             "charge_efficiency": 0.95,
             "discharge_efficiency": 0.95
           }
@@ -1072,6 +1075,7 @@
         "battery_discharge_mwh": 57.0,
         "battery_losses_mwh": 6.157895,
         "assumed_cost_proxy_usd": 1665362.99993,
+        "emergency_runback_mwh": 0.0,
         "line_hours_at_limit": {
           "L1": 0.0,
           "L2": 8.0,
@@ -1315,7 +1319,8 @@
       "solver": {
         "name": "HiGHS",
         "version": "1.15.1",
-        "solve_time_s": 0.0026,
+        "method": "LP",
+        "solve_time_s": 0.0029,
         "solves": 1
       },
       "objective": {
@@ -1325,7 +1330,8 @@
           "unserved_penalty_usd": 0.0,
           "curtailment_penalty_usd": 0.0,
           "battery_throughput_cost_usd": 623.143848,
-          "transmission_tiebreak_usd": 205.226
+          "transmission_tiebreak_usd": 205.226,
+          "emergency_runback_penalty_usd": 0.0
         }
       },
       "assets": {
@@ -1337,6 +1343,7 @@
             "energy_capacity_mwh": 60.0,
             "min_soc_mwh": 0.0,
             "initial_soc_mwh": 30.0,
+            "final_soc_mwh": null,
             "charge_efficiency": 0.95,
             "discharge_efficiency": 0.95
           },
@@ -1347,6 +1354,7 @@
             "energy_capacity_mwh": 600.0,
             "min_soc_mwh": 0.0,
             "initial_soc_mwh": 300.0,
+            "final_soc_mwh": null,
             "charge_efficiency": 0.95,
             "discharge_efficiency": 0.95,
             "added_by_candidate": "north_bess"
@@ -2384,6 +2392,7 @@
         "battery_discharge_mwh": 591.20875,
         "battery_losses_mwh": 63.870197,
         "assumed_cost_proxy_usd": 1591133.16875,
+        "emergency_runback_mwh": 0.0,
         "line_hours_at_limit": {
           "L1": 0.0,
           "L2": 8.0,
@@ -3083,7 +3092,8 @@
           "solver": {
             "name": "HiGHS",
             "version": "1.15.1",
-            "solve_time_s": 0.0026,
+            "method": "LP",
+            "solve_time_s": 0.0029,
             "solves": 1
           },
           "objective": {
@@ -3093,7 +3103,8 @@
               "unserved_penalty_usd": 0.0,
               "curtailment_penalty_usd": 0.0,
               "battery_throughput_cost_usd": 623.143848,
-              "transmission_tiebreak_usd": 205.226
+              "transmission_tiebreak_usd": 205.226,
+              "emergency_runback_penalty_usd": 0.0
             }
           },
           "assets": {
@@ -3105,6 +3116,7 @@
                 "energy_capacity_mwh": 60.0,
                 "min_soc_mwh": 0.0,
                 "initial_soc_mwh": 30.0,
+                "final_soc_mwh": null,
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95
               },
@@ -3115,6 +3127,7 @@
                 "energy_capacity_mwh": 600.0,
                 "min_soc_mwh": 0.0,
                 "initial_soc_mwh": 300.0,
+                "final_soc_mwh": null,
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95,
                 "added_by_candidate": "north_bess"
@@ -4152,6 +4165,7 @@
             "battery_discharge_mwh": 591.20875,
             "battery_losses_mwh": 63.870197,
             "assumed_cost_proxy_usd": 1591133.16875,
+            "emergency_runback_mwh": 0.0,
             "line_hours_at_limit": {
               "L1": 0.0,
               "L2": 8.0,
@@ -4840,7 +4854,8 @@
           "solver": {
             "name": "HiGHS",
             "version": "1.15.1",
-            "solve_time_s": 0.0026,
+            "method": "LP",
+            "solve_time_s": 0.003,
             "solves": 1
           },
           "objective": {
@@ -4850,7 +4865,8 @@
               "unserved_penalty_usd": 0.0,
               "curtailment_penalty_usd": 0.0,
               "battery_throughput_cost_usd": 226.297369,
-              "transmission_tiebreak_usd": 193.362105
+              "transmission_tiebreak_usd": 193.362105,
+              "emergency_runback_penalty_usd": 0.0
             }
           },
           "assets": {
@@ -4862,6 +4878,7 @@
                 "energy_capacity_mwh": 60.0,
                 "min_soc_mwh": 0.0,
                 "initial_soc_mwh": 30.0,
+                "final_soc_mwh": null,
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95
               },
@@ -4872,6 +4889,7 @@
                 "energy_capacity_mwh": 600.0,
                 "min_soc_mwh": 0.0,
                 "initial_soc_mwh": 300.0,
+                "final_soc_mwh": null,
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95,
                 "added_by_candidate": "south_bess"
@@ -5909,6 +5927,7 @@
             "battery_discharge_mwh": 214.7,
             "battery_losses_mwh": 23.194737,
             "assumed_cost_proxy_usd": 1647269.000015,
+            "emergency_runback_mwh": 0.0,
             "line_hours_at_limit": {
               "L1": 0.0,
               "L2": 8.0,
@@ -6509,7 +6528,8 @@
           "solver": {
             "name": "HiGHS",
             "version": "1.15.1",
-            "solve_time_s": 0.0023,
+            "method": "LP",
+            "solve_time_s": 0.0028,
             "solves": 1
           },
           "objective": {
@@ -6519,7 +6539,8 @@
               "unserved_penalty_usd": 0.0,
               "curtailment_penalty_usd": 0.0,
               "battery_throughput_cost_usd": 110.515224,
-              "transmission_tiebreak_usd": 209.627485
+              "transmission_tiebreak_usd": 209.627485,
+              "emergency_runback_penalty_usd": 0.0
             }
           },
           "assets": {
@@ -6531,6 +6552,7 @@
                 "energy_capacity_mwh": 60.0,
                 "min_soc_mwh": 0.0,
                 "initial_soc_mwh": 30.0,
+                "final_soc_mwh": null,
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95
               }
@@ -7488,6 +7510,7 @@
             "battery_discharge_mwh": 104.8515,
             "battery_losses_mwh": 11.327447,
             "assumed_cost_proxy_usd": 1588573.909965,
+            "emergency_runback_mwh": 0.0,
             "line_hours_at_limit": {
               "L1": 0.0,
               "L2": 4.0,
@@ -8181,7 +8204,8 @@
         "solver": {
           "name": "HiGHS",
           "version": "1.15.1",
-          "solve_time_s": 0.004,
+          "method": "LP",
+          "solve_time_s": 0.0047,
           "solves": 2
         },
         "objective": {
@@ -8191,7 +8215,8 @@
             "unserved_penalty_usd": 19219250.0,
             "curtailment_penalty_usd": 0.0,
             "battery_throughput_cost_usd": 58.576974,
-            "transmission_tiebreak_usd": 193.826
+            "transmission_tiebreak_usd": 193.826,
+            "emergency_runback_penalty_usd": 0.0
           }
         },
         "assets": {
@@ -8203,6 +8228,7 @@
               "energy_capacity_mwh": 60.0,
               "min_soc_mwh": 0.0,
               "initial_soc_mwh": 30.0,
+              "final_soc_mwh": null,
               "charge_efficiency": 0.95,
               "discharge_efficiency": 0.95
             }
@@ -8862,10 +8888,10 @@
               0.0,
               0.0,
               0.0,
-              0.0,
+              25.575,
               30.0,
               0.0,
-              25.575,
+              0.0,
               0.0
             ]
           },
@@ -8891,9 +8917,9 @@
               60.0,
               60.0,
               60.0,
-              60.0,
-              28.421053,
-              28.421053,
+              33.078947,
+              1.5,
+              1.5,
               1.5,
               30.0
             ]
@@ -9077,10 +9103,10 @@
               0.0,
               0.0,
               242.2,
-              450.1,
+              424.525,
               532.0,
               552.6,
-              145.025,
+              170.6,
               0.0
             ],
             "n_centro_sur": [
@@ -9160,6 +9186,7 @@
           "battery_discharge_mwh": 55.575,
           "battery_losses_mwh": 6.003947,
           "assumed_cost_proxy_usd": 1556802.999965,
+          "emergency_runback_mwh": 0.0,
           "line_hours_at_limit": {
             "L1": 0.0,
             "L2": 8.0,
@@ -9200,8 +9227,7 @@
             "hours": [
               16,
               17,
-              18,
-              19
+              18
             ],
             "detail": "state of charge at 60 MWh capacity (end of hour)"
           },
@@ -9437,7 +9463,8 @@
         "solver": {
           "name": "HiGHS",
           "version": "1.15.1",
-          "solve_time_s": 0.0041,
+          "method": "LP",
+          "solve_time_s": 0.0059,
           "solves": 2
         },
         "objective": {
@@ -9447,7 +9474,8 @@
             "unserved_penalty_usd": 15300500.0,
             "curtailment_penalty_usd": 0.0,
             "battery_throughput_cost_usd": 794.368849,
-            "transmission_tiebreak_usd": 204.9775
+            "transmission_tiebreak_usd": 204.9775,
+            "emergency_runback_penalty_usd": 0.0
           }
         },
         "assets": {
@@ -9459,6 +9487,7 @@
               "energy_capacity_mwh": 60.0,
               "min_soc_mwh": 0.0,
               "initial_soc_mwh": 30.0,
+              "final_soc_mwh": null,
               "charge_efficiency": 0.95,
               "discharge_efficiency": 0.95
             },
@@ -9469,6 +9498,7 @@
               "energy_capacity_mwh": 600.0,
               "min_soc_mwh": 0.0,
               "initial_soc_mwh": 300.0,
+              "final_soc_mwh": null,
               "charge_efficiency": 0.95,
               "discharge_efficiency": 0.95,
               "added_by_candidate": "north_bess"
@@ -10154,11 +10184,11 @@
               0.0,
               0.0,
               0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
               27.075,
-              0.0,
-              0.0,
-              0.0,
-              0.0,
               0.0
             ],
             "north_bess_bat1": [
@@ -10180,11 +10210,11 @@
               0.0,
               0.0,
               0.0,
+              0.0,
               150.0,
               120.375,
-              0.0,
-              0.0,
               150.0,
+              0.0,
               0.0
             ]
           },
@@ -10209,10 +10239,10 @@
               30.0,
               30.0,
               30.0,
-              1.5,
-              1.5,
-              1.5,
-              1.5,
+              30.0,
+              30.0,
+              30.0,
+              30.0,
               1.5,
               30.0
             ],
@@ -10236,10 +10266,10 @@
               600.0,
               600.0,
               600.0,
+              600.0,
               442.105263,
               315.394737,
-              315.394737,
-              315.394737,
+              157.5,
               157.5,
               300.0
             ]
@@ -10264,11 +10294,11 @@
               234.6,
               291.8,
               277.4,
-              367.5,
-              289.275,
-              169.5,
-              169.8,
-              319.9,
+              217.5,
+              318.9,
+              289.875,
+              319.8,
+              169.9,
               20.0
             ],
             "L2": [
@@ -10290,11 +10320,11 @@
               400.0,
               400.0,
               322.2,
-              353.1,
-              255.675,
-              137.0,
-              140.7,
-              295.9,
+              203.1,
+              285.3,
+              257.375,
+              290.7,
+              145.9,
               -2.2
             ],
             "L3": [
@@ -10422,11 +10452,11 @@
               0.0,
               0.0,
               0.0,
-              65.125,
-              329.725,
-              562.0,
-              552.6,
-              20.6,
+              242.2,
+              300.1,
+              441.625,
+              402.6,
+              143.525,
               0.0
             ],
             "n_centro_sur": [
@@ -10506,6 +10536,7 @@
           "battery_discharge_mwh": 753.65875,
           "battery_losses_mwh": 81.420197,
           "assumed_cost_proxy_usd": 1552445.66875,
+          "emergency_runback_mwh": 0.0,
           "line_hours_at_limit": {
             "L1": 0.0,
             "L2": 8.0,
@@ -10554,7 +10585,8 @@
             "hours": [
               15,
               16,
-              17
+              17,
+              18
             ],
             "detail": "state of charge at 600 MWh capacity (end of hour)"
           },
@@ -10582,8 +10614,8 @@
               12,
               13,
               14,
-              18,
-              22,
+              19,
+              21,
               23
             ],
             "detail": "charging or discharging at 150 MW limit"
@@ -10870,8 +10902,7 @@
               "hours": [
                 16,
                 17,
-                18,
-                19
+                18
               ],
               "detail": "state of charge at 60 MWh capacity (end of hour)"
             },
@@ -11063,7 +11094,8 @@
               "hours": [
                 15,
                 16,
-                17
+                17,
+                18
               ],
               "detail": "state of charge at 600 MWh capacity (end of hour)"
             },
@@ -11091,8 +11123,8 @@
                 12,
                 13,
                 14,
-                18,
-                22,
+                19,
+                21,
                 23
               ],
               "detail": "charging or discharging at 150 MW limit"
@@ -11305,7 +11337,8 @@
               "solver": {
                 "name": "HiGHS",
                 "version": "1.15.1",
-                "solve_time_s": 0.0026,
+                "method": "LP",
+                "solve_time_s": 0.0029,
                 "solves": 1
               },
               "objective": {
@@ -11315,7 +11348,8 @@
                   "unserved_penalty_usd": 0.0,
                   "curtailment_penalty_usd": 0.0,
                   "battery_throughput_cost_usd": 623.143848,
-                  "transmission_tiebreak_usd": 205.226
+                  "transmission_tiebreak_usd": 205.226,
+                  "emergency_runback_penalty_usd": 0.0
                 }
               },
               "assets": {
@@ -11327,6 +11361,7 @@
                     "energy_capacity_mwh": 60.0,
                     "min_soc_mwh": 0.0,
                     "initial_soc_mwh": 30.0,
+                    "final_soc_mwh": null,
                     "charge_efficiency": 0.95,
                     "discharge_efficiency": 0.95
                   },
@@ -11337,6 +11372,7 @@
                     "energy_capacity_mwh": 600.0,
                     "min_soc_mwh": 0.0,
                     "initial_soc_mwh": 300.0,
+                    "final_soc_mwh": null,
                     "charge_efficiency": 0.95,
                     "discharge_efficiency": 0.95,
                     "added_by_candidate": "north_bess"
@@ -12374,6 +12410,7 @@
                 "battery_discharge_mwh": 591.20875,
                 "battery_losses_mwh": 63.870197,
                 "assumed_cost_proxy_usd": 1591133.16875,
+                "emergency_runback_mwh": 0.0,
                 "line_hours_at_limit": {
                   "L1": 0.0,
                   "L2": 8.0,
@@ -13058,7 +13095,8 @@
             "solver": {
               "name": "HiGHS",
               "version": "1.15.1",
-              "solve_time_s": 0.0041,
+              "method": "LP",
+              "solve_time_s": 0.0059,
               "solves": 2
             },
             "objective": {
@@ -13068,7 +13106,8 @@
                 "unserved_penalty_usd": 15300500.0,
                 "curtailment_penalty_usd": 0.0,
                 "battery_throughput_cost_usd": 794.368849,
-                "transmission_tiebreak_usd": 204.9775
+                "transmission_tiebreak_usd": 204.9775,
+                "emergency_runback_penalty_usd": 0.0
               }
             },
             "assets": {
@@ -13080,6 +13119,7 @@
                   "energy_capacity_mwh": 60.0,
                   "min_soc_mwh": 0.0,
                   "initial_soc_mwh": 30.0,
+                  "final_soc_mwh": null,
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95
                 },
@@ -13090,6 +13130,7 @@
                   "energy_capacity_mwh": 600.0,
                   "min_soc_mwh": 0.0,
                   "initial_soc_mwh": 300.0,
+                  "final_soc_mwh": null,
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95,
                   "added_by_candidate": "north_bess"
@@ -13775,11 +13816,11 @@
                   0.0,
                   0.0,
                   0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
                   27.075,
-                  0.0,
-                  0.0,
-                  0.0,
-                  0.0,
                   0.0
                 ],
                 "north_bess_bat1": [
@@ -13801,11 +13842,11 @@
                   0.0,
                   0.0,
                   0.0,
+                  0.0,
                   150.0,
                   120.375,
-                  0.0,
-                  0.0,
                   150.0,
+                  0.0,
                   0.0
                 ]
               },
@@ -13830,10 +13871,10 @@
                   30.0,
                   30.0,
                   30.0,
-                  1.5,
-                  1.5,
-                  1.5,
-                  1.5,
+                  30.0,
+                  30.0,
+                  30.0,
+                  30.0,
                   1.5,
                   30.0
                 ],
@@ -13857,10 +13898,10 @@
                   600.0,
                   600.0,
                   600.0,
+                  600.0,
                   442.105263,
                   315.394737,
-                  315.394737,
-                  315.394737,
+                  157.5,
                   157.5,
                   300.0
                 ]
@@ -13885,11 +13926,11 @@
                   234.6,
                   291.8,
                   277.4,
-                  367.5,
-                  289.275,
-                  169.5,
-                  169.8,
-                  319.9,
+                  217.5,
+                  318.9,
+                  289.875,
+                  319.8,
+                  169.9,
                   20.0
                 ],
                 "L2": [
@@ -13911,11 +13952,11 @@
                   400.0,
                   400.0,
                   322.2,
-                  353.1,
-                  255.675,
-                  137.0,
-                  140.7,
-                  295.9,
+                  203.1,
+                  285.3,
+                  257.375,
+                  290.7,
+                  145.9,
                   -2.2
                 ],
                 "L3": [
@@ -14043,11 +14084,11 @@
                   0.0,
                   0.0,
                   0.0,
-                  65.125,
-                  329.725,
-                  562.0,
-                  552.6,
-                  20.6,
+                  242.2,
+                  300.1,
+                  441.625,
+                  402.6,
+                  143.525,
                   0.0
                 ],
                 "n_centro_sur": [
@@ -14127,6 +14168,7 @@
               "battery_discharge_mwh": 753.65875,
               "battery_losses_mwh": 81.420197,
               "assumed_cost_proxy_usd": 1552445.66875,
+              "emergency_runback_mwh": 0.0,
               "line_hours_at_limit": {
                 "L1": 0.0,
                 "L2": 8.0,
@@ -14175,7 +14217,8 @@
                 "hours": [
                   15,
                   16,
-                  17
+                  17,
+                  18
                 ],
                 "detail": "state of charge at 600 MWh capacity (end of hour)"
               },
@@ -14203,8 +14246,8 @@
                   12,
                   13,
                   14,
-                  18,
-                  22,
+                  19,
+                  21,
                   23
                 ],
                 "detail": "charging or discharging at 150 MW limit"
@@ -14491,8 +14534,7 @@
                   "hours": [
                     16,
                     17,
-                    18,
-                    19
+                    18
                   ],
                   "detail": "state of charge at 60 MWh capacity (end of hour)"
                 },
@@ -14684,7 +14726,8 @@
                   "hours": [
                     15,
                     16,
-                    17
+                    17,
+                    18
                   ],
                   "detail": "state of charge at 600 MWh capacity (end of hour)"
                 },
@@ -14712,8 +14755,8 @@
                     12,
                     13,
                     14,
-                    18,
-                    22,
+                    19,
+                    21,
                     23
                   ],
                   "detail": "charging or discharging at 150 MW limit"
@@ -14926,7 +14969,8 @@
               "solver": {
                 "name": "HiGHS",
                 "version": "1.15.1",
-                "solve_time_s": 0.0026,
+                "method": "LP",
+                "solve_time_s": 0.003,
                 "solves": 1
               },
               "objective": {
@@ -14936,7 +14980,8 @@
                   "unserved_penalty_usd": 0.0,
                   "curtailment_penalty_usd": 0.0,
                   "battery_throughput_cost_usd": 226.297369,
-                  "transmission_tiebreak_usd": 193.362105
+                  "transmission_tiebreak_usd": 193.362105,
+                  "emergency_runback_penalty_usd": 0.0
                 }
               },
               "assets": {
@@ -14948,6 +14993,7 @@
                     "energy_capacity_mwh": 60.0,
                     "min_soc_mwh": 0.0,
                     "initial_soc_mwh": 30.0,
+                    "final_soc_mwh": null,
                     "charge_efficiency": 0.95,
                     "discharge_efficiency": 0.95
                   },
@@ -14958,6 +15004,7 @@
                     "energy_capacity_mwh": 600.0,
                     "min_soc_mwh": 0.0,
                     "initial_soc_mwh": 300.0,
+                    "final_soc_mwh": null,
                     "charge_efficiency": 0.95,
                     "discharge_efficiency": 0.95,
                     "added_by_candidate": "south_bess"
@@ -15995,6 +16042,7 @@
                 "battery_discharge_mwh": 214.7,
                 "battery_losses_mwh": 23.194737,
                 "assumed_cost_proxy_usd": 1647269.000015,
+                "emergency_runback_mwh": 0.0,
                 "line_hours_at_limit": {
                   "L1": 0.0,
                   "L2": 8.0,
@@ -16593,7 +16641,8 @@
             "solver": {
               "name": "HiGHS",
               "version": "1.15.1",
-              "solve_time_s": 0.005,
+              "method": "LP",
+              "solve_time_s": 0.0051,
               "solves": 2
             },
             "objective": {
@@ -16603,7 +16652,8 @@
                 "unserved_penalty_usd": 16788675.0,
                 "curtailment_penalty_usd": 0.0,
                 "battery_throughput_cost_usd": 314.763619,
-                "transmission_tiebreak_usd": 194.373255
+                "transmission_tiebreak_usd": 194.373255,
+                "emergency_runback_penalty_usd": 0.0
               }
             },
             "assets": {
@@ -16615,6 +16665,7 @@
                   "energy_capacity_mwh": 60.0,
                   "min_soc_mwh": 0.0,
                   "initial_soc_mwh": 30.0,
+                  "final_soc_mwh": null,
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95
                 },
@@ -16625,6 +16676,7 @@
                   "energy_capacity_mwh": 600.0,
                   "min_soc_mwh": 0.0,
                   "initial_soc_mwh": 300.0,
+                  "final_soc_mwh": null,
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95,
                   "added_by_candidate": "south_bess"
@@ -17310,8 +17362,8 @@
                   0.0,
                   0.0,
                   0.0,
-                  0.0,
                   27.075,
+                  0.0,
                   0.0,
                   0.0,
                   0.0,
@@ -17336,10 +17388,10 @@
                   0.0,
                   0.0,
                   0.0,
-                  0.0,
                   121.5575,
                   0.0,
                   150.0,
+                  0.0,
                   0.0,
                   0.0
                 ]
@@ -17365,7 +17417,7 @@
                   30.0,
                   30.0,
                   30.0,
-                  30.0,
+                  1.5,
                   1.5,
                   1.5,
                   1.5,
@@ -17392,9 +17444,9 @@
                   343.885,
                   343.885,
                   443.35,
-                  443.35,
                   315.394737,
                   315.394737,
+                  157.5,
                   157.5,
                   157.5,
                   300.0
@@ -17472,10 +17524,10 @@
                   -225.2,
                   -217.8,
                   -97.7,
-                  -171.3,
-                  -249.0575,
-                  -93.7,
-                  -246.0,
+                  -292.8575,
+                  -127.5,
+                  -243.7,
+                  -96.0,
                   -134.5,
                   -33.8
                 ],
@@ -17498,10 +17550,10 @@
                   -129.2,
                   -118.0,
                   0.0,
-                  -87.0,
-                  -188.0575,
-                  -52.0,
-                  -203.4,
+                  -208.5575,
+                  -66.5,
+                  -202.0,
+                  -53.4,
                   -70.5,
                   56.7
                 ]
@@ -17578,10 +17630,10 @@
                   0.0,
                   0.0,
                   0.0,
-                  242.2,
-                  301.4675,
-                  562.0,
-                  402.6,
+                  93.5675,
+                  450.1,
+                  412.0,
+                  552.6,
                   170.6,
                   0.0
                 ],
@@ -17662,6 +17714,7 @@
               "battery_discharge_mwh": 298.6325,
               "battery_losses_mwh": 32.262237,
               "assumed_cost_proxy_usd": 1593638.000015,
+              "emergency_runback_mwh": 0.0,
               "line_hours_at_limit": {
                 "L1": 0.0,
                 "L2": 8.0,
@@ -17708,7 +17761,7 @@
                 "type": "battery_power_limit",
                 "id": "south_bess_bat1",
                 "hours": [
-                  21,
+                  20,
                   23
                 ],
                 "detail": "charging or discharging at 150 MW limit"
@@ -17996,8 +18049,7 @@
                   "hours": [
                     16,
                     17,
-                    18,
-                    19
+                    18
                   ],
                   "detail": "state of charge at 60 MWh capacity (end of hour)"
                 },
@@ -18187,7 +18239,7 @@
                   "type": "battery_power_limit",
                   "id": "south_bess_bat1",
                   "hours": [
-                    21,
+                    20,
                     23
                   ],
                   "detail": "charging or discharging at 150 MW limit"
@@ -18399,7 +18451,8 @@
               "solver": {
                 "name": "HiGHS",
                 "version": "1.15.1",
-                "solve_time_s": 0.0023,
+                "method": "LP",
+                "solve_time_s": 0.0028,
                 "solves": 1
               },
               "objective": {
@@ -18409,7 +18462,8 @@
                   "unserved_penalty_usd": 0.0,
                   "curtailment_penalty_usd": 0.0,
                   "battery_throughput_cost_usd": 110.515224,
-                  "transmission_tiebreak_usd": 209.627485
+                  "transmission_tiebreak_usd": 209.627485,
+                  "emergency_runback_penalty_usd": 0.0
                 }
               },
               "assets": {
@@ -18421,6 +18475,7 @@
                     "energy_capacity_mwh": 60.0,
                     "min_soc_mwh": 0.0,
                     "initial_soc_mwh": 30.0,
+                    "final_soc_mwh": null,
                     "charge_efficiency": 0.95,
                     "discharge_efficiency": 0.95
                   }
@@ -19378,6 +19433,7 @@
                 "battery_discharge_mwh": 104.8515,
                 "battery_losses_mwh": 11.327447,
                 "assumed_cost_proxy_usd": 1588573.909965,
+                "emergency_runback_mwh": 0.0,
                 "line_hours_at_limit": {
                   "L1": 0.0,
                   "L2": 4.0,
@@ -20060,7 +20116,8 @@
             "solver": {
               "name": "HiGHS",
               "version": "1.15.1",
-              "solve_time_s": 0.0046,
+              "method": "LP",
+              "solve_time_s": 0.0048,
               "solves": 2
             },
             "objective": {
@@ -20070,7 +20127,8 @@
                 "unserved_penalty_usd": 19219250.0,
                 "curtailment_penalty_usd": 0.0,
                 "battery_throughput_cost_usd": 109.01325,
-                "transmission_tiebreak_usd": 209.627485
+                "transmission_tiebreak_usd": 209.627485,
+                "emergency_runback_penalty_usd": 0.0
               }
             },
             "assets": {
@@ -20082,6 +20140,7 @@
                   "energy_capacity_mwh": 60.0,
                   "min_soc_mwh": 0.0,
                   "initial_soc_mwh": 30.0,
+                  "final_soc_mwh": null,
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95
                 }
@@ -20740,10 +20799,10 @@
                   0.0,
                   0.0,
                   0.0,
-                  30.0,
-                  0.0,
                   25.575,
                   0.0,
+                  0.0,
+                  30.0,
                   0.0,
                   0.0
                 ]
@@ -20769,9 +20828,9 @@
                   60.0,
                   60.0,
                   60.0,
-                  28.421053,
-                  28.421053,
-                  1.5,
+                  33.078947,
+                  33.078947,
+                  33.078947,
                   1.5,
                   1.5,
                   30.0
@@ -20955,10 +21014,10 @@
                   0.0,
                   0.0,
                   0.0,
-                  212.2,
+                  216.625,
                   450.1,
-                  536.425,
-                  552.6,
+                  562.0,
+                  522.6,
                   170.6,
                   0.0
                 ],
@@ -21039,6 +21098,7 @@
               "battery_discharge_mwh": 103.4265,
               "battery_losses_mwh": 11.1735,
               "assumed_cost_proxy_usd": 1480013.91,
+              "emergency_runback_mwh": 0.0,
               "line_hours_at_limit": {
                 "L1": 0.0,
                 "L2": 4.0,
@@ -21099,7 +21159,7 @@
                 "id": "b_centro",
                 "hours": [
                   11,
-                  18,
+                  21,
                   23
                 ],
                 "detail": "charging or discharging at 30 MW limit"
@@ -21387,8 +21447,7 @@
                   "hours": [
                     16,
                     17,
-                    18,
-                    19
+                    18
                   ],
                   "detail": "state of charge at 60 MWh capacity (end of hour)"
                 },
@@ -21592,7 +21651,7 @@
                   "id": "b_centro",
                   "hours": [
                     11,
-                    18,
+                    21,
                     23
                   ],
                   "detail": "charging or discharging at 30 MW limit"
@@ -21795,7 +21854,8 @@
         "solver": {
           "name": "HiGHS",
           "version": "1.15.1",
-          "solve_time_s": 0.0033,
+          "method": "LP",
+          "solve_time_s": 0.0038,
           "solves": 2
         },
         "objective": null,
@@ -21866,10 +21926,10 @@
           0.0,
           0.0,
           242200.0,
-          450100.0,
+          424525.0,
           532000.0,
           552600.0,
-          145025.0,
+          170600.0,
           0.0
         ],
         "candidate_affected_households_equivalent_by_step": [
@@ -21891,11 +21951,11 @@
           0.0,
           0.0,
           0.0,
-          65125.0,
-          329725.0,
-          562000.0,
-          552600.0,
-          20600.0,
+          242200.0,
+          300100.0,
+          441625.0,
+          402600.0,
+          143525.0,
           0.0
         ],
         "net_reconnected_households_equivalent_by_step": [
@@ -21917,18 +21977,18 @@
           0.0,
           0.0,
           0.0,
-          177075.0,
-          120375.0,
-          -30000.0,
           0.0,
           124425.0,
+          90375.0,
+          150000.0,
+          27075.0,
           0.0
         ],
-        "avoided_household_hours": 267450.0,
+        "avoided_household_hours": 364800.0,
         "horizon_avoided_household_hours": 391875.0,
         "unique_households_reconnected": null,
-        "average_households_reconnected_equivalent": 66862.5,
-        "peak_households_reconnected_equivalent": 177075.0,
+        "average_households_reconnected_equivalent": 91200.0,
+        "peak_households_reconnected_equivalent": 150000.0,
         "by_node": {
           "n_norte_grande": {
             "baseline_affected_households_equivalent": [
@@ -22113,10 +22173,10 @@
               0.0,
               0.0,
               242200.0,
-              450100.0,
+              424525.0,
               532000.0,
               552600.0,
-              145025.0,
+              170600.0,
               0.0
             ],
             "candidate_affected_households_equivalent": [
@@ -22138,11 +22198,11 @@
               0.0,
               0.0,
               0.0,
-              65125.0,
-              329725.0,
-              562000.0,
-              552600.0,
-              20600.0,
+              242200.0,
+              300100.0,
+              441625.0,
+              402600.0,
+              143525.0,
               0.0
             ],
             "net_reconnected_households_equivalent": [
@@ -22164,14 +22224,14 @@
               0.0,
               0.0,
               0.0,
-              177075.0,
-              120375.0,
-              -30000.0,
               0.0,
               124425.0,
+              90375.0,
+              150000.0,
+              27075.0,
               0.0
             ],
-            "avoided_household_hours": 267450.0
+            "avoided_household_hours": 364800.0
           },
           "n_centro_sur": {
             "baseline_affected_households_equivalent": [
@@ -22342,7 +22402,7 @@
           "No actual distribution feeder switching is modelled"
         ]
       },
-      "estimated_households_reconnected": 66862.5,
+      "estimated_households_reconnected": 91200.0,
       "estimated_households_reconnected_definition": "Event-window average residential-equivalent load restored; not unique customers"
     },
     "validation": {
@@ -22460,7 +22520,7 @@
         "tool": "load_scenario",
         "label": "chile-sen-5node-demo",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.626495Z",
+        "timestamp_utc": "2026-10-24T17:14:43.165446Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22468,7 +22528,7 @@
         "tool": "inspect_evidence",
         "label": "sources_and_modification_menu",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.626704Z",
+        "timestamp_utc": "2026-10-24T17:14:43.165627Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22476,7 +22536,7 @@
         "tool": "run_optimisation",
         "label": "baseline_normal",
         "status": "optimal",
-        "timestamp_utc": "2026-10-24T16:57:05.630577Z",
+        "timestamp_utc": "2026-10-24T17:14:43.170188Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22484,7 +22544,7 @@
         "tool": "validate_candidate",
         "label": "baseline_normal",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.630583Z",
+        "timestamp_utc": "2026-10-24T17:14:43.170195Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22492,7 +22552,7 @@
         "tool": "run_optimisation",
         "label": "north_bess_normal",
         "status": "optimal",
-        "timestamp_utc": "2026-10-24T16:57:05.634457Z",
+        "timestamp_utc": "2026-10-24T17:14:43.174470Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22500,7 +22560,7 @@
         "tool": "validate_candidate",
         "label": "north_bess_normal",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.634463Z",
+        "timestamp_utc": "2026-10-24T17:14:43.174476Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22508,7 +22568,7 @@
         "tool": "run_optimisation",
         "label": "south_bess_normal",
         "status": "optimal",
-        "timestamp_utc": "2026-10-24T16:57:05.638226Z",
+        "timestamp_utc": "2026-10-24T17:14:43.178866Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22516,7 +22576,7 @@
         "tool": "validate_candidate",
         "label": "south_bess_normal",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.638230Z",
+        "timestamp_utc": "2026-10-24T17:14:43.178873Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22524,7 +22584,7 @@
         "tool": "run_optimisation",
         "label": "uprate_l2_normal",
         "status": "optimal",
-        "timestamp_utc": "2026-10-24T16:57:05.641677Z",
+        "timestamp_utc": "2026-10-24T17:14:43.182998Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22532,7 +22592,7 @@
         "tool": "validate_candidate",
         "label": "uprate_l2_normal",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.641686Z",
+        "timestamp_utc": "2026-10-24T17:14:43.183002Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22540,7 +22600,7 @@
         "tool": "run_optimisation",
         "label": "crisis_strict_zero_shedding",
         "status": "infeasible",
-        "timestamp_utc": "2026-10-24T16:57:05.645273Z",
+        "timestamp_utc": "2026-10-24T17:14:43.187051Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22548,7 +22608,7 @@
         "tool": "validate_candidate",
         "label": "crisis_strict_zero_shedding",
         "status": "failed",
-        "timestamp_utc": "2026-10-24T16:57:05.645278Z",
+        "timestamp_utc": "2026-10-24T17:14:43.187063Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22556,7 +22616,7 @@
         "tool": "run_optimisation",
         "label": "baseline_crisis",
         "status": "optimal",
-        "timestamp_utc": "2026-10-24T16:57:05.652731Z",
+        "timestamp_utc": "2026-10-24T17:14:43.196493Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22564,7 +22624,7 @@
         "tool": "validate_candidate",
         "label": "baseline_crisis",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.652739Z",
+        "timestamp_utc": "2026-10-24T17:14:43.196505Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22572,7 +22632,7 @@
         "tool": "run_optimisation",
         "label": "north_bess_crisis",
         "status": "optimal",
-        "timestamp_utc": "2026-10-24T16:57:05.662973Z",
+        "timestamp_utc": "2026-10-24T17:14:43.207059Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22580,7 +22640,7 @@
         "tool": "validate_candidate",
         "label": "north_bess_crisis",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.662982Z",
+        "timestamp_utc": "2026-10-24T17:14:43.207068Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22588,7 +22648,7 @@
         "tool": "run_optimisation",
         "label": "south_bess_crisis",
         "status": "optimal",
-        "timestamp_utc": "2026-10-24T16:57:05.674151Z",
+        "timestamp_utc": "2026-10-24T17:14:43.217139Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22596,7 +22656,7 @@
         "tool": "validate_candidate",
         "label": "south_bess_crisis",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.674162Z",
+        "timestamp_utc": "2026-10-24T17:14:43.217147Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22604,7 +22664,7 @@
         "tool": "run_optimisation",
         "label": "uprate_l2_crisis",
         "status": "optimal",
-        "timestamp_utc": "2026-10-24T16:57:05.683013Z",
+        "timestamp_utc": "2026-10-24T17:14:43.226950Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22612,7 +22672,7 @@
         "tool": "validate_candidate",
         "label": "uprate_l2_crisis",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.683022Z",
+        "timestamp_utc": "2026-10-24T17:14:43.226960Z",
         "driver": "deterministic_backend"
       },
       {
@@ -22620,7 +22680,7 @@
         "tool": "compare_results",
         "label": "normal_and_crisis",
         "status": "success",
-        "timestamp_utc": "2026-10-24T16:57:05.683094Z",
+        "timestamp_utc": "2026-10-24T17:14:43.227030Z",
         "driver": "deterministic_backend"
       }
     ],

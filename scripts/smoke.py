@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+from pathlib import Path
 import time
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -14,6 +15,9 @@ def main():
     parser.add_argument("--base-url", default="http://127.0.0.1:8000")
     parser.add_argument("--mode", choices=("replay", "live", "deterministic"), default="replay")
     parser.add_argument("--scenario", default="chile-sen-5node-demo")
+    parser.add_argument(
+        "--report-dir", type=Path, help="Save the actual downloaded, approved simulation reports"
+    )
     args = parser.parse_args()
     token = os.getenv("GRIDPILOT_API_TOKEN", "")
 
@@ -98,6 +102,8 @@ def main():
         )
     for attempt in range(2):
         body = dict(scenario_id=args.scenario, execution_mode=args.mode)
+        if args.mode == "live" and selected["schema_version"] == "2.0.0":
+            body["settings"] = {"allow_cached_fallback": False}
         key = str(uuid4())
         doc = request("/api/agent/run", body, {"Idempotency-Key": key})
         assert request("/api/agent/run", body, {"Idempotency-Key": key})["run_id"] == doc["run_id"]
@@ -109,8 +115,12 @@ def main():
             doc = request("/api/agent/runs/" + doc["run_id"])
         if doc["status"] != "completed" or not doc["validation"]["passed"]:
             raise SystemExit("Investigation failed: " + json.dumps(doc["error"]))
-        if args.mode == "replay" and doc["provenance"]["live_gemini"]:
-            raise SystemExit("Replay mislabeled as live")
+        if doc["execution_mode"] != args.mode or doc.get("fallback"):
+            raise SystemExit(
+                "Requested execution mode was replaced; this does not pass the demo gate"
+            )
+        if bool(doc["provenance"]["live_gemini"]) != (args.mode == "live"):
+            raise SystemExit("Model provenance does not match the requested execution mode")
         route = "/api/agent/runs/" + doc["run_id"]
         decision = request(
             route + "/decision",
@@ -123,12 +133,20 @@ def main():
         )
         report = request(route + "/report")
         assert decision["approval_status"] == report["approval_status"] == "approved"
+        assert (
+            report["run_id"] == doc["run_id"] and report["decision"]["scope"] == "simulation_only"
+        )
+        if args.report_dir:
+            args.report_dir.mkdir(parents=True, exist_ok=True)
+            (args.report_dir / f"{args.mode}-{doc['run_id']}.json").write_text(
+                json.dumps(report, indent=2) + "\n"
+            )
         print(
             json.dumps(
                 dict(
                     attempt=attempt + 1,
                     run_id=doc["run_id"],
-                    execution_mode=args.mode,
+                    execution_mode=doc["execution_mode"],
                     validation_passed=True,
                     comparison={
                         k: doc["comparison"].get(k)

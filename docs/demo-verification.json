@@ -1,0 +1,73 @@
+{
+  "verified_on": "2026-10-24",
+  "frontend_commit": "d481a6a",
+  "agent_commit": "bc1d3d4",
+  "numerical_commit": "c9306bb",
+  "backend_runtime_only_environment": true,
+  "adapters": {
+    "agent": true,
+    "solver": true,
+    "validator": true
+  },
+  "gemini_credentials_configured": false,
+  "real_google_call_observed": false,
+  "strict_live_start_http_status": 503,
+  "strict_live_start_error": {
+    "code": "http_503",
+    "message": "Live mode requires Gemini credentials and installed agent/solver/validator; no live execution was started"
+  },
+  "allowed_fallback": {
+    "run_id": "2670957f-0f9f-4310-8d8f-adb570d5f268",
+    "requested_execution_mode": "live",
+    "execution_mode": "replay",
+    "reason": "gemini_credentials_missing",
+    "live_gemini": false
+  },
+  "approved_backend_http_runs": [
+    {
+      "run_id": "352a7160-e3c8-40e2-bb8f-8ca882158ce7",
+      "execution_mode": "deterministic",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "4a4d7818d829b4d83055aefa2e1fcb0aed34a7f210d1e64d0d14a01b1b10f147",
+      "local_report": "var/demo-verification/deterministic-352a7160-e3c8-40e2-bb8f-8ca882158ce7.json"
+    },
+    {
+      "run_id": "b4805792-70b9-4d0d-8883-5c0e459a0146",
+      "execution_mode": "deterministic",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "56794a7e4222a6c84f662e9522af715ebbd7311496704c026b142ef6ae2a452e",
+      "local_report": "var/demo-verification/deterministic-b4805792-70b9-4d0d-8883-5c0e459a0146.json"
+    },
+    {
+      "run_id": "37713ec3-4151-4d7c-bad9-680f2f68842f",
+      "execution_mode": "replay",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "03885a3868f07bcd1e011e260680db43c676d58f9e71518c2d74aa73f2c46490",
+      "local_report": "var/demo-verification/replay-37713ec3-4151-4d7c-bad9-680f2f68842f.json"
+    },
+    {
+      "run_id": "4c01be49-a846-4e2e-ab1f-221fdb03e7b4",
+      "execution_mode": "replay",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "efe1e503f2581c0d0ffee7996097dbb15cdcb7435b243aa59d971cabd29fe240",
+      "local_report": "var/demo-verification/replay-4c01be49-a846-4e2e-ab1f-221fdb03e7b4.json"
+    }
+  ],
+  "frontend_standard_build": {
+    "passed": false,
+    "error": "src/api/client.ts(6,30): TS2339 ImportMeta.env"
+  },
+  "frontend_build_with_external_vite_types": {
+    "passed": true,
+    "owner_source_edited": false
+  },
+  "browser_verification": {
+    "completed": false,
+    "reason": "Browser authorization denied localhost access; no workaround attempted"
+  },
+  "integrated_live_demo_ready": false
+}

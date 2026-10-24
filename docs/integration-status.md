@@ -1,5 +1,10 @@
 # Integration status
 
+## Demo integration audit, 24 October 2026
+
+All three teammate sources are now merged on `feature/data-backend`: frontend `d481a6a`, agent `bc1d3d4`, numerical `c9306bb`. See [the precise demo handoff](demo-integration-handoff.md) for current blockers and owner-specific changes. Real numerical/backend HTTP execution, persisted approval and report download pass in deterministic/replay modes. The current frontend is fixture-based and its standard build fails; the agent emits legacy results and has an offline Google-attestation bug. Missing Gemini credentials prevent a real live provider test. The following native/v1 notes are contract history, not a claim that the integrated UI works.
+
+
 ## Current native v2 path
 
 Upstream README commit `1756d68` is incorporated into `feature/data-backend`; no merge or push into `main` was performed. The current default is `chile-sen-5node-demo`, preserving Person 3's native scenario and output structures, with candidate modifications, planned/sudden outages, ramp validation and crisis comparisons exposed through FastAPI. `docs/contracts-v2.md` is the current handoff guide. The backend additionally checks exact asset IDs, requested inputs and independent no-hindsight prefix reproduction. Five-node normal/crisis workflows, residential equivalences, RIO-style reports, governance and explicit cached fallback are implemented.

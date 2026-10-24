@@ -198,7 +198,8 @@ def test_adapter_execution(settings, adapter, status, code):
             assert not r.json()["validation"]["passed"]
 
 
-def test_live_adapter_boundary_and_external_rejection(settings):
+def test_live_adapter_boundary_and_external_rejection(settings, monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "unit-test-not-a-provider-key")
     settings.agent_callable = "tests.adapters:investigate"
     settings.solve_callable = "tests.adapters:solve"
     settings.validate_callable = "tests.adapters:reject"
@@ -216,7 +217,8 @@ def test_synthetic_fallback(client):
     assert doc["historical_evidence"] is None and doc["provenance"]["mode"] == "synthetic"
 
 
-def test_cached_trace_cannot_be_presented_as_live(settings):
+def test_cached_trace_cannot_be_presented_as_live(settings, monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "unit-test-not-a-provider-key")
     settings.agent_callable = "tests.adapters:unattested"
     settings.solve_callable = "tests.adapters:solve"
     settings.validate_callable = "tests.adapters:validate"

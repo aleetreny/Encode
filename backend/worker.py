@@ -8,6 +8,7 @@ import sys
 
 from backend.audit import audit
 from backend.config import Settings
+from backend.live import MissingGeminiCredentials, gemini_configured, verified_provider_metadata
 from backend.models import AgentResult, Options, Scenario, Solution, Validation, wire
 from backend.runtime import _active_evidence, _active_scenario, invoke
 
@@ -89,6 +90,11 @@ async def execute(payload, settings=None):
             "replay_sha256": fingerprint(replay),
         }
     else:
+        if not gemini_configured():
+            return failure(
+                "gemini_credentials_missing",
+                "Gemini credentials are not configured; no provider call was made",
+            )
         result = AgentResult.model_validate(
             await invoke(settings.agent_callable, scenario.scenario_id, wire(options))
         )
@@ -102,7 +108,9 @@ async def execute(payload, settings=None):
         }
         successful = {event.tool for event in result.tool_trace if event.status == "success"}
         if (
-            not result.model_execution
+            not verified_provider_metadata(
+                wire(result.model_execution) if result.model_execution else None
+            )
             or not required.issubset(successful)
             or any(
                 event.timestamp_utc is None or event.execution_mode == "replay"
@@ -233,6 +241,14 @@ async def main():
         with contextlib.redirect_stdout(sys.stderr):
             result = await execute(payload)
         envelope = {"ok": True, "result": result}
+    except MissingGeminiCredentials:
+        envelope = {
+            "ok": False,
+            "error": {
+                "code": "gemini_credentials_missing",
+                "message": "Gemini credentials are not configured; no provider call was made.",
+            },
+        }
     except (ImportError, AttributeError):
         envelope = {
             "ok": False,

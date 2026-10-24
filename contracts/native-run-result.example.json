@@ -8,6 +8,7 @@
           "charge_efficiency": 0.95,
           "discharge_efficiency": 0.95,
           "energy_capacity_mwh": 60.0,
+          "final_soc_mwh": null,
           "id": "b_centro",
           "initial_soc_mwh": 30.0,
           "min_soc_mwh": 0.0,
@@ -218,6 +219,7 @@
       },
       "demand_mwh": 34279.4,
       "dispatchable_mwh": 24548.257894,
+      "emergency_runback_mwh": 0.0,
       "line_hours_at_limit": {
         "L1": 0.0,
         "L2": 8.0,
@@ -240,6 +242,7 @@
         "battery_throughput_cost_usd": 60.078947,
         "curtailment_penalty_usd": 0.0,
         "dispatchable_cost_usd": 1665362.99993,
+        "emergency_runback_penalty_usd": 0.0,
         "transmission_tiebreak_usd": 193.826,
         "unserved_penalty_usd": 0.0
       },
@@ -251,8 +254,9 @@
     },
     "scenario_id": "chile-sen-5node-demo",
     "solver": {
+      "method": "LP",
       "name": "HiGHS",
-      "solve_time_s": 0.0027,
+      "solve_time_s": 0.0031,
       "solves": 1,
       "version": "1.15.1"
     },
@@ -1222,6 +1226,7 @@
           "charge_efficiency": 0.95,
           "discharge_efficiency": 0.95,
           "energy_capacity_mwh": 60.0,
+          "final_soc_mwh": null,
           "id": "b_centro",
           "initial_soc_mwh": 30.0,
           "min_soc_mwh": 0.0,
@@ -1233,6 +1238,7 @@
           "charge_efficiency": 0.95,
           "discharge_efficiency": 0.95,
           "energy_capacity_mwh": 600.0,
+          "final_soc_mwh": null,
           "id": "north_bess_bat1",
           "initial_soc_mwh": 300.0,
           "min_soc_mwh": 0.0,
@@ -1459,6 +1465,7 @@
       },
       "demand_mwh": 34279.4,
       "dispatchable_mwh": 23974.39125,
+      "emergency_runback_mwh": 0.0,
       "line_hours_at_limit": {
         "L1": 0.0,
         "L2": 8.0,
@@ -1489,6 +1496,7 @@
         "battery_throughput_cost_usd": 623.143848,
         "curtailment_penalty_usd": 0.0,
         "dispatchable_cost_usd": 1591133.16875,
+        "emergency_runback_penalty_usd": 0.0,
         "transmission_tiebreak_usd": 205.226,
         "unserved_penalty_usd": 0.0
       },
@@ -1500,8 +1508,9 @@
     },
     "scenario_id": "chile-sen-5node-demo",
     "solver": {
+      "method": "LP",
       "name": "HiGHS",
-      "solve_time_s": 0.0026,
+      "solve_time_s": 0.0029,
       "solves": 1,
       "version": "1.15.1"
     },
@@ -2979,6 +2988,7 @@
               "charge_efficiency": 0.95,
               "discharge_efficiency": 0.95,
               "energy_capacity_mwh": 60.0,
+              "final_soc_mwh": null,
               "id": "b_centro",
               "initial_soc_mwh": 30.0,
               "min_soc_mwh": 0.0,
@@ -2990,6 +3000,7 @@
               "charge_efficiency": 0.95,
               "discharge_efficiency": 0.95,
               "energy_capacity_mwh": 600.0,
+              "final_soc_mwh": null,
               "id": "north_bess_bat1",
               "initial_soc_mwh": 300.0,
               "min_soc_mwh": 0.0,
@@ -3216,6 +3227,7 @@
           },
           "demand_mwh": 34279.4,
           "dispatchable_mwh": 23974.39125,
+          "emergency_runback_mwh": 0.0,
           "line_hours_at_limit": {
             "L1": 0.0,
             "L2": 8.0,
@@ -3246,6 +3258,7 @@
             "battery_throughput_cost_usd": 623.143848,
             "curtailment_penalty_usd": 0.0,
             "dispatchable_cost_usd": 1591133.16875,
+            "emergency_runback_penalty_usd": 0.0,
             "transmission_tiebreak_usd": 205.226,
             "unserved_penalty_usd": 0.0
           },
@@ -3257,8 +3270,9 @@
         },
         "scenario_id": "chile-sen-5node-demo",
         "solver": {
+          "method": "LP",
           "name": "HiGHS",
-          "solve_time_s": 0.0026,
+          "solve_time_s": 0.0029,
           "solves": 1,
           "version": "1.15.1"
         },
@@ -4693,6 +4707,7 @@
               "charge_efficiency": 0.95,
               "discharge_efficiency": 0.95,
               "energy_capacity_mwh": 60.0,
+              "final_soc_mwh": null,
               "id": "b_centro",
               "initial_soc_mwh": 30.0,
               "min_soc_mwh": 0.0,
@@ -4704,6 +4719,7 @@
               "charge_efficiency": 0.95,
               "discharge_efficiency": 0.95,
               "energy_capacity_mwh": 600.0,
+              "final_soc_mwh": null,
               "id": "south_bess_bat1",
               "initial_soc_mwh": 300.0,
               "min_soc_mwh": 0.0,
@@ -4887,6 +4903,7 @@
           },
           "demand_mwh": 34279.4,
           "dispatchable_mwh": 24565.294737,
+          "emergency_runback_mwh": 0.0,
           "line_hours_at_limit": {
             "L1": 0.0,
             "L2": 8.0,
@@ -4917,6 +4934,7 @@
             "battery_throughput_cost_usd": 226.297369,
             "curtailment_penalty_usd": 0.0,
             "dispatchable_cost_usd": 1647269.000015,
+            "emergency_runback_penalty_usd": 0.0,
             "transmission_tiebreak_usd": 193.362105,
             "unserved_penalty_usd": 0.0
           },
@@ -4928,8 +4946,9 @@
         },
         "scenario_id": "chile-sen-5node-demo",
         "solver": {
+          "method": "LP",
           "name": "HiGHS",
-          "solve_time_s": 0.0026,
+          "solve_time_s": 0.003,
           "solves": 1,
           "version": "1.15.1"
         },
@@ -6405,6 +6424,7 @@
               "charge_efficiency": 0.95,
               "discharge_efficiency": 0.95,
               "energy_capacity_mwh": 60.0,
+              "final_soc_mwh": null,
               "id": "b_centro",
               "initial_soc_mwh": 30.0,
               "min_soc_mwh": 0.0,
@@ -6631,6 +6651,7 @@
           },
           "demand_mwh": 34279.4,
           "dispatchable_mwh": 23560.427447,
+          "emergency_runback_mwh": 0.0,
           "line_hours_at_limit": {
             "L1": 0.0,
             "L2": 4.0,
@@ -6660,6 +6681,7 @@
             "battery_throughput_cost_usd": 110.515224,
             "curtailment_penalty_usd": 0.0,
             "dispatchable_cost_usd": 1588573.909965,
+            "emergency_runback_penalty_usd": 0.0,
             "transmission_tiebreak_usd": 209.627485,
             "unserved_penalty_usd": 0.0
           },
@@ -6671,8 +6693,9 @@
         },
         "scenario_id": "chile-sen-5node-demo",
         "solver": {
+          "method": "LP",
           "name": "HiGHS",
-          "solve_time_s": 0.0023,
+          "solve_time_s": 0.0028,
           "solves": 1,
           "version": "1.15.1"
         },
@@ -8062,6 +8085,7 @@
             "charge_efficiency": 0.95,
             "discharge_efficiency": 0.95,
             "energy_capacity_mwh": 60.0,
+            "final_soc_mwh": null,
             "id": "b_centro",
             "initial_soc_mwh": 30.0,
             "min_soc_mwh": 0.0,
@@ -8128,8 +8152,7 @@
           "hours": [
             16,
             17,
-            18,
-            19
+            18
           ],
           "id": "b_centro",
           "type": "battery_full"
@@ -8306,6 +8329,7 @@
         },
         "demand_mwh": 34279.4,
         "dispatchable_mwh": 22626.178947,
+        "emergency_runback_mwh": 0.0,
         "line_hours_at_limit": {
           "L1": 0.0,
           "L2": 8.0,
@@ -8328,6 +8352,7 @@
           "battery_throughput_cost_usd": 58.576974,
           "curtailment_penalty_usd": 0.0,
           "dispatchable_cost_usd": 1556802.999965,
+          "emergency_runback_penalty_usd": 0.0,
           "transmission_tiebreak_usd": 193.826,
           "unserved_penalty_usd": 19219250.0
         },
@@ -8339,8 +8364,9 @@
       },
       "scenario_id": "chile-sen-5node-demo",
       "solver": {
+        "method": "LP",
         "name": "HiGHS",
-        "solve_time_s": 0.004,
+        "solve_time_s": 0.0047,
         "solves": 2,
         "version": "1.15.1"
       },
@@ -8632,10 +8658,10 @@
             0.0,
             0.0,
             0.0,
-            0.0,
+            25.575,
             30.0,
             0.0,
-            25.575,
+            0.0,
             0.0
           ]
         },
@@ -8661,9 +8687,9 @@
             60.0,
             60.0,
             60.0,
-            60.0,
-            28.421053,
-            28.421053,
+            33.078947,
+            1.5,
+            1.5,
             1.5,
             30.0
           ]
@@ -9137,10 +9163,10 @@
             0.0,
             0.0,
             242.2,
-            450.1,
+            424.525,
             532.0,
             552.6,
-            145.025,
+            170.6,
             0.0
           ],
           "n_centro_sur": [
@@ -9311,6 +9337,7 @@
             "charge_efficiency": 0.95,
             "discharge_efficiency": 0.95,
             "energy_capacity_mwh": 60.0,
+            "final_soc_mwh": null,
             "id": "b_centro",
             "initial_soc_mwh": 30.0,
             "min_soc_mwh": 0.0,
@@ -9322,6 +9349,7 @@
             "charge_efficiency": 0.95,
             "discharge_efficiency": 0.95,
             "energy_capacity_mwh": 600.0,
+            "final_soc_mwh": null,
             "id": "north_bess_bat1",
             "initial_soc_mwh": 300.0,
             "min_soc_mwh": 0.0,
@@ -9396,7 +9424,8 @@
           "hours": [
             15,
             16,
-            17
+            17,
+            18
           ],
           "id": "north_bess_bat1",
           "type": "battery_full"
@@ -9424,8 +9453,8 @@
             12,
             13,
             14,
-            18,
-            22,
+            19,
+            21,
             23
           ],
           "id": "north_bess_bat1",
@@ -9594,6 +9623,7 @@
         },
         "demand_mwh": 34279.4,
         "dispatchable_mwh": 22461.89125,
+        "emergency_runback_mwh": 0.0,
         "line_hours_at_limit": {
           "L1": 0.0,
           "L2": 8.0,
@@ -9624,6 +9654,7 @@
           "battery_throughput_cost_usd": 794.368849,
           "curtailment_penalty_usd": 0.0,
           "dispatchable_cost_usd": 1552445.66875,
+          "emergency_runback_penalty_usd": 0.0,
           "transmission_tiebreak_usd": 204.9775,
           "unserved_penalty_usd": 15300500.0
         },
@@ -9635,8 +9666,9 @@
       },
       "scenario_id": "chile-sen-5node-demo",
       "solver": {
+        "method": "LP",
         "name": "HiGHS",
-        "solve_time_s": 0.0041,
+        "solve_time_s": 0.0059,
         "solves": 2,
         "version": "1.15.1"
       },
@@ -9953,11 +9985,11 @@
             0.0,
             0.0,
             0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
             27.075,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
             0.0
           ],
           "north_bess_bat1": [
@@ -9979,11 +10011,11 @@
             0.0,
             0.0,
             0.0,
+            0.0,
             150.0,
             120.375,
-            0.0,
-            0.0,
             150.0,
+            0.0,
             0.0
           ]
         },
@@ -10008,10 +10040,10 @@
             30.0,
             30.0,
             30.0,
-            1.5,
-            1.5,
-            1.5,
-            1.5,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
             1.5,
             30.0
           ],
@@ -10035,10 +10067,10 @@
             600.0,
             600.0,
             600.0,
+            600.0,
             442.105263,
             315.394737,
-            315.394737,
-            315.394737,
+            157.5,
             157.5,
             300.0
           ]
@@ -10405,11 +10437,11 @@
             234.6,
             291.8,
             277.4,
-            367.5,
-            289.275,
-            169.5,
-            169.8,
-            319.9,
+            217.5,
+            318.9,
+            289.875,
+            319.8,
+            169.9,
             20.0
           ],
           "L2": [
@@ -10431,11 +10463,11 @@
             400.0,
             400.0,
             322.2,
-            353.1,
-            255.675,
-            137.0,
-            140.7,
-            295.9,
+            203.1,
+            285.3,
+            257.375,
+            290.7,
+            145.9,
             -2.2
           ],
           "L3": [
@@ -10511,11 +10543,11 @@
             0.0,
             0.0,
             0.0,
-            65.125,
-            329.725,
-            562.0,
-            552.6,
-            20.6,
+            242.2,
+            300.1,
+            441.625,
+            402.6,
+            143.525,
             0.0
           ],
           "n_centro_sur": [
@@ -10715,8 +10747,7 @@
                 "hours": [
                   16,
                   17,
-                  18,
-                  19
+                  18
                 ],
                 "id": "b_centro",
                 "type": "battery_full"
@@ -10908,7 +10939,8 @@
                 "hours": [
                   15,
                   16,
-                  17
+                  17,
+                  18
                 ],
                 "id": "north_bess_bat1",
                 "type": "battery_full"
@@ -10936,8 +10968,8 @@
                   12,
                   13,
                   14,
-                  18,
-                  22,
+                  19,
+                  21,
                   23
                 ],
                 "id": "north_bess_bat1",
@@ -11603,6 +11635,7 @@
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95,
                   "energy_capacity_mwh": 60.0,
+                  "final_soc_mwh": null,
                   "id": "b_centro",
                   "initial_soc_mwh": 30.0,
                   "min_soc_mwh": 0.0,
@@ -11614,6 +11647,7 @@
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95,
                   "energy_capacity_mwh": 600.0,
+                  "final_soc_mwh": null,
                   "id": "north_bess_bat1",
                   "initial_soc_mwh": 300.0,
                   "min_soc_mwh": 0.0,
@@ -11840,6 +11874,7 @@
               },
               "demand_mwh": 34279.4,
               "dispatchable_mwh": 23974.39125,
+              "emergency_runback_mwh": 0.0,
               "line_hours_at_limit": {
                 "L1": 0.0,
                 "L2": 8.0,
@@ -11870,6 +11905,7 @@
                 "battery_throughput_cost_usd": 623.143848,
                 "curtailment_penalty_usd": 0.0,
                 "dispatchable_cost_usd": 1591133.16875,
+                "emergency_runback_penalty_usd": 0.0,
                 "transmission_tiebreak_usd": 205.226,
                 "unserved_penalty_usd": 0.0
               },
@@ -11881,8 +11917,9 @@
             },
             "scenario_id": "chile-sen-5node-demo",
             "solver": {
+              "method": "LP",
               "name": "HiGHS",
-              "solve_time_s": 0.0026,
+              "solve_time_s": 0.0029,
               "solves": 1,
               "version": "1.15.1"
             },
@@ -12932,6 +12969,7 @@
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95,
                 "energy_capacity_mwh": 60.0,
+                "final_soc_mwh": null,
                 "id": "b_centro",
                 "initial_soc_mwh": 30.0,
                 "min_soc_mwh": 0.0,
@@ -12943,6 +12981,7 @@
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95,
                 "energy_capacity_mwh": 600.0,
+                "final_soc_mwh": null,
                 "id": "north_bess_bat1",
                 "initial_soc_mwh": 300.0,
                 "min_soc_mwh": 0.0,
@@ -13017,7 +13056,8 @@
               "hours": [
                 15,
                 16,
-                17
+                17,
+                18
               ],
               "id": "north_bess_bat1",
               "type": "battery_full"
@@ -13045,8 +13085,8 @@
                 12,
                 13,
                 14,
-                18,
-                22,
+                19,
+                21,
                 23
               ],
               "id": "north_bess_bat1",
@@ -13215,6 +13255,7 @@
             },
             "demand_mwh": 34279.4,
             "dispatchable_mwh": 22461.89125,
+            "emergency_runback_mwh": 0.0,
             "line_hours_at_limit": {
               "L1": 0.0,
               "L2": 8.0,
@@ -13245,6 +13286,7 @@
               "battery_throughput_cost_usd": 794.368849,
               "curtailment_penalty_usd": 0.0,
               "dispatchable_cost_usd": 1552445.66875,
+              "emergency_runback_penalty_usd": 0.0,
               "transmission_tiebreak_usd": 204.9775,
               "unserved_penalty_usd": 15300500.0
             },
@@ -13256,8 +13298,9 @@
           },
           "scenario_id": "chile-sen-5node-demo",
           "solver": {
+            "method": "LP",
             "name": "HiGHS",
-            "solve_time_s": 0.0041,
+            "solve_time_s": 0.0059,
             "solves": 2,
             "version": "1.15.1"
           },
@@ -13574,11 +13617,11 @@
                 0.0,
                 0.0,
                 0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
                 27.075,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
                 0.0
               ],
               "north_bess_bat1": [
@@ -13600,11 +13643,11 @@
                 0.0,
                 0.0,
                 0.0,
+                0.0,
                 150.0,
                 120.375,
-                0.0,
-                0.0,
                 150.0,
+                0.0,
                 0.0
               ]
             },
@@ -13629,10 +13672,10 @@
                 30.0,
                 30.0,
                 30.0,
-                1.5,
-                1.5,
-                1.5,
-                1.5,
+                30.0,
+                30.0,
+                30.0,
+                30.0,
                 1.5,
                 30.0
               ],
@@ -13656,10 +13699,10 @@
                 600.0,
                 600.0,
                 600.0,
+                600.0,
                 442.105263,
                 315.394737,
-                315.394737,
-                315.394737,
+                157.5,
                 157.5,
                 300.0
               ]
@@ -14026,11 +14069,11 @@
                 234.6,
                 291.8,
                 277.4,
-                367.5,
-                289.275,
-                169.5,
-                169.8,
-                319.9,
+                217.5,
+                318.9,
+                289.875,
+                319.8,
+                169.9,
                 20.0
               ],
               "L2": [
@@ -14052,11 +14095,11 @@
                 400.0,
                 400.0,
                 322.2,
-                353.1,
-                255.675,
-                137.0,
-                140.7,
-                295.9,
+                203.1,
+                285.3,
+                257.375,
+                290.7,
+                145.9,
                 -2.2
               ],
               "L3": [
@@ -14132,11 +14175,11 @@
                 0.0,
                 0.0,
                 0.0,
-                65.125,
-                329.725,
-                562.0,
-                552.6,
-                20.6,
+                242.2,
+                300.1,
+                441.625,
+                402.6,
+                143.525,
                 0.0
               ],
               "n_centro_sur": [
@@ -14336,8 +14379,7 @@
                 "hours": [
                   16,
                   17,
-                  18,
-                  19
+                  18
                 ],
                 "id": "b_centro",
                 "type": "battery_full"
@@ -14527,7 +14569,7 @@
               {
                 "detail": "charging or discharging at 150 MW limit",
                 "hours": [
-                  21,
+                  20,
                   23
                 ],
                 "id": "south_bess_bat1",
@@ -15151,6 +15193,7 @@
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95,
                   "energy_capacity_mwh": 60.0,
+                  "final_soc_mwh": null,
                   "id": "b_centro",
                   "initial_soc_mwh": 30.0,
                   "min_soc_mwh": 0.0,
@@ -15162,6 +15205,7 @@
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95,
                   "energy_capacity_mwh": 600.0,
+                  "final_soc_mwh": null,
                   "id": "south_bess_bat1",
                   "initial_soc_mwh": 300.0,
                   "min_soc_mwh": 0.0,
@@ -15345,6 +15389,7 @@
               },
               "demand_mwh": 34279.4,
               "dispatchable_mwh": 24565.294737,
+              "emergency_runback_mwh": 0.0,
               "line_hours_at_limit": {
                 "L1": 0.0,
                 "L2": 8.0,
@@ -15375,6 +15420,7 @@
                 "battery_throughput_cost_usd": 226.297369,
                 "curtailment_penalty_usd": 0.0,
                 "dispatchable_cost_usd": 1647269.000015,
+                "emergency_runback_penalty_usd": 0.0,
                 "transmission_tiebreak_usd": 193.362105,
                 "unserved_penalty_usd": 0.0
               },
@@ -15386,8 +15432,9 @@
             },
             "scenario_id": "chile-sen-5node-demo",
             "solver": {
+              "method": "LP",
               "name": "HiGHS",
-              "solve_time_s": 0.0026,
+              "solve_time_s": 0.003,
               "solves": 1,
               "version": "1.15.1"
             },
@@ -16437,6 +16484,7 @@
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95,
                 "energy_capacity_mwh": 60.0,
+                "final_soc_mwh": null,
                 "id": "b_centro",
                 "initial_soc_mwh": 30.0,
                 "min_soc_mwh": 0.0,
@@ -16448,6 +16496,7 @@
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95,
                 "energy_capacity_mwh": 600.0,
+                "final_soc_mwh": null,
                 "id": "south_bess_bat1",
                 "initial_soc_mwh": 300.0,
                 "min_soc_mwh": 0.0,
@@ -16520,7 +16569,7 @@
             {
               "detail": "charging or discharging at 150 MW limit",
               "hours": [
-                21,
+                20,
                 23
               ],
               "id": "south_bess_bat1",
@@ -16690,6 +16739,7 @@
             },
             "demand_mwh": 34279.4,
             "dispatchable_mwh": 22895.494737,
+            "emergency_runback_mwh": 0.0,
             "line_hours_at_limit": {
               "L1": 0.0,
               "L2": 8.0,
@@ -16720,6 +16770,7 @@
               "battery_throughput_cost_usd": 314.763619,
               "curtailment_penalty_usd": 0.0,
               "dispatchable_cost_usd": 1593638.000015,
+              "emergency_runback_penalty_usd": 0.0,
               "transmission_tiebreak_usd": 194.373255,
               "unserved_penalty_usd": 16788675.0
             },
@@ -16731,8 +16782,9 @@
           },
           "scenario_id": "chile-sen-5node-demo",
           "solver": {
+            "method": "LP",
             "name": "HiGHS",
-            "solve_time_s": 0.005,
+            "solve_time_s": 0.0051,
             "solves": 2,
             "version": "1.15.1"
           },
@@ -17049,8 +17101,8 @@
                 0.0,
                 0.0,
                 0.0,
-                0.0,
                 27.075,
+                0.0,
                 0.0,
                 0.0,
                 0.0,
@@ -17075,10 +17127,10 @@
                 0.0,
                 0.0,
                 0.0,
-                0.0,
                 121.5575,
                 0.0,
                 150.0,
+                0.0,
                 0.0,
                 0.0
               ]
@@ -17104,7 +17156,7 @@
                 30.0,
                 30.0,
                 30.0,
-                30.0,
+                1.5,
                 1.5,
                 1.5,
                 1.5,
@@ -17131,9 +17183,9 @@
                 343.885,
                 343.885,
                 443.35,
-                443.35,
                 315.394737,
                 315.394737,
+                157.5,
                 157.5,
                 157.5,
                 300.0
@@ -17553,10 +17605,10 @@
                 -225.2,
                 -217.8,
                 -97.7,
-                -171.3,
-                -249.0575,
-                -93.7,
-                -246.0,
+                -292.8575,
+                -127.5,
+                -243.7,
+                -96.0,
                 -134.5,
                 -33.8
               ],
@@ -17579,10 +17631,10 @@
                 -129.2,
                 -118.0,
                 0.0,
-                -87.0,
-                -188.0575,
-                -52.0,
-                -203.4,
+                -208.5575,
+                -66.5,
+                -202.0,
+                -53.4,
                 -70.5,
                 56.7
               ]
@@ -17607,10 +17659,10 @@
                 0.0,
                 0.0,
                 0.0,
-                242.2,
-                301.4675,
-                562.0,
-                402.6,
+                93.5675,
+                450.1,
+                412.0,
+                552.6,
                 170.6,
                 0.0
               ],
@@ -17811,8 +17863,7 @@
                 "hours": [
                   16,
                   17,
-                  18,
-                  19
+                  18
                 ],
                 "id": "b_centro",
                 "type": "battery_full"
@@ -18016,7 +18067,7 @@
                 "detail": "charging or discharging at 30 MW limit",
                 "hours": [
                   11,
-                  18,
+                  21,
                   23
                 ],
                 "id": "b_centro",
@@ -18681,6 +18732,7 @@
                   "charge_efficiency": 0.95,
                   "discharge_efficiency": 0.95,
                   "energy_capacity_mwh": 60.0,
+                  "final_soc_mwh": null,
                   "id": "b_centro",
                   "initial_soc_mwh": 30.0,
                   "min_soc_mwh": 0.0,
@@ -18907,6 +18959,7 @@
               },
               "demand_mwh": 34279.4,
               "dispatchable_mwh": 23560.427447,
+              "emergency_runback_mwh": 0.0,
               "line_hours_at_limit": {
                 "L1": 0.0,
                 "L2": 4.0,
@@ -18936,6 +18989,7 @@
                 "battery_throughput_cost_usd": 110.515224,
                 "curtailment_penalty_usd": 0.0,
                 "dispatchable_cost_usd": 1588573.909965,
+                "emergency_runback_penalty_usd": 0.0,
                 "transmission_tiebreak_usd": 209.627485,
                 "unserved_penalty_usd": 0.0
               },
@@ -18947,8 +19001,9 @@
             },
             "scenario_id": "chile-sen-5node-demo",
             "solver": {
+              "method": "LP",
               "name": "HiGHS",
-              "solve_time_s": 0.0023,
+              "solve_time_s": 0.0028,
               "solves": 1,
               "version": "1.15.1"
             },
@@ -19919,6 +19974,7 @@
                 "charge_efficiency": 0.95,
                 "discharge_efficiency": 0.95,
                 "energy_capacity_mwh": 60.0,
+                "final_soc_mwh": null,
                 "id": "b_centro",
                 "initial_soc_mwh": 30.0,
                 "min_soc_mwh": 0.0,
@@ -20005,7 +20061,7 @@
               "detail": "charging or discharging at 30 MW limit",
               "hours": [
                 11,
-                18,
+                21,
                 23
               ],
               "id": "b_centro",
@@ -20176,6 +20232,7 @@
             },
             "demand_mwh": 34279.4,
             "dispatchable_mwh": 21638.3485,
+            "emergency_runback_mwh": 0.0,
             "line_hours_at_limit": {
               "L1": 0.0,
               "L2": 4.0,
@@ -20205,6 +20262,7 @@
               "battery_throughput_cost_usd": 109.01325,
               "curtailment_penalty_usd": 0.0,
               "dispatchable_cost_usd": 1480013.91,
+              "emergency_runback_penalty_usd": 0.0,
               "transmission_tiebreak_usd": 209.627485,
               "unserved_penalty_usd": 19219250.0
             },
@@ -20216,8 +20274,9 @@
           },
           "scenario_id": "chile-sen-5node-demo",
           "solver": {
+            "method": "LP",
             "name": "HiGHS",
-            "solve_time_s": 0.0046,
+            "solve_time_s": 0.0048,
             "solves": 2,
             "version": "1.15.1"
           },
@@ -20508,10 +20567,10 @@
                 0.0,
                 0.0,
                 0.0,
-                30.0,
-                0.0,
                 25.575,
                 0.0,
+                0.0,
+                30.0,
                 0.0,
                 0.0
               ]
@@ -20537,9 +20596,9 @@
                 60.0,
                 60.0,
                 60.0,
-                28.421053,
-                28.421053,
-                1.5,
+                33.078947,
+                33.078947,
+                33.078947,
                 1.5,
                 1.5,
                 30.0
@@ -21013,10 +21072,10 @@
                 0.0,
                 0.0,
                 0.0,
-                212.2,
+                216.625,
                 450.1,
-                536.425,
-                552.6,
+                562.0,
+                522.6,
                 170.6,
                 0.0
               ],
@@ -21218,8 +21277,7 @@
             "hours": [
               16,
               17,
-              18,
-              19
+              18
             ],
             "id": "b_centro",
             "type": "battery_full"
@@ -21411,7 +21469,8 @@
             "hours": [
               15,
               16,
-              17
+              17,
+              18
             ],
             "id": "north_bess_bat1",
             "type": "battery_full"
@@ -21439,8 +21498,8 @@
               12,
               13,
               14,
-              18,
-              22,
+              19,
+              21,
               23
             ],
             "id": "north_bess_bat1",
@@ -21670,7 +21729,7 @@
       "reason": null,
       "unserved_reduction_mwh": 391.875
     },
-    "estimated_households_reconnected": 66862.5,
+    "estimated_households_reconnected": 91200.0,
     "estimated_households_reconnected_definition": "Event-window average residential-equivalent load restored; not unique customers",
     "event": {
       "from_hour": 18,
@@ -21689,8 +21748,8 @@
       }
     ],
     "household_impact": {
-      "average_households_reconnected_equivalent": 66862.5,
-      "avoided_household_hours": 267450.0,
+      "average_households_reconnected_equivalent": 91200.0,
+      "avoided_household_hours": 364800.0,
       "baseline_affected_households_equivalent_by_step": [
         0.0,
         0.0,
@@ -21711,15 +21770,15 @@
         0.0,
         0.0,
         242200.0,
-        450100.0,
+        424525.0,
         532000.0,
         552600.0,
-        145025.0,
+        170600.0,
         0.0
       ],
       "by_node": {
         "n_centro": {
-          "avoided_household_hours": 267450.0,
+          "avoided_household_hours": 364800.0,
           "baseline_affected_households_equivalent": [
             0.0,
             0.0,
@@ -21740,10 +21799,10 @@
             0.0,
             0.0,
             242200.0,
-            450100.0,
+            424525.0,
             532000.0,
             552600.0,
-            145025.0,
+            170600.0,
             0.0
           ],
           "candidate_affected_households_equivalent": [
@@ -21765,11 +21824,11 @@
             0.0,
             0.0,
             0.0,
-            65125.0,
-            329725.0,
-            562000.0,
-            552600.0,
-            20600.0,
+            242200.0,
+            300100.0,
+            441625.0,
+            402600.0,
+            143525.0,
             0.0
           ],
           "net_reconnected_households_equivalent": [
@@ -21791,11 +21850,11 @@
             0.0,
             0.0,
             0.0,
-            177075.0,
-            120375.0,
-            -30000.0,
             0.0,
             124425.0,
+            90375.0,
+            150000.0,
+            27075.0,
             0.0
           ]
         },
@@ -22143,11 +22202,11 @@
         0.0,
         0.0,
         0.0,
-        65125.0,
-        329725.0,
-        562000.0,
-        552600.0,
-        20600.0,
+        242200.0,
+        300100.0,
+        441625.0,
+        402600.0,
+        143525.0,
         0.0
       ],
       "classification": "derived_from_simulated_unserved_power_and_synthetic_mapping",
@@ -22195,14 +22254,14 @@
         0.0,
         0.0,
         0.0,
-        177075.0,
-        120375.0,
-        -30000.0,
         0.0,
         124425.0,
+        90375.0,
+        150000.0,
+        27075.0,
         0.0
       ],
-      "peak_households_reconnected_equivalent": 177075.0,
+      "peak_households_reconnected_equivalent": 150000.0,
       "unique_households_reconnected": null
     },
     "strict_attempt": {
@@ -22229,8 +22288,9 @@
       },
       "scenario_id": "chile-sen-5node-demo",
       "solver": {
+        "method": "LP",
         "name": "HiGHS",
-        "solve_time_s": 0.0033,
+        "solve_time_s": 0.0038,
         "solves": 2,
         "version": "1.15.1"
       },
@@ -22458,8 +22518,7 @@
             "hours": [
               16,
               17,
-              18,
-              19
+              18
             ],
             "id": "b_centro",
             "type": "battery_full"
@@ -22651,7 +22710,8 @@
             "hours": [
               15,
               16,
-              17
+              17,
+              18
             ],
             "id": "north_bess_bat1",
             "type": "battery_full"
@@ -22679,8 +22739,8 @@
               12,
               13,
               14,
-              18,
-              22,
+              19,
+              21,
               23
             ],
             "id": "north_bess_bat1",
@@ -22910,11 +22970,11 @@
       "reason": null,
       "unserved_reduction_mwh": 391.875
     },
-    "crisis_recovery_plan": "Simulated intervention north_bess. Event-window avoided household-hours: 267450.000000; average household-equivalents restored: 66862.500000.",
+    "crisis_recovery_plan": "Simulated intervention north_bess. Event-window avoided household-hours: 364800.000000; average household-equivalents restored: 91200.000000.",
     "format": "RIO-style simulation decision note; not an official CEN RIO instruction",
     "household_impact": {
-      "average_households_reconnected_equivalent": 66862.5,
-      "avoided_household_hours": 267450.0,
+      "average_households_reconnected_equivalent": 91200.0,
+      "avoided_household_hours": 364800.0,
       "baseline_affected_households_equivalent_by_step": [
         0.0,
         0.0,
@@ -22935,15 +22995,15 @@
         0.0,
         0.0,
         242200.0,
-        450100.0,
+        424525.0,
         532000.0,
         552600.0,
-        145025.0,
+        170600.0,
         0.0
       ],
       "by_node": {
         "n_centro": {
-          "avoided_household_hours": 267450.0,
+          "avoided_household_hours": 364800.0,
           "baseline_affected_households_equivalent": [
             0.0,
             0.0,
@@ -22964,10 +23024,10 @@
             0.0,
             0.0,
             242200.0,
-            450100.0,
+            424525.0,
             532000.0,
             552600.0,
-            145025.0,
+            170600.0,
             0.0
           ],
           "candidate_affected_households_equivalent": [
@@ -22989,11 +23049,11 @@
             0.0,
             0.0,
             0.0,
-            65125.0,
-            329725.0,
-            562000.0,
-            552600.0,
-            20600.0,
+            242200.0,
+            300100.0,
+            441625.0,
+            402600.0,
+            143525.0,
             0.0
           ],
           "net_reconnected_households_equivalent": [
@@ -23015,11 +23075,11 @@
             0.0,
             0.0,
             0.0,
-            177075.0,
-            120375.0,
-            -30000.0,
             0.0,
             124425.0,
+            90375.0,
+            150000.0,
+            27075.0,
             0.0
           ]
         },
@@ -23367,11 +23427,11 @@
         0.0,
         0.0,
         0.0,
-        65125.0,
-        329725.0,
-        562000.0,
-        552600.0,
-        20600.0,
+        242200.0,
+        300100.0,
+        441625.0,
+        402600.0,
+        143525.0,
         0.0
       ],
       "classification": "derived_from_simulated_unserved_power_and_synthetic_mapping",
@@ -23419,14 +23479,14 @@
         0.0,
         0.0,
         0.0,
-        177075.0,
-        120375.0,
-        -30000.0,
         0.0,
         124425.0,
+        90375.0,
+        150000.0,
+        27075.0,
         0.0
       ],
-      "peak_households_reconnected_equivalent": 177075.0,
+      "peak_households_reconnected_equivalent": 150000.0,
       "unique_households_reconnected": null
     },
     "limitations": [
@@ -24475,7 +24535,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 1,
-      "timestamp_utc": "2026-10-24T16:57:05.626495Z",
+      "timestamp_utc": "2026-10-24T17:14:43.165446Z",
       "tool": "load_scenario"
     },
     {
@@ -24485,7 +24545,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 2,
-      "timestamp_utc": "2026-10-24T16:57:05.626704Z",
+      "timestamp_utc": "2026-10-24T17:14:43.165627Z",
       "tool": "inspect_evidence"
     },
     {
@@ -24495,7 +24555,7 @@
       "live_gemini": false,
       "status": "optimal",
       "step": 3,
-      "timestamp_utc": "2026-10-24T16:57:05.630577Z",
+      "timestamp_utc": "2026-10-24T17:14:43.170188Z",
       "tool": "run_optimisation"
     },
     {
@@ -24505,7 +24565,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 4,
-      "timestamp_utc": "2026-10-24T16:57:05.630583Z",
+      "timestamp_utc": "2026-10-24T17:14:43.170195Z",
       "tool": "validate_candidate"
     },
     {
@@ -24515,7 +24575,7 @@
       "live_gemini": false,
       "status": "optimal",
       "step": 5,
-      "timestamp_utc": "2026-10-24T16:57:05.634457Z",
+      "timestamp_utc": "2026-10-24T17:14:43.174470Z",
       "tool": "run_optimisation"
     },
     {
@@ -24525,7 +24585,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 6,
-      "timestamp_utc": "2026-10-24T16:57:05.634463Z",
+      "timestamp_utc": "2026-10-24T17:14:43.174476Z",
       "tool": "validate_candidate"
     },
     {
@@ -24535,7 +24595,7 @@
       "live_gemini": false,
       "status": "optimal",
       "step": 7,
-      "timestamp_utc": "2026-10-24T16:57:05.638226Z",
+      "timestamp_utc": "2026-10-24T17:14:43.178866Z",
       "tool": "run_optimisation"
     },
     {
@@ -24545,7 +24605,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 8,
-      "timestamp_utc": "2026-10-24T16:57:05.638230Z",
+      "timestamp_utc": "2026-10-24T17:14:43.178873Z",
       "tool": "validate_candidate"
     },
     {
@@ -24555,7 +24615,7 @@
       "live_gemini": false,
       "status": "optimal",
       "step": 9,
-      "timestamp_utc": "2026-10-24T16:57:05.641677Z",
+      "timestamp_utc": "2026-10-24T17:14:43.182998Z",
       "tool": "run_optimisation"
     },
     {
@@ -24565,7 +24625,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 10,
-      "timestamp_utc": "2026-10-24T16:57:05.641686Z",
+      "timestamp_utc": "2026-10-24T17:14:43.183002Z",
       "tool": "validate_candidate"
     },
     {
@@ -24575,7 +24635,7 @@
       "live_gemini": false,
       "status": "infeasible",
       "step": 11,
-      "timestamp_utc": "2026-10-24T16:57:05.645273Z",
+      "timestamp_utc": "2026-10-24T17:14:43.187051Z",
       "tool": "run_optimisation"
     },
     {
@@ -24585,7 +24645,7 @@
       "live_gemini": false,
       "status": "failed",
       "step": 12,
-      "timestamp_utc": "2026-10-24T16:57:05.645278Z",
+      "timestamp_utc": "2026-10-24T17:14:43.187063Z",
       "tool": "validate_candidate"
     },
     {
@@ -24595,7 +24655,7 @@
       "live_gemini": false,
       "status": "optimal",
       "step": 13,
-      "timestamp_utc": "2026-10-24T16:57:05.652731Z",
+      "timestamp_utc": "2026-10-24T17:14:43.196493Z",
       "tool": "run_optimisation"
     },
     {
@@ -24605,7 +24665,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 14,
-      "timestamp_utc": "2026-10-24T16:57:05.652739Z",
+      "timestamp_utc": "2026-10-24T17:14:43.196505Z",
       "tool": "validate_candidate"
     },
     {
@@ -24615,7 +24675,7 @@
       "live_gemini": false,
       "status": "optimal",
       "step": 15,
-      "timestamp_utc": "2026-10-24T16:57:05.662973Z",
+      "timestamp_utc": "2026-10-24T17:14:43.207059Z",
       "tool": "run_optimisation"
     },
     {
@@ -24625,7 +24685,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 16,
-      "timestamp_utc": "2026-10-24T16:57:05.662982Z",
+      "timestamp_utc": "2026-10-24T17:14:43.207068Z",
       "tool": "validate_candidate"
     },
     {
@@ -24635,7 +24695,7 @@
       "live_gemini": false,
       "status": "optimal",
       "step": 17,
-      "timestamp_utc": "2026-10-24T16:57:05.674151Z",
+      "timestamp_utc": "2026-10-24T17:14:43.217139Z",
       "tool": "run_optimisation"
     },
     {
@@ -24645,7 +24705,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 18,
-      "timestamp_utc": "2026-10-24T16:57:05.674162Z",
+      "timestamp_utc": "2026-10-24T17:14:43.217147Z",
       "tool": "validate_candidate"
     },
     {
@@ -24655,7 +24715,7 @@
       "live_gemini": false,
       "status": "optimal",
       "step": 19,
-      "timestamp_utc": "2026-10-24T16:57:05.683013Z",
+      "timestamp_utc": "2026-10-24T17:14:43.226950Z",
       "tool": "run_optimisation"
     },
     {
@@ -24665,7 +24725,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 20,
-      "timestamp_utc": "2026-10-24T16:57:05.683022Z",
+      "timestamp_utc": "2026-10-24T17:14:43.226960Z",
       "tool": "validate_candidate"
     },
     {
@@ -24675,7 +24735,7 @@
       "live_gemini": false,
       "status": "success",
       "step": 21,
-      "timestamp_utc": "2026-10-24T16:57:05.683094Z",
+      "timestamp_utc": "2026-10-24T17:14:43.227030Z",
       "tool": "compare_results"
     },
     {

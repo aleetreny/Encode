@@ -12,7 +12,7 @@ pip install -r requirements-dev.txt
 python -m uvicorn backend.main:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
-Open [API documentation](http://127.0.0.1:8000/docs). In another terminal, run `python scripts/smoke.py` for two complete HTTP investigations with validation, simulated approval and report export. Use `python -m pytest -q` for the automated checks. This branch contains Person 4's backend/data/integration work; Person 3's production HiGHS solver and validator are integrated on this branch. The Gemini agent and dashboard remain separate team workstreams. Live agent calls fail explicitly until the real agent is installed.
+Open [API documentation](http://127.0.0.1:8000/docs). In another terminal, run `python scripts/smoke.py` for two complete HTTP investigations with validation, simulated approval and report export. Use `python -m pytest -q` for the automated checks. This branch contains Person 4's backend/data/integration work; Person 3's production HiGHS solver and validator are integrated on this branch. The latest agent and frontend sources are integrated for compatibility testing. They do not yet form a live demo: the frontend uses fixtures and the agent still returns the legacy contract. See [demo integration handoff](docs/demo-integration-handoff.md) for verified status and exact remaining changes.
 
 Read [backend operations](backend/README.md), [the native v2 contract](docs/contracts-v2.md), [research and source findings](docs/task-4-research.md), [104 detailed subtasks](docs/task-4-work-breakdown.md), and [the release runbook](docs/release-runbook.md). The default five-node scenario runs normal dispatch, bounded interventions and sudden-outage recovery. `python scripts/smoke.py --mode deterministic` computes the two-stage workflow using the actual solver without claiming a Gemini invocation. Historical source evidence and synthetic simulation inputs are kept separate. A cached replay is never labelled as a live Gemini run.
 
@@ -22,7 +22,7 @@ Read [backend operations](backend/README.md), [the native v2 contract](docs/cont
 >
 > **Scope / safety:** We do **not** operate Chile's live physical grid, send real SCADA commands to power plants, replace official CEN/distributor control systems, or claim that a reduced 5-node backbone reproduces every bus of Chile's >1,000-node grid. All autonomous dispatches and crisis reconnections occur **strictly inside an audited simulation** under explicitly documented model assumptions.
 >
-> **Implementation status (24 Oct):** `optimisation/` (solver, validator, comparison, outages) is built, tested and verified against the backend bridge; `backend/`, `data/`, `contracts/` are on `feature/data-backend`; `agent/` and `frontend/` are in progress. The 5-node demo scenario is **synthetic**; CEN evidence is kept as separate, labelled context.
+> **Implementation status (24 Oct):** `optimisation/` (solver, validator, comparison, outages) is built, tested and verified against the backend bridge; `backend/`, `data/`, `contracts/` are on `feature/data-backend`; `agent/` and `frontend/` are imported but require the integration fixes documented in [the demo handoff](docs/demo-integration-handoff.md). The 5-node demo scenario is **synthetic**; CEN evidence is kept as separate, labelled context.
 
 ---
 

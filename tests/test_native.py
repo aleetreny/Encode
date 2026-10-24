@@ -145,7 +145,8 @@ def test_native_comparison_revalidates_and_returns_household_units(client, nativ
     assert not client.post("/api/compare", json=body).json()["comparable"]
 
 
-def test_native_timeout_fallback_is_relabelled(settings):
+def test_native_timeout_fallback_is_relabelled(settings, monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "unit-test-not-a-provider-key")
     from backend.main import create_app
     from fastapi.testclient import TestClient
 
@@ -185,8 +186,8 @@ def test_household_units_and_window_are_distinct(native_scenario, native_bundle)
     )
     assert impact["event_duration_hours"] == 4
     assert impact["horizon_avoided_household_hours"] == pytest.approx(391875)
-    assert impact["avoided_household_hours"] == pytest.approx(267450)
-    assert impact["average_households_reconnected_equivalent"] == pytest.approx(66862.5)
+    assert impact["avoided_household_hours"] == pytest.approx(364800)
+    assert impact["average_households_reconnected_equivalent"] == pytest.approx(91200)
     assert impact["unique_households_reconnected"] is None
     before = impact["average_households_reconnected_equivalent"]
     native_scenario["household_mapping"]["households_per_mw"] = 250

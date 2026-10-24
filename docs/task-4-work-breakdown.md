@@ -97,16 +97,16 @@
 | ID | Subtask and acceptance criterion | State |
 |---|---|---|
 | 4.66 | Reproduction instructions from a clean Python environment | DONE |
-| 4.67 | Handoff guide for all three owners, including exact function signatures | DONE |
+| 4.67 | Handoff guide for all three owners, including exact function signatures | DONE: refreshed after importing current P1/P2/P3 sources |
 | 4.68 | Demo script and factual submission draft | DONE |
 | 4.69 | Troubleshooting, warm-up, rollback and final release gate | DONE |
-| 4.70 | Final live integrated application tested twice | EXTERNAL: agent, frontend and hosting |
+| 4.70 | Final live integrated application tested twice | BLOCKED: native Gemini tool loop, credential and frontend wiring; see demo-integration-handoff.md |
 | 4.71 | Record actual product video with live Gemini and visible verification | EXTERNAL: integrated product |
 | 4.72 | Fill final public URL/video/model fields and submit entry | EXTERNAL: product, video and submission account |
 
 ## Release gate
 
-Do not promote this branch's replay to a live-agent claim. Merge the other workstreams, install their dependencies in the image, validate actual provider execution and deliberately demonstrate a rejected invalid candidate. Run `scripts/smoke.py --mode live` twice against the public URL. Verify the frontend in a fresh browser. Check the exported report and operator decision, record the real video and only then complete the submission.
+Do not promote this branch's replay to a live-agent claim. The current teammate sources are merged on this branch. Close the agent/frontend blockers in demo-integration-handoff.md, validate actual provider execution and deliberately demonstrate a rejected invalid candidate. Run `scripts/smoke.py --mode live` twice against the public URL. Verify the frontend in a fresh browser. Check the exported report and operator decision, record the real video and only then complete the submission.
 
 ## G. Updated README: native workflow v2
 

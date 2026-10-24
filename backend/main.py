@@ -3,7 +3,6 @@ import contextlib
 import hashlib
 import json
 import logging
-import os
 import secrets
 from contextlib import asynccontextmanager
 from uuid import uuid4
@@ -15,6 +14,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import ValidationError
 
 from backend.config import Settings
+from backend.live import gemini_configured
 from backend.executor import ExecutionError, isolated
 from backend.models import (
     Decision,
@@ -76,7 +76,13 @@ def create_app(settings=None):
                     request.get("_protocol") == "2.0.0"
                     and request["execution_mode"] == "live"
                     and request["settings"].get("allow_cached_fallback", True)
-                    and exc.code in ("execution_timeout", "adapter_unavailable", "adapter_failed")
+                    and exc.code
+                    in (
+                        "execution_timeout",
+                        "adapter_unavailable",
+                        "adapter_failed",
+                        "gemini_credentials_missing",
+                    )
                 ):
                     try:
                         result = await isolated({**payload, "execution_mode": "replay"}, settings)
@@ -205,7 +211,7 @@ def create_app(settings=None):
             "solver": available(settings.solve_callable),
             "validator": available(settings.validate_callable),
         }
-        gemini_configured = bool(os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
+        credentials_configured = gemini_configured()
         return dict(
             status="ok",
             schema_version="2.0.0",
@@ -219,8 +225,8 @@ def create_app(settings=None):
                 (settings.data_dir / "demo" / f"{s.scenario_id}.native-replay.json").is_file()
                 for s in native_scenarios.values()
             ),
-            live_ready=all(adapters.values()) and gemini_configured,
-            gemini_credentials_configured=gemini_configured,
+            live_ready=all(adapters.values()) and credentials_configured,
+            gemini_credentials_configured=credentials_configured,
             adapters=adapters,
             auth_required=bool(settings.api_token),
             worker_enabled=app.state.worker_task is not None and not app.state.worker_task.done(),
@@ -348,18 +354,21 @@ def create_app(settings=None):
         if (
             body.execution_mode == "live"
             and not (native and body.settings.allow_cached_fallback)
-            and not all(
-                available(x)
-                for x in (
-                    settings.agent_callable,
-                    settings.solve_callable,
-                    settings.validate_callable,
+            and (
+                not gemini_configured()
+                or not all(
+                    available(x)
+                    for x in (
+                        settings.agent_callable,
+                        settings.solve_callable,
+                        settings.validate_callable,
+                    )
                 )
             )
         ):
             raise HTTPException(
                 503,
-                "Live agent, solver and validator must all be installed; use execution_mode=replay for offline demonstration",
+                "Live mode requires Gemini credentials and installed agent/solver/validator; no live execution was started",
             )
         request_json = wire(body)
         stored_request = {**request_json, "_scenario_snapshot": wire(selected)}

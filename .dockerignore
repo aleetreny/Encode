@@ -8,3 +8,6 @@ data/processed/*.jsonl
 __pycache__
 .pytest_cache
 node_modules
+.vite
+**/dist
+.ruff_cache

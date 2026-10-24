@@ -6,6 +6,7 @@ import json
 from optimisation import compare
 
 from backend.models import wire, utc_now
+from backend.live import MissingGeminiCredentials, gemini_configured, verified_provider_metadata
 from backend.native_models import Candidate, InvestigationSettings, NativeOptions, NativeScenario
 from backend.native_service import (
     candidate_from_solution,
@@ -146,6 +147,10 @@ async def execute(payload, settings):
     elif mode == "deterministic":
         bundle = investigate(scenario, request_settings)
     else:
+        if not gemini_configured():
+            # Raise through the existing isolated-worker fallback path. Never let
+            # an offline agent invent a Google response and label it live.
+            raise MissingGeminiCredentials
         agent_result = await invoke(
             settings.agent_callable, scenario["scenario_id"], request_settings
         )
@@ -159,12 +164,7 @@ async def execute(payload, settings):
             "compare_results",
             "generate_operator_report",
         }
-        if (
-            not provider
-            or provider.get("provider") != "google"
-            or not provider.get("response_id")
-            or not provider.get("model")
-        ):
+        if not verified_provider_metadata(provider):
             return _failure(
                 "unverified_live_trace",
                 "Actual Google provider/model/response metadata is required",

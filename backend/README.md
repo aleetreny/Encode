@@ -93,3 +93,7 @@ The canonical report summary is generated deterministically from those metrics. 
 | Historical evidence missing | Use the explicitly synthetic scenario while restoring verified evidence |
 
 Adapter exception text is not returned because provider exceptions can contain secrets. Error codes identify the failure class. Adapter owners should emit safe diagnostic summaries, avoiding secrets and raw prompts.
+
+## Current integration gate
+
+The actual teammate modules are imported on this branch. Follow [demo integration handoff](../docs/demo-integration-handoff.md). Runtime requirements include the current agent imports; its native output and real Google tool loop still need P2 changes. Strict live requests require credentials. Known local hash response IDs are rejected. `scripts/smoke.py --mode live` disables fallback and checks actual execution mode; a replay cannot pass this release gate. Health adapter readiness does not certify provider access or contract compatibility.
