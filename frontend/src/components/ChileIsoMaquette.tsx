@@ -1,98 +1,67 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as k from '../iso/iso-kit';
 import {
   Dots,
-  FaceText,
-  IsoFigure,
   Line,
-  Plate,
   Solid,
   Wire,
 } from '../iso/react/draw';
-import { useEased } from '../iso/react/live';
+import { Stage, useEased, useLoop } from '../iso/react/live';
+import {
+  IncidentPresetId,
+  postOperatorDecision,
+  startBackendAgentRun,
+} from '../api/client';
 
-export type StationId =
+export type NodeId =
   | 'solar'
+  | 'wind'
   | 'thermal'
   | 'battery'
-  | 'grid'
+  | 'substation'
   | 'houses';
 
-export interface GridSandboxState {
-  // User-controlled game parameters
-  sunPct: number; // 0..100%
-  demandMw: number; // 300..900 MW demanded by the neighborhood
-  cableCapMw: number; // 300..650 MW max capacity of central line
-  thermalBroken: boolean; // Whether the gas plant is tripped
-  agentEnabled: boolean; // Whether the AI Agent is actively managing the grid
+type AnimStage = 'steady' | 'perturbing' | 'ai_solving';
+type Pt2 = [number, number];
 
-  // Computed real-time physics & AI Agent flows
-  solarAvailableMw: number;
-  solarUsedMw: number;
-  solarWastedMw: number;
-  thermalOutputMw: number;
-  windOutputMw: number;
-  batteryFlowMw: number; // positive = discharging to houses, negative = charging from solar
-  batterySocPct: number; // 0..100%
-  cableFlowMw: number;
-  cableUtilPct: number;
-  cableSaturated: boolean;
-  housesServedMw: number;
-  housesBlackoutMw: number;
-  housesLitPct: number; // 0..100%
-  agentActionTitle: string;
-  agentActionReason: string;
-  agentTone: 'green' | 'blue' | 'red' | 'neutral';
-}
+const W = 1440;
+const H = 860;
 
-interface ChileIsoMaquetteProps {
-  state: GridSandboxState;
-  selectedStation: StationId | null;
-  onSelectStation: (id: StationId | null) => void;
-  onToggleThermalBreak: () => void;
-  onToggleAgent: () => void;
-}
+// True isometric projection calibrated so our 6 free-floating 3D nodes
+// span the entire full-screen white canvas from Left -> Center -> Right.
+const ALL_ANCHORS: k.Point3[] = [
+  [-245, -45, -10],
+  [-160, 35, 32],
+  [-175, 75, -10],
+  [-95, 155, 38],
+  [-75, 150, -10],
+  [10, 230, 36],
+  [-95, -105, -10],
+  [-10, -25, 34],
+  [10, 25, -10],
+  [95, 105, 32],
+  [90, -135, -10],
+  [195, -35, 32],
+];
 
-const W = 860;
-const H = 400;
+const P = k.fitProjection(ALL_ANCHORS, W, H, {
+  pad: 132,
+  azimuth: 54,
+  elevation: 30,
+});
 
-// Clean isometric camera where +X goes right-down and +Y goes left-down,
-// or let's use azimuth 54, elevation 32 so our schematic left-to-right layout fills the canvas spaciously!
-const SCENE_BOUNDS: k.Plan = { x: -165, y: -95, w: 330, d: 190, r: 8 };
-const P = k.fitProjection(
-  [...k.boxCorners(SCENE_BOUNDS, -12, 36)],
-  W,
-  H,
-  { pad: 18, azimuth: 56, elevation: 32 }
-);
+// Exact 3D world centers for the 6 free-floating infrastructure objects:
+// Left column (Generation):
+const SOLAR_C: k.Point3 = [-202, -6, 0];      // 01 · Planta Solar Atacama (Top-Left)
+const WIND_C: k.Point3 = [-135, 110, 0];      // 02 · Parque Eólico Norte (Middle-Left)
+const THERMAL_C: k.Point3 = [-36, 186, 0];    // 03 · Central Térmica Gas (Bottom-Left)
 
-// Five independent 3D Maquette Plinths arranged in a clean schematic flow:
-// Left: Solar Plant (top-left) & Thermal/Wind Plant (bottom-left)
-// Center: AI Battery Station (top-center) & Central Grid Substation (bottom-center)
-// Right: Neighborhood of Houses (consumer final)
-const SOLAR_PAD: k.Plan = { x: -156, y: -76, w: 78, d: 58, r: 6 };
-const THERMAL_PAD: k.Plan = { x: -156, y: 12, w: 78, d: 62, r: 6 };
-const BATTERY_PAD: k.Plan = { x: -38, y: -82, w: 78, d: 58, r: 6 };
-const GRID_PAD: k.Plan = { x: -38, y: 10, w: 78, d: 62, r: 6 };
-const HOUSES_PAD: k.Plan = { x: 76, y: -48, w: 86, d: 98, r: 7 };
+// Center column (AI Battery & 500 kV Substation):
+const BATTERY_C: k.Point3 = [-53, -65, 0];    // 04 · Batería Agente IA BESS (Upper-Center)
+const SUBSTATION_C: k.Point3 = [53, 62, 0];   // 05 · Subestación Troncal L2 (Lower-Center)
 
-const DIAL_X = 0;
-const DIAL_Y = 48;
-const DIAL_R = 14.5;
-const DIAL_Z = 5.2;
-
-const DIAL_TICKS = k.radialTicks(
-  DIAL_X,
-  DIAL_Y,
-  DIAL_R - 2.4,
-  24,
-  4,
-  DIAL_Z,
-  [1.4, 2.8],
-  P,
-  -Math.PI * 0.75,
-  Math.PI * 1.5
-);
+// Right column (Residential Neighborhood of Houses):
+const HOUSES_C: k.Point3 = [134, -88, 0];     // 06 · Barrio Residencial (Center-Right)
 
 function toPct(world: k.Point3): { left: string; top: string } {
   const [sx, sy] = k.iso(world, P);
@@ -102,8 +71,179 @@ function toPct(world: k.Point3): { left: string; top: string } {
   };
 }
 
-// Helper to draw a 3D isometric house with a pitched roof on the Neighborhood Maquette
-function PitchedHouse({
+// Helper: interpolate a 2D point along a piecewise 2D polyline at t in [0, 1]
+function samplePolyline(pts: Pt2[], tRaw: number): Pt2 {
+  if (pts.length === 0) return [0, 0];
+  if (pts.length === 1) return pts[0];
+  const t = ((tRaw % 1) + 1) % 1;
+  const segLengths: number[] = [];
+  let total = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const dx = pts[i + 1][0] - pts[i][0];
+    const dy = pts[i + 1][1] - pts[i][1];
+    const len = Math.hypot(dx, dy);
+    segLengths.push(len);
+    total += len;
+  }
+  if (total <= 1e-6) return pts[0];
+  let target = t * total;
+  for (let i = 0; i < segLengths.length; i++) {
+    const seg = segLengths[i];
+    if (target <= seg || i === segLengths.length - 1) {
+      const localT = seg > 1e-6 ? target / seg : 0;
+      return [
+        pts[i][0] + (pts[i + 1][0] - pts[i][0]) * localT,
+        pts[i][1] + (pts[i + 1][1] - pts[i][1]) * localT,
+      ];
+    }
+    target -= seg;
+  }
+  return pts[pts.length - 1];
+}
+
+// Animated suspended transmission line with traveling energy packets & mid-air flow badge
+function AnimatedPowerLink({
+  from,
+  via = [],
+  to,
+  mw,
+  tone,
+  phase,
+  reverse = false,
+  isPerturbed = false,
+  isAiSolving = false,
+  midLabel,
+  labelT = 0.58,
+}: {
+  from: Pt2;
+  via?: Pt2[];
+  to: Pt2;
+  mw: number;
+  tone: 'green' | 'blue' | 'red' | 'hi' | 'lo';
+  phase: number;
+  reverse?: boolean;
+  isPerturbed?: boolean;
+  isAiSolving?: boolean;
+  midLabel?: string;
+  labelT?: number;
+}) {
+  const pts = [from, ...via, to];
+  const dPath = k.pathOf(pts, false);
+  const absMw = Math.abs(mw);
+  const activeFlow = absMw >= 5;
+
+  const strokeSize =
+    isPerturbed || isAiSolving
+      ? 2.5
+      : activeFlow
+      ? Math.min(2.1, 1.25 + (absMw / 700) * 0.85)
+      : 1.0;
+
+  const auraColor =
+    tone === 'red'
+      ? '#e5484d'
+      : tone === 'green'
+      ? '#16a34a'
+      : tone === 'blue'
+      ? '#2563eb'
+      : '#71717a';
+
+  const packetCount = isPerturbed || isAiSolving ? 5 : activeFlow ? 3 : 0;
+  const speedMult = isPerturbed
+    ? 2.25
+    : isAiSolving
+    ? 2.0
+    : Math.max(0.45, Math.min(1.55, absMw / 360));
+  const labelPt = samplePolyline(pts, labelT);
+
+  return (
+    <g className="animated-power-link">
+      {/* Stage 1 / Stage 2 luminous aura along the wire */}
+      {(isPerturbed || isAiSolving) && (
+        <path
+          d={dPath}
+          fill="none"
+          stroke={auraColor}
+          strokeWidth={isPerturbed ? 8.0 : 6.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={isPerturbed ? 0.22 : 0.18}
+        />
+      )}
+
+      {/* Main isometric wire with animated dashes */}
+      <Wire
+        from={from}
+        via={via}
+        to={to}
+        tone={activeFlow ? tone : 'lo'}
+        flow={activeFlow}
+        size={strokeSize}
+      />
+
+      {/* Traveling luminous energy packets moving along the 3D wire */}
+      {packetCount > 0 &&
+        Array.from({ length: packetCount }).map((_, idx) => {
+          const rawOffset = idx / packetCount + phase * speedMult * (reverse ? -1 : 1);
+          const [px, py] = samplePolyline(pts, rawOffset);
+          const rCore = isPerturbed ? 3.6 : isAiSolving ? 3.3 : 2.15;
+          return (
+            <g key={idx}>
+              {(isPerturbed || isAiSolving) && (
+                <circle
+                  cx={px.toFixed(1)}
+                  cy={py.toFixed(1)}
+                  r={(rCore * 2.35).toFixed(1)}
+                  fill={auraColor}
+                  opacity={0.26}
+                />
+              )}
+              <circle
+                cx={px.toFixed(1)}
+                cy={py.toFixed(1)}
+                r={rCore.toFixed(1)}
+                fill={auraColor}
+                stroke="#ffffff"
+                strokeWidth="0.9"
+              />
+            </g>
+          );
+        })}
+
+      {/* Floating borderless mid-air telemetry tag directly on the wire */}
+      {midLabel && (
+        <g transform={`translate(${labelPt[0].toFixed(1)}, ${(labelPt[1] - 11).toFixed(1)})`}>
+          <rect
+            x={-midLabel.length * 3.05 - 6}
+            y={-9}
+            width={midLabel.length * 6.1 + 12}
+            height={14}
+            rx={3}
+            fill="#ffffff"
+            fillOpacity={0.94}
+          />
+          <text
+            x={0}
+            y={1}
+            textAnchor="middle"
+            fill={auraColor}
+            style={{
+              fontFamily: 'var(--anatomy-mono, ui-monospace, monospace)',
+              fontSize: '9.5px',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+            }}
+          >
+            {midLabel}
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
+// Free-floating 3D isometric pitched-roof house (no ground plate)
+function FloatingHouse({
   x,
   y,
   w,
@@ -111,8 +251,8 @@ function PitchedHouse({
   z,
   wallH,
   roofH,
-  lit,
-  blackout,
+  highlighted,
+  powered = true,
 }: {
   x: number;
   y: number;
@@ -121,18 +261,17 @@ function PitchedHouse({
   z: number;
   wallH: number;
   roofH: number;
-  lit: boolean;
-  blackout: boolean;
+  highlighted: boolean;
+  powered?: boolean;
 }) {
   const zTop = z + wallH;
   const zPeak = zTop + roofH;
   const yMid = y + d / 2;
 
-  // Roof overhang
-  const x0 = x - 0.8;
-  const x1 = x + w + 0.8;
-  const yFront = y + d + 0.8;
-  const yBack = y - 0.8;
+  const x0 = x - 0.9;
+  const x1 = x + w + 0.9;
+  const yFront = y + d + 0.9;
+  const yBack = y - 0.9;
 
   const r0 = k.iso([x0, yMid, zPeak], P);
   const r1 = k.iso([x1, yMid, zPeak], P);
@@ -144,62 +283,59 @@ function PitchedHouse({
   const rightGablePath = k.pathOf([r1, b1, f1], true);
   const roofOutlinePath =
     k.pathOf([f0, r0, r1, b1, f1, f0], false) + k.pathOf([r1, f1], false);
+  const roofSilhouette = k.pathOf([f0, r0, r1, b1, f1], true);
 
-  // Two front windows on y + d wall
-  const winZ0 = z + 1.8;
-  const winZ1 = z + wallH - 1.4;
+  const winZ0 = z + 2.0;
+  const winZ1 = z + wallH - 1.5;
   const win1Path = k.pathOf(
     [
-      k.iso([x + 2.0, y + d + 0.05, winZ0], P),
-      k.iso([x + 5.2, y + d + 0.05, winZ0], P),
-      k.iso([x + 5.2, y + d + 0.05, winZ1], P),
-      k.iso([x + 2.0, y + d + 0.05, winZ1], P),
+      k.iso([x + 2.2, y + d + 0.06, winZ0], P),
+      k.iso([x + 5.4, y + d + 0.06, winZ0], P),
+      k.iso([x + 5.4, y + d + 0.06, winZ1], P),
+      k.iso([x + 2.2, y + d + 0.06, winZ1], P),
     ],
     true
   );
   const win2Path = k.pathOf(
     [
-      k.iso([x + w - 5.2, y + d + 0.05, winZ0], P),
-      k.iso([x + w - 2.0, y + d + 0.05, winZ0], P),
-      k.iso([x + w - 2.0, y + d + 0.05, winZ1], P),
-      k.iso([x + w - 5.2, y + d + 0.05, winZ1], P),
+      k.iso([x + w - 5.4, y + d + 0.06, winZ0], P),
+      k.iso([x + w - 2.2, y + d + 0.06, winZ0], P),
+      k.iso([x + w - 2.2, y + d + 0.06, winZ1], P),
+      k.iso([x + w - 5.4, y + d + 0.06, winZ1], P),
     ],
     true
   );
-
-  // Side window on x + w wall
   const sideWinPath = k.pathOf(
     [
-      k.iso([x + w + 0.05, y + d * 0.32, winZ0], P),
-      k.iso([x + w + 0.05, y + d * 0.68, winZ0], P),
-      k.iso([x + w + 0.05, y + d * 0.68, winZ1], P),
-      k.iso([x + w + 0.05, y + d * 0.32, winZ1], P),
+      k.iso([x + w + 0.06, y + d * 0.3, winZ0], P),
+      k.iso([x + w + 0.06, y + d * 0.7, winZ0], P),
+      k.iso([x + w + 0.06, y + d * 0.7, winZ1], P),
+      k.iso([x + w + 0.06, y + d * 0.3, winZ1], P),
     ],
     true
   );
-
-  const isHouseLit = lit && !blackout;
-  const roofSilhouette = k.pathOf([f0, r0, r1, b1, f1], true);
 
   return (
     <g>
-      {/* House Walls */}
+      <path
+        className="iso-halo"
+        d={k.haloOf({ x, y, w, d, r: 1 }, z - 1.5, 2.5, P)}
+      />
       <Solid
         paths={k.slabOf({ x, y, w, d, r: 0.7 }, z, wallH, P, 3, 0.25)}
-        tone={blackout ? 'lo' : 'hi'}
-        lit={isHouseLit}
+        tone={powered ? 'hi' : 'mid'}
+        lit={highlighted}
         inner={
           <path
             d={win1Path + win2Path + sideWinPath}
-            fill={isHouseLit ? '#fde047' : 'rgba(100, 116, 139, 0.35)'}
-            fillOpacity={isHouseLit ? 0.9 : 0.55}
-            stroke={blackout ? '#dc2626' : isHouseLit ? '#d97706' : 'rgba(71, 85, 105, 0.7)'}
+            fill={powered ? '#fde047' : '#94a3b8'}
+            fillOpacity={powered ? 0.9 : 0.45}
+            stroke={powered ? '#d97706' : '#64748b'}
             strokeWidth={0.38}
             strokeLinejoin="round"
           />
         }
       />
-      {/* Pitched Roof */}
       <Solid
         paths={{
           fill: roofSilhouette,
@@ -209,347 +345,832 @@ function PitchedHouse({
           bevel: '',
           outline: roofOutlinePath,
         }}
-        tone={blackout ? 'lo' : 'hi'}
-        lit={isHouseLit}
+        tone={powered ? 'hi' : 'mid'}
+        lit={highlighted}
       />
     </g>
   );
 }
 
-// Helper to draw a machined plinth base for each of the 5 stations
-function StationPlinth({
-  plan,
-  selected,
-  alert,
+// Free-floating 3D Wind Turbine
+function FloatingWindTurbine({
+  tx,
+  ty,
+  tz,
+  towerH,
+  bladeR,
+  angleRad,
+  highlighted,
 }: {
-  plan: k.Plan;
-  selected: boolean;
-  alert?: boolean;
+  tx: number;
+  ty: number;
+  tz: number;
+  towerH: number;
+  bladeR: number;
+  angleRad: number;
+  highlighted: boolean;
 }) {
+  const hubZ = tz + towerH + 1.8;
+  const hubX = tx + 2.8;
+  const hubY = ty + 2.8;
+
   return (
     <g>
-      <path className="iso-halo" d={k.haloOf(plan, -7, 7, P)} />
-      {k.corners(plan, 7).map(([fx, fy], idx) => (
-        <Solid
-          key={idx}
-          paths={k.cylinder(fx, fy, 3.4, -7, 2.2, P, 18)}
-          tone="lo"
-          crease="none"
-        />
-      ))}
+      <path
+        className="iso-halo"
+        d={k.haloOf({ x: tx - 4, y: ty - 4, w: 8, d: 8, r: 4 }, tz - 1, 2.5, P)}
+      />
       <Solid
-        paths={k.slabOf(plan, -5, 5, P, 6, 0.9)}
-        tone={selected ? 'hi' : 'mid'}
-        lit={selected}
-        crease="faint"
-        inner={<Line d={k.sideSeam(plan, -2.5, P, 6)} tone="faint" />}
+        paths={k.cylinder(tx, ty, 3.6, tz, 1.8, P, 18)}
+        tone="mid"
+        lit={highlighted}
       />
-      <Line
-        d={k.planOutline(k.insetPlan(plan, 2.6), 0, P, 5)}
-        tone={alert ? 'red' : selected ? 'lit' : 'lo'}
+      <Solid
+        paths={k.cylinder(tx, ty, 1.45, tz + 1.8, towerH, P, 16)}
+        tone="hi"
+        lit={highlighted}
       />
+      <Solid
+        paths={k.slabOf(
+          { x: tx - 2.4, y: ty - 2.2, w: 5.8, d: 4.8, r: 1.0 },
+          tz + towerH,
+          3.4,
+          P,
+          3,
+          0.3
+        )}
+        tone="hi"
+        lit={highlighted}
+      />
+      {[0, 1, 2].map((bIdx) => {
+        const theta = angleRad + (bIdx * Math.PI * 2) / 3;
+        const tipX = hubX + Math.cos(theta) * bladeR * 0.72;
+        const tipY = hubY - Math.cos(theta) * bladeR * 0.42;
+        const tipZ = hubZ + Math.sin(theta) * bladeR;
+        return (
+          <Line
+            key={bIdx}
+            d={k.pathOf([k.iso([hubX, hubY, hubZ], P), k.iso([tipX, tipY, tipZ], P)])}
+            tone="hi"
+          />
+        );
+      })}
+      <Dots points={[k.iso([hubX, hubY, hubZ], P)]} size={1.1} tone="hi" />
     </g>
   );
 }
 
-export const ChileIsoMaquette: React.FC<ChileIsoMaquetteProps> = ({
-  state,
-  selectedStation,
-  onSelectStation,
-  onToggleThermalBreak,
-  onToggleAgent,
-}) => {
-  const liftSolar = useEased(selectedStation === 'solar' ? 3.5 : 0, 0.15);
-  const liftThermal = useEased(selectedStation === 'thermal' ? 3.5 : 0, 0.15);
-  const liftBattery = useEased(selectedStation === 'battery' ? 3.5 : 0, 0.15);
-  const liftGrid = useEased(selectedStation === 'grid' ? 3.5 : 0, 0.15);
-  const liftHouses = useEased(selectedStation === 'houses' ? 3.5 : 0, 0.15);
-
-  const easedSoc = useEased(state.batterySocPct / 100, 0.14);
-  const easedCableRatio = useEased(
-    Math.min(1.05, state.cableUtilPct / 100),
-    0.14
+// 3D Mid-Air Transmission Pylon / Insulator Post along the wires
+function MidAirPylon({ x, y, z }: { x: number; y: number; z: number }) {
+  return (
+    <g>
+      <Solid
+        paths={k.cylinder(x, y, 1.5, z - 2, 5.5, P, 12)}
+        tone="mid"
+        crease="none"
+      />
+      <Dots points={[k.iso([x, y, z + 3.8], P)]} size={0.95} tone="hi" pulse />
+    </g>
   );
-  const easedBreaker = useEased(state.thermalBroken ? 1 : 0, 0.16);
-  const easedAgent = useEased(state.agentEnabled ? 1 : 0, 0.16);
+}
 
-  // Dial gauge needle
-  const needleAngle = -Math.PI * 0.75 + easedCableRatio * Math.PI * 1.5;
-  const needleTip: k.Plane = [
-    DIAL_X + Math.cos(needleAngle) * (DIAL_R - 3.0),
-    DIAL_Y + Math.sin(needleAngle) * (DIAL_R - 3.0),
-  ];
-  const needleTail: k.Plane = [
-    DIAL_X - Math.cos(needleAngle) * 2.5,
-    DIAL_Y - Math.sin(needleAngle) * 2.5,
-  ];
+export const ChileIsoMaquette: React.FC = () => {
+  const [activeNode, setActiveNode] = useState<NodeId | null>(null);
 
-  // HTML Badge Coordinates above each of the 5 3D Maquette Stations
-  const solarPin = toPct([-117, -76, 17]);
-  const thermalPin = toPct([-117, 74, -2]);
-  const batteryPin = toPct([1, -82, 22]);
-  const gridPin = toPct([1, 74, -2]);
-  const housesPin = toPct([119, -48, 22]);
+  // ============================================================================
+  // REAL CHILE SEN 5-NODE PARAMETERS (from chile-sen-5node-demo HiGHS LP solver)
+  // ============================================================================
+  const [solarMw, setSolarMw] = useState<number>(620);     // 0..989 MW (solar_ng + solar_nc)
+  const [windMw, setWindMw] = useState<number>(180);       // 40..400 MW (wind_nc + wind_sur)
+  const [thermalMw, setThermalMw] = useState<number>(380); // 0..600 MW (gas_centro)
+  const [l2CapMw, setL2CapMw] = useState<number>(400);     // 300..600 MW (L2 Norte Chico -> Centro bottleneck)
+  const [demandMw, setDemandMw] = useState<number>(780);   // 500..1300 MW (Centro + Sur residential load)
+  const [aiEnabled, setAiEnabled] = useState<boolean>(true);
+  const [activePreset, setActivePreset] = useState<IncidentPresetId>('normal');
 
-  const isCharging = state.batteryFlowMw < -5;
-  const isDischarging = state.batteryFlowMw > 5;
-  const hasBlackout = state.housesBlackoutMw > 5;
+  // Two-stage animation state machine:
+  // Stage 1 ('perturbing'): Plant parameter changes -> connected wire surges first
+  // Stage 2 ('ai_solving'): AI Agent BESS automatically dispatches counter-flow to solve it
+  const [animStage, setAnimStage] = useState<AnimStage>('steady');
+  const [perturbedNode, setPerturbedNode] = useState<NodeId | null>(null);
+  const stageTimer1 = useRef<number | null>(null);
+  const stageTimer2 = useRef<number | null>(null);
 
-  // Station detail popover if user clicks a 3D station
-  const stationInfo: Record<
-    StationId,
-    { title: string; subtitle: string; metric: string }
-  > = {
-    solar: {
-      title: '☀️ Maqueta 01 · Planta Solar (Atacama)',
-      subtitle:
-        'Paneles fotovoltaicos que generan energía limpia gratis cuando brilla el sol. Si el cable central se llena y el Agente IA está apagado, el excedente se pierde.',
-      metric: `Producción actual: ${Math.round(state.solarAvailableMw)} MW (${
-        state.solarWastedMw > 5
-          ? `${Math.round(state.solarWastedMw)} MW desperdiciados`
-          : '100% aprovechado'
-      })`,
-    },
-    thermal: {
-      title: '🔥 Maqueta 02 · Central Térmica y Eólica',
-      subtitle:
-        'Respaldo convencional de gas + aerogeneradores. Puedes provocarle una avería con un clic para ver cómo el Agente IA protege al barrio usando la batería.',
-      metric: state.thermalBroken
-        ? `🚨 PLANTA AVERIADA (0 MW de gas · ${Math.round(state.windOutputMw)} MW eólicos)`
-        : `Producción firme: ${Math.round(state.thermalOutputMw + state.windOutputMw)} MW`,
-    },
-    battery: {
-      title: '🤖 Maqueta 03 · Super-Batería del Agente IA',
-      subtitle:
-        'El cerebro de la red. Cuando sobra sol, el Agente IA la carga automáticamente; cuando falta luz en las casas o se rompe la central térmica, la descarga al instante.',
-      metric: isCharging
-        ? `🔋 Guardando +${Math.round(Math.abs(state.batteryFlowMw))} MW solares`
-        : isDischarging
-        ? `⚡ Inyectando +${Math.round(state.batteryFlowMw)} MW hacia el barrio`
-        : `En espera · Carga al ${Math.round(state.batterySocPct)}%`,
-    },
-    grid: {
-      title: '⚡ Maqueta 04 · Subestación y Cable Central',
-      subtitle:
-        'Autopista eléctrica que lleva la energía de las plantas hacia el barrio de casas. Tiene un límite físico que puedes ajustar abajo.',
-      metric: `Flujo actual: ${Math.round(state.cableFlowMw)} / ${Math.round(
-        state.cableCapMw
-      )} MW (${Math.round(state.cableUtilPct)}%)`,
-    },
-    houses: {
-      title: '🏘️ Maqueta 05 · Barrio Residencial (Consumidor Final)',
-      subtitle:
-        'Representa los hogares de Chile donde llega la electricidad. Las ventanas y tejados muestran en vivo si todas las familias tienen luz.',
-      metric: hasBlackout
-        ? `🚨 APAGÓN PARCIAL: Faltan ${Math.round(state.housesBlackoutMw)} MW en el barrio`
-        : `✅ 100% de las casas iluminadas (${Math.round(state.housesServedMw)} MW)`,
-    },
+  const triggerTwoStageReaction = (sourceNode: NodeId, nextAiEnabled = aiEnabled) => {
+    if (stageTimer1.current) window.clearTimeout(stageTimer1.current);
+    if (stageTimer2.current) window.clearTimeout(stageTimer2.current);
+
+    setPerturbedNode(sourceNode);
+    setAnimStage('perturbing');
+
+    stageTimer1.current = window.setTimeout(() => {
+      if (nextAiEnabled) {
+        setAnimStage('ai_solving');
+        stageTimer2.current = window.setTimeout(() => {
+          setAnimStage('steady');
+        }, 3200);
+      } else {
+        setAnimStage('steady');
+      }
+    }, 820);
   };
 
+  useEffect(() => {
+    return () => {
+      if (stageTimer1.current) window.clearTimeout(stageTimer1.current);
+      if (stageTimer2.current) window.clearTimeout(stageTimer2.current);
+    };
+  }, []);
+
+  // Continuous animation loop for wind rotors, traveling wire packets, and AI sonar ring
+  const [rotorPhase, setRotorPhase] = useState<number>(0);
+  const [wirePhase, setWirePhase] = useState<number>(0);
+
+  const windSpeedFactor = Math.max(0.4, windMw / 180);
+
+  useLoop((dt, calm) => {
+    if (calm) return false;
+    setRotorPhase((p) => (p + dt * 1.35 * windSpeedFactor) % (Math.PI * 2));
+    setWirePhase((p) => (p + dt * 0.42) % 1);
+    return true;
+  }, true);
+
+  // ============================================================================
+  // LIVE POWER-FLOW & AI AGENT DISPATCH PHYSICS (HiGHS LP Grounded)
+  // ============================================================================
+  const northRenewableMw = solarMw + windMw;
+  const rawCorridorOverflowMw = Math.max(0, northRenewableMw - l2CapMw);
+
+  // How much excess solar the AI Agent absorbs into BESS (up to 600 MW total storage absorption)
+  const aiAbsorbMw = aiEnabled ? Math.min(600, rawCorridorOverflowMw) : 0;
+  const curtailedSolarMw = Math.max(0, rawCorridorOverflowMw - aiAbsorbMw);
+
+  // Flow reaching the 500 kV Substation from North renewables + Thermal gas
+  const solarToBessMw = aiAbsorbMw;
+  const windToSubMw = Math.min(windMw, l2CapMw);
+  const solarToSubMw = Math.max(0, Math.min(solarMw - solarToBessMw - curtailedSolarMw, l2CapMw - windToSubMw));
+  const thermalToSubMw = thermalMw;
+
+  const substationInflowMw = solarToSubMw + windToSubMw + thermalToSubMw;
+  const rawDeficitMw = Math.max(0, demandMw - substationInflowMw);
+
+  // If thermal drops or demand spikes, AI Agent injects emergency BESS power!
+  const aiInjectMw = aiEnabled && rawDeficitMw > 0 ? Math.min(480, rawDeficitMw) : 0;
+  const unservedMw = Math.max(0, rawDeficitMw - aiInjectMw);
+
+  // Net BESS flow (+ charging from solar excess, - discharging to rescue homes)
+  const netBessMw = aiInjectMw > 0 ? -aiInjectMw : aiAbsorbMw;
+  const bessTargetSoc =
+    aiInjectMw > 0
+      ? Math.max(24, Math.round(82 - (aiInjectMw / 480) * 48))
+      : aiAbsorbMw > 0
+      ? Math.min(96, Math.round(56 + (aiAbsorbMw / 600) * 38))
+      : 68;
+
+  const subToHousesMw = Math.min(demandMw, substationInflowMw);
+  const bessToHousesMw = aiInjectMw;
+  const bessToSubMw =
+    aiAbsorbMw > 0
+      ? Math.round(aiAbsorbMw * 0.25)
+      : aiInjectMw > 0
+      ? -Math.round(aiInjectMw * 0.35)
+      : 45;
+
+  const supplyRatio = demandMw > 0 ? Math.min(1, (subToHousesMw + bessToHousesMw) / demandMw) : 1;
+  const litHousesCount = unservedMw <= 15 ? 6 : Math.max(1, Math.round(supplyRatio * 6));
+  const freqHz = unservedMw > 20 ? 49.42 : curtailedSolarMw > 80 ? 50.18 : 50.0;
+
+  // Smoothly eased 3D heights & gauge angles
+  const solarLift = useEased(
+    activeNode === 'solar' || (animStage === 'perturbing' && perturbedNode === 'solar') ? 4.8 : 0,
+    0.22
+  );
+  const windLift = useEased(
+    activeNode === 'wind' || (animStage === 'perturbing' && perturbedNode === 'wind') ? 4.8 : 0,
+    0.22
+  );
+  const thermalLift = useEased(
+    activeNode === 'thermal' || (animStage === 'perturbing' && perturbedNode === 'thermal') ? 4.8 : 0,
+    0.22
+  );
+  const batteryLift = useEased(
+    activeNode === 'battery' || animStage === 'ai_solving' ? 5.2 : 0,
+    0.22
+  );
+  const subLift = useEased(
+    activeNode === 'substation' || (animStage === 'perturbing' && perturbedNode === 'substation') ? 4.8 : 0,
+    0.22
+  );
+  const housesLift = useEased(
+    activeNode === 'houses' || (animStage === 'perturbing' && perturbedNode === 'houses') ? 4.8 : 0,
+    0.22
+  );
+
+  // Physical 3D battery core cylinder height responds smoothly to State of Charge (SoC)
+  const bessCoreHeight = useEased(4.8 + (bessTargetSoc / 100) * 7.4, 0.16);
+
+  // Smoothly eased Substation 500 kV Dial Gauge Needle
+  const corridorLoadRatio = Math.min(1.12, (solarToSubMw + windToSubMw) / Math.max(1, l2CapMw));
+  const easedDialRatio = useEased(corridorLoadRatio, 0.18);
+
+  const dialX = SUBSTATION_C[0] - 12;
+  const dialY = SUBSTATION_C[1] + 16;
+  const dialR = 13.5;
+  const dialZ = SUBSTATION_C[2] + 3.2 + subLift;
+
+  const dialTicks = k.radialTicks(
+    dialX,
+    dialY,
+    dialR - 2.2,
+    24,
+    4,
+    dialZ,
+    [1.3, 2.6],
+    P,
+    -Math.PI * 0.75,
+    Math.PI * 1.5
+  );
+
+  const needleAngle = -Math.PI * 0.75 + easedDialRatio * Math.PI * 1.5;
+  const needleTip: k.Point3 = [
+    dialX + Math.cos(needleAngle) * (dialR - 3.6),
+    dialY + Math.sin(needleAngle) * (dialR - 3.6),
+    dialZ + 0.4,
+  ];
+
+  // ============================================================================
+  // PRESET SCENARIOS FROM TEAMMATES' HiGHS LP SOLVER
+  // ============================================================================
+  const applyScenarioPreset = (preset: IncidentPresetId) => {
+    setActivePreset(preset);
+    if (preset === 'normal') {
+      // Peak Atacama solar congestion on L2 (880 MW solar + 180 MW wind, 400 MW L2 cap, 380 MW thermal, 780 MW demand)
+      setSolarMw(880);
+      setWindMw(180);
+      setThermalMw(380);
+      setL2CapMw(400);
+      setDemandMw(780);
+      setAiEnabled(true);
+      triggerTwoStageReaction('solar', true);
+    } else if (preset === 'sudden_outage') {
+      // Sudden thermal crash at 18:00-22:00 (gas_centro drops to 0 MW, evening demand 780 MW, solar 180 MW, wind 220 MW)
+      setSolarMw(180);
+      setWindMw(220);
+      setThermalMw(0);
+      setL2CapMw(400);
+      setDemandMw(780);
+      setAiEnabled(true);
+      triggerTwoStageReaction('thermal', true);
+    } else if (preset === 'planned_maintenance') {
+      // Planned maintenance + L2 uprate to 600 MW (c3_uprate_l2)
+      setSolarMw(720);
+      setWindMw(220);
+      setThermalMw(200);
+      setL2CapMw(600);
+      setDemandMw(800);
+      setAiEnabled(true);
+      triggerTwoStageReaction('substation', true);
+    }
+    void startBackendAgentRun(preset);
+    void postOperatorDecision({
+      investigation_id: `sen-${preset}`,
+      candidate_id: preset === 'planned_maintenance' ? 'c3_uprate_l2' : 'c1_battery_norte_grande',
+      decision: 'approved',
+    });
+  };
+
+  // Live two-stage narrative text for top borderless telemetry bar
+  let stage1Summary = '';
+  let stage2Summary = '';
+
+  if (unservedMw > 10) {
+    stage1Summary = `ALERTA DE RED: Déficit térmico de ${Math.round(rawDeficitMw)} MW hacia 06 · Barrio Residencial`;
+    stage2Summary = `AGENTE IA APAGADO: ${Math.round(unservedMw)} MW sin suministro (${6 - litHousesCount} manzanas a oscuras · Activa IA para rescatar 243,058 hogares)`;
+  } else if (aiInjectMw > 0) {
+    stage1Summary = `FASE 1 · PERTURBACIÓN: Caída en 03 · Central Gas deja déficit de ${Math.round(rawDeficitMw)} MW en hora punta`;
+    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA: 04 · Batería BESS inyecta +${Math.round(aiInjectMw)} MW de emergencia → 100% hogares iluminados (243,058 hogares protegidos)`;
+  } else if (curtailedSolarMw > 10) {
+    stage1Summary = `SATURACIÓN L2: Excedente renovable de +${Math.round(rawCorridorOverflowMw)} MW supera capacidad de 05 · Troncal L2 (${l2CapMw} MW)`;
+    stage2Summary = `AGENTE IA APAGADO: Se pierden ${Math.round(curtailedSolarMw)} MW de energía solar limpia (Activa Agente IA para almacenar en BESS)`;
+  } else if (aiAbsorbMw > 0) {
+    const savedUsd = Math.round((aiAbsorbMw / 400) * 51950);
+    const savedMwh = ((aiAbsorbMw / 400) * 631.6).toFixed(1);
+    stage1Summary = `FASE 1 · PERTURBACIÓN: Generación Norte (${Math.round(northRenewableMw)} MW) supera capacidad de 05 · Troncal L2 (${l2CapMw} MW)`;
+    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA: 04 · Batería BESS absorbe +${Math.round(aiAbsorbMw)} MW por línea directa → 0 MW recorte (-${savedMwh} MWh · -$${savedUsd.toLocaleString()} USD/día)`;
+  } else {
+    stage1Summary = `FLUJO NOMINAL SEN: Generación limpia (${Math.round(northRenewableMw)} MW) + Térmica (${thermalMw} MW) abasteciendo ${demandMw} MW`;
+    stage2Summary = `AGENTE IA EN GUARDIA (HiGHS LP): Corredor L2 al ${Math.round(corridorLoadRatio * 100)}% (${Math.round(solarToSubMw + windToSubMw)}/${l2CapMw} MW) · 50.00 Hz estables`;
+  }
+
+  // 4-datum minimalist borderless specifications + inline parameter controls
+  const nodeSpecs: Array<{
+    id: NodeId;
+    pos: { left: string; top: string };
+    align: 'left' | 'right' | 'center';
+    dotColor: string;
+    name: string;
+    d1: string;
+    d2: string;
+    d3: string;
+    slider?: {
+      value: number;
+      min: number;
+      max: number;
+      step: number;
+      unit: string;
+      accent: string;
+      onChange: (v: number) => void;
+      quickLabel?: string;
+      onQuickClick?: () => void;
+    };
+  }> = [
+    {
+      id: 'solar',
+      pos: toPct([SOLAR_C[0] - 8, SOLAR_C[1] - 32, 20]),
+      align: 'center',
+      dotColor: curtailedSolarMw > 10 ? '#e5484d' : '#16a34a',
+      name: '01 · PLANTA SOLAR ATACAMA',
+      d1: `${solarMw} MW · FV NORTE GRANDE`,
+      d2:
+        aiAbsorbMw > 0
+          ? `→ +${Math.round(aiAbsorbMw)} MW A BATERÍA IA · ${Math.round(solarToSubMw)} MW A L2`
+          : `220 kV DC/AC → ${Math.round(solarToSubMw)} MW EN L2`,
+      d3:
+        curtailedSolarMw > 10
+          ? `▲ ${Math.round(curtailedSolarMw)} MW RECORTE SOLAR`
+          : `${Math.round((solarMw / 989) * 100)}% IRRADIANCIA · 0 VERTIMIENTO`,
+      slider: {
+        value: solarMw,
+        min: 0,
+        max: 989,
+        step: 25,
+        unit: 'MW',
+        accent: '#16a34a',
+        onChange: (v) => {
+          setSolarMw(v);
+          triggerTwoStageReaction('solar');
+        },
+        quickLabel: solarMw < 850 ? 'Pico 880 MW' : 'Base 420 MW',
+        onQuickClick: () => {
+          const next = solarMw < 850 ? 880 : 420;
+          setSolarMw(next);
+          triggerTwoStageReaction('solar');
+        },
+      },
+    },
+    {
+      id: 'wind',
+      pos: toPct([WIND_C[0] - 16, WIND_C[1] + 20, -18]),
+      align: 'center',
+      dotColor: '#16a34a',
+      name: '02 · PARQUE EÓLICO NORTE',
+      d1: `${windMw} MW · EÓLICA`,
+      d2: `220 kV AC → ${Math.round(windToSubMw)} MW EN L2`,
+      d3: `${(8.5 + (windMw / 400) * 9.5).toFixed(1)} RPM · 3 TURBINAS`,
+      slider: {
+        value: windMw,
+        min: 40,
+        max: 400,
+        step: 20,
+        unit: 'MW',
+        accent: '#16a34a',
+        onChange: (v) => {
+          setWindMw(v);
+          triggerTwoStageReaction('wind');
+        },
+        quickLabel: windMw < 340 ? 'Ráfaga 360 MW' : 'Base 180 MW',
+        onQuickClick: () => {
+          const next = windMw < 340 ? 360 : 180;
+          setWindMw(next);
+          triggerTwoStageReaction('wind');
+        },
+      },
+    },
+    {
+      id: 'thermal',
+      pos: toPct([THERMAL_C[0] + 6, THERMAL_C[1] + 28, -12]),
+      align: 'center',
+      dotColor: thermalMw === 0 ? '#e5484d' : '#2563eb',
+      name: '03 · CENTRAL TÉRMICA GAS',
+      d1: thermalMw === 0 ? '0 MW · FUERA DE SERVICIO' : `${thermalMw} MW · CICLO COMBINADO`,
+      d2: '500 kV AC · GAS_CENTRO',
+      d3: thermalMw === 0 ? '▲ CAÍDA FORZADA 18:00–22:00' : 'RESERVA SINCRÓNICA ACTIVA',
+      slider: {
+        value: thermalMw,
+        min: 0,
+        max: 600,
+        step: 50,
+        unit: 'MW',
+        accent: thermalMw === 0 ? '#e5484d' : '#2563eb',
+        onChange: (v) => {
+          setThermalMw(v);
+          triggerTwoStageReaction('thermal');
+        },
+        quickLabel: thermalMw > 0 ? 'Provocar caída 0 MW' : 'Restaurar 380 MW',
+        onQuickClick: () => {
+          if (thermalMw > 0) {
+            applyScenarioPreset('sudden_outage');
+          } else {
+            setThermalMw(380);
+            setSolarMw(620);
+            triggerTwoStageReaction('thermal');
+          }
+        },
+      },
+    },
+    {
+      id: 'battery',
+      pos: toPct([BATTERY_C[0] - 2, BATTERY_C[1] - 32, 20]),
+      align: 'center',
+      dotColor: !aiEnabled ? '#71717a' : aiInjectMw > 0 ? '#2563eb' : '#16a34a',
+      name: '04 · BATERÍA AGENTE IA (BESS)',
+      d1: !aiEnabled
+        ? '0 MW · AGENTE IA EN PAUSA'
+        : netBessMw > 0
+        ? `+${Math.round(netBessMw)} MW · ABSORBIENDO EXCEDENTE`
+        : netBessMw < 0
+        ? `+${Math.round(Math.abs(netBessMw))} MW · INYECCIÓN RESCATE`
+        : 'EN GUARDIA · OPTIMIZADOR HiGHS',
+      d2: '800 MWh NORTE + 600 MWh SUR',
+      d3: `${bessTargetSoc}% SoC · ${aiEnabled ? 'DESPACHO IA AUTOMÁTICO' : 'MODO MANUAL SIN IA'}`,
+    },
+    {
+      id: 'substation',
+      pos: toPct([SUBSTATION_C[0] - 2, SUBSTATION_C[1] + 34, -11]),
+      align: 'center',
+      dotColor: curtailedSolarMw > 10 ? '#e5484d' : '#2563eb',
+      name: '05 · SUBESTACIÓN TRONCAL L2',
+      d1: `${Math.round(solarToSubMw + windToSubMw)} / ${l2CapMw} MW · CORREDOR L2`,
+      d2: '500 kV / 220 kV · NORTE → CENTRO',
+      d3: `${freqHz.toFixed(2)} Hz · ${l2CapMw > 450 ? 'AMPLIACIÓN c3 ACTIVA' : 'CAPACIDAD NOMINAL'}`,
+      slider: {
+        value: l2CapMw,
+        min: 300,
+        max: 600,
+        step: 50,
+        unit: 'MW',
+        accent: '#2563eb',
+        onChange: (v) => {
+          setL2CapMw(v);
+          triggerTwoStageReaction('substation');
+        },
+        quickLabel: l2CapMw < 600 ? 'Ampliar L2 a 600 MW' : 'Base 400 MW',
+        onQuickClick: () => {
+          const next = l2CapMw < 600 ? 600 : 400;
+          setL2CapMw(next);
+          triggerTwoStageReaction('substation');
+        },
+      },
+    },
+    {
+      id: 'houses',
+      pos: toPct([HOUSES_C[0] - 10, HOUSES_C[1] - 26, 29]),
+      align: 'center',
+      dotColor: unservedMw > 15 ? '#e5484d' : '#16a34a',
+      name: '06 · BARRIO RESIDENCIAL',
+      d1: `${demandMw} MW · DEMANDA HOGARES`,
+      d2: aiInjectMw > 0 ? `+${Math.round(aiInjectMw)} MW RESPALDO BESS IA` : '23 kV / 220 V AC · CENTRO-SUR',
+      d3:
+        unservedMw > 15
+          ? `▲ ${Math.round(unservedMw)} MW DÉFICIT (${litHousesCount}/6 MANZANAS)`
+          : `100% SUMINISTRO (${litHousesCount}/6 MANZANAS ILUMINADAS)`,
+      slider: {
+        value: demandMw,
+        min: 500,
+        max: 1200,
+        step: 40,
+        unit: 'MW',
+        accent: unservedMw > 15 ? '#e5484d' : '#16a34a',
+        onChange: (v) => {
+          setDemandMw(v);
+          triggerTwoStageReaction('houses');
+        },
+        quickLabel: demandMw < 1050 ? 'Punta 1,100 MW' : 'Base 780 MW',
+        onQuickClick: () => {
+          const next = demandMw < 1050 ? 1100 : 780;
+          setDemandMw(next);
+          triggerTwoStageReaction('houses');
+        },
+      },
+    },
+  ];
+
   return (
-    <Plate
-      fig="ESQUEMA INTERACTIVO 3D · RED ELÉCTRICA"
-      title="PLANTAS GENERADORAS (IZQ.)  →  RED Y AGENTE IA (CENTRO)  →  BARRIO DE CASAS (DER.)"
-      hint="TOCA CUALQUIER MAQUETA 3D O MUEVE LOS CONTROLES DE ABAJO"
-      readout={
-        state.agentEnabled ? '🤖 AGENTE IA: ACTIVO' : '⚠️ AGENTE IA: APAGADO'
-      }
-    >
-      <div className="maquette-stage">
-        {/* FLOATING LABELS FOR EACH OF THE 5 SCHEMATIC 3D STATIONS */}
-        <div className="maquette-overlay">
-          {/* 1. SOLAR PLANT LABEL */}
-          <button
-            type="button"
-            className="station-tag"
-            data-tone={
-              state.solarWastedMw > 10
-                ? 'red'
-                : state.solarAvailableMw > 20
-                ? 'green'
-                : 'neutral'
-            }
-            style={{ left: solarPin.left, top: solarPin.top }}
-            onClick={() =>
-              onSelectStation(selectedStation === 'solar' ? null : 'solar')
-            }
-          >
-            <span className="station-tag-title">☀️ PLANTA SOLAR</span>
-            <strong className="station-tag-val">
-              {Math.round(state.solarAvailableMw)} MW
-            </strong>
-            <span className="station-tag-sub">
-              {state.solarWastedMw > 10
-                ? `❌ Pierde ${Math.round(state.solarWastedMw)} MW`
-                : state.solarAvailableMw > 20
-                ? '✓ Enviando sol a la red'
-                : '☾ De noche (0 MW)'}
+    <Stage className="iso iso-fullspace">
+      <div className="fullspace-stage">
+        {/* =========================================================
+            TOP BORDERLESS TELEMETRY & 2-STAGE AI AGENT NARRATIVE
+           ========================================================= */}
+        <header className="bare-top-telemetry">
+          <div className="bare-top-row">
+            <span className="bare-brand-tag">
+              <span
+                className="bare-live-dot"
+                style={{
+                  backgroundColor:
+                    animStage === 'perturbing'
+                      ? '#e5484d'
+                      : animStage === 'ai_solving'
+                      ? '#16a34a'
+                      : '#2563eb',
+                }}
+              />
+              SEN CHILE · RED 3D & AGENTE IA (HiGHS LP)
             </span>
-          </button>
 
-          {/* 2. THERMAL + WIND PLANT LABEL */}
-          <button
-            type="button"
-            className="station-tag station-tag--bottom"
-            data-tone={state.thermalBroken ? 'red' : 'blue'}
-            style={{ left: thermalPin.left, top: thermalPin.top }}
-            onClick={onToggleThermalBreak}
-            title="Haz clic para averiar o reparar la central térmica"
-          >
-            <span className="station-tag-title">🔥 CENTRAL TÉRMICA + EÓLICA</span>
-            <strong className="station-tag-val">
-              {state.thermalBroken
-                ? '💥 AVERIADA'
-                : `${Math.round(state.thermalOutputMw + state.windOutputMw)} MW`}
-            </strong>
-            <span className="station-tag-sub">
-              {state.thermalBroken
-                ? 'Clic aquí para reparar planta'
-                : 'Clic aquí para simular avería'}
+            <div className="bare-preset-links">
+              <button
+                type="button"
+                className={`bare-link-btn ${activePreset === 'normal' ? 'is-current' : ''}`}
+                onClick={() => applyScenarioPreset('normal')}
+              >
+                01 · Pico Solar (880 MW)
+              </button>
+              <span className="bare-sep">·</span>
+              <button
+                type="button"
+                className={`bare-link-btn ${activePreset === 'sudden_outage' ? 'is-current' : ''}`}
+                onClick={() => applyScenarioPreset('sudden_outage')}
+              >
+                02 · Caída Gas (0 MW)
+              </button>
+              <span className="bare-sep">·</span>
+              <button
+                type="button"
+                className={`bare-link-btn ${activePreset === 'planned_maintenance' ? 'is-current' : ''}`}
+                onClick={() => applyScenarioPreset('planned_maintenance')}
+              >
+                03 · Ampliación L2 (600 MW)
+              </button>
+              <span className="bare-sep">|</span>
+              <button
+                type="button"
+                className={`bare-ai-toggle ${aiEnabled ? 'is-on' : 'is-off'}`}
+                onClick={() => {
+                  const next = !aiEnabled;
+                  setAiEnabled(next);
+                  triggerTwoStageReaction('battery', next);
+                }}
+              >
+                {aiEnabled ? '● AGENTE IA: ACTIVO' : '○ AGENTE IA: APAGADO'}
+              </button>
+            </div>
+          </div>
+
+          <div className="bare-narrative-strip">
+            <span
+              className={`bare-stage-line ${
+                animStage === 'perturbing' ? 'is-highlighting-perturb' : ''
+              }`}
+            >
+              {stage1Summary}
             </span>
-          </button>
-
-          {/* 3. AI BATTERY STATION LABEL */}
-          <button
-            type="button"
-            className="station-tag"
-            data-tone={
-              !state.agentEnabled
-                ? 'neutral'
-                : isCharging
-                ? 'green'
-                : isDischarging
-                ? 'blue'
-                : 'green'
-            }
-            style={{ left: batteryPin.left, top: batteryPin.top }}
-            onClick={onToggleAgent}
-            title="Haz clic para encender o apagar el Agente IA"
-          >
-            <span className="station-tag-title">🤖 BATERÍA AGENTE IA</span>
-            <strong className="station-tag-val">
-              {!state.agentEnabled
-                ? 'DESACTIVADA'
-                : isCharging
-                ? `CARGANDO +${Math.round(Math.abs(state.batteryFlowMw))} MW`
-                : isDischarging
-                ? `INYECTANDO +${Math.round(state.batteryFlowMw)} MW`
-                : `LISTA (${Math.round(state.batterySocPct)}%)`}
-            </strong>
-            <span className="station-tag-sub">
-              {!state.agentEnabled
-                ? 'Clic para activar Agente IA'
-                : isCharging
-                ? 'Guardando sol que no cabe en cable'
-                : isDischarging
-                ? 'Enviando luz de emergencia a casas'
-                : 'Vigilando la red en tiempo real'}
+            <span className="bare-arrow-sep">→</span>
+            <span
+              className={`bare-stage-line ${
+                animStage === 'ai_solving'
+                  ? 'is-highlighting-ai'
+                  : !aiEnabled
+                  ? 'is-ai-disabled'
+                  : 'is-ai-steady'
+              }`}
+            >
+              {stage2Summary}
             </span>
-          </button>
+          </div>
+        </header>
 
-          {/* 4. CENTRAL CABLE / SUBSTATION LABEL */}
-          <button
-            type="button"
-            className="station-tag station-tag--bottom"
-            data-tone={state.cableSaturated ? 'red' : 'blue'}
-            style={{ left: gridPin.left, top: gridPin.top }}
-            onClick={() =>
-              onSelectStation(selectedStation === 'grid' ? null : 'grid')
-            }
-          >
-            <span className="station-tag-title">⚡ CABLE CENTRAL</span>
-            <strong className="station-tag-val">
-              {Math.round(state.cableFlowMw)} / {Math.round(state.cableCapMw)} MW
-            </strong>
-            <span className="station-tag-sub">
-              {state.cableSaturated
-                ? '⚠️ CABLE AL 100% (Atasco)'
-                : `Capacidad al ${Math.round(state.cableUtilPct)}%`}
-            </span>
-          </button>
-
-          {/* 5. NEIGHBORHOOD OF HOUSES LABEL */}
-          <button
-            type="button"
-            className="station-tag"
-            data-tone={hasBlackout ? 'red' : 'green'}
-            style={{ left: housesPin.left, top: housesPin.top }}
-            onClick={() =>
-              onSelectStation(selectedStation === 'houses' ? null : 'houses')
-            }
-          >
-            <span className="station-tag-title">🏘️ BARRIO DE CASAS</span>
-            <strong className="station-tag-val">
-              {hasBlackout
-                ? `🚨 APAGÓN (${Math.round(state.housesLitPct)}% luz)`
-                : '✅ 100% CON LUZ'}
-            </strong>
-            <span className="station-tag-sub">
-              {hasBlackout
-                ? `Faltan ${Math.round(state.housesBlackoutMw)} MW en hogares`
-                : `Consumiendo ${Math.round(state.demandMw)} MW sin cortes`}
-            </span>
-          </button>
-        </div>
-
-        <IsoFigure
-          width={W}
-          height={H}
-          label="Esquema isométrico 3D de plantas eléctricas, batería IA y barrio de casas"
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="fullspace-svg"
+          aria-label="Esquema 3D interactivo de la red eléctrica de Chile"
         >
-          {/* ============================================================
-              STATION 1 (TOP-LEFT): ☀️ PLANTA SOLAR ATACAMA
-             ============================================================ */}
-          <g
-            transform={k.translateAlong(P, [0, 0, liftSolar])}
-            style={{ cursor: 'pointer' }}
-            onClick={() =>
-              onSelectStation(selectedStation === 'solar' ? null : 'solar')
-            }
-          >
-            <StationPlinth
-              plan={SOLAR_PAD}
-              selected={selectedStation === 'solar'}
-              alert={state.solarWastedMw > 10}
+          {/* =========================================================
+              SUSPENDED MID-AIR NETWORK WIRES WITH 2-STAGE ANIMATION
+             ========================================================= */}
+          <g className="network-wires">
+            {/* Render Mid-Air Junction Pylons first so wire telemetry badges stay crisp on top */}
+            <MidAirPylon x={-132} y={-38} z={2} />
+            <MidAirPylon x={-68} y={92} z={1} />
+            <MidAirPylon x={0} y={0} z={2} />
+            <MidAirPylon x={28} y={-76} z={2} />
+            <MidAirPylon x={96} y={12} z={2} />
+
+            {/* 1. Solar Plant -> AI Battery (Direct DC/AC AI Solar Absorption Link) */}
+            <AnimatedPowerLink
+              from={k.iso([SOLAR_C[0] + 24, SOLAR_C[1] - 4, 2 + solarLift], P)}
+              via={[
+                k.iso([-132, -38, 2], P),
+                k.iso([-95, -52, 2], P),
+              ]}
+              to={k.iso([BATTERY_C[0] - 24, BATTERY_C[1] + 2, 2 + batteryLift], P)}
+              mw={solarToBessMw}
+              tone="green"
+              phase={wirePhase}
+              isPerturbed={animStage === 'perturbing' && perturbedNode === 'solar' && solarToBessMw > 0}
+              isAiSolving={
+                (animStage === 'ai_solving' && solarToBessMw > 0) ||
+                (aiEnabled && solarToBessMw >= 100)
+              }
+              labelT={0.64}
+              midLabel={
+                solarToBessMw > 0
+                  ? `IA +${Math.round(solarToBessMw)} MW → CARGA BESS`
+                  : undefined
+              }
             />
 
-            {/* 6 Tilted Solar PV Collector Arrays in 2 rows of 3 */}
-            {[0, 1].map((row) =>
-              [0, 1, 2].map((col) => {
-                const sx = SOLAR_PAD.x + 8 + col * 21;
-                const sy = SOLAR_PAD.y + 8 + row * 19;
-                const active = state.solarAvailableMw > 25;
-                const h = 2.4 + row * 0.8;
+            {/* 2. Solar Plant -> 500 kV Substation (Corridor L1/L2) */}
+            <AnimatedPowerLink
+              from={k.iso([SOLAR_C[0] + 22, SOLAR_C[1] + 12, 2 + solarLift], P)}
+              via={[
+                k.iso([-115, 22, 1], P),
+                k.iso([-42, 48, 1], P),
+              ]}
+              to={k.iso([SUBSTATION_C[0] - 26, SUBSTATION_C[1] - 6, 2 + subLift], P)}
+              mw={solarToSubMw}
+              tone={curtailedSolarMw > 10 ? 'red' : 'green'}
+              phase={wirePhase}
+              isPerturbed={animStage === 'perturbing' && perturbedNode === 'solar'}
+              labelT={0.5}
+              midLabel={
+                animStage === 'perturbing' && perturbedNode === 'solar'
+                  ? `PICO SOLAR ${solarMw} MW → L2`
+                  : curtailedSolarMw > 10
+                  ? `L2 SATURADA (+${Math.round(curtailedSolarMw)} MW RECORTE)`
+                  : `${Math.round(solarToSubMw)} MW SOLAR → L2`
+              }
+            />
+
+            {/* 3. Wind Farm -> 500 kV Substation */}
+            <AnimatedPowerLink
+              from={k.iso([WIND_C[0] + 24, WIND_C[1] - 4, 2 + windLift], P)}
+              via={[
+                k.iso([-68, 92, 1], P),
+                k.iso([-12, 78, 1], P),
+              ]}
+              to={k.iso([SUBSTATION_C[0] - 24, SUBSTATION_C[1] + 8, 2 + subLift], P)}
+              mw={windToSubMw}
+              tone="green"
+              phase={wirePhase}
+              isPerturbed={animStage === 'perturbing' && perturbedNode === 'wind'}
+              labelT={0.62}
+              midLabel={
+                animStage === 'perturbing' && perturbedNode === 'wind'
+                  ? `${windMw} MW EÓLICA → L2`
+                  : undefined
+              }
+            />
+
+            {/* 4. Thermal Gas Plant -> 500 kV Substation */}
+            <AnimatedPowerLink
+              from={k.iso([THERMAL_C[0] + 24, THERMAL_C[1] - 12, 2 + thermalLift], P)}
+              via={[
+                k.iso([8, 144, 1], P),
+                k.iso([35, 108, 1], P),
+              ]}
+              to={k.iso([SUBSTATION_C[0] - 6, SUBSTATION_C[1] + 22, 2 + subLift], P)}
+              mw={thermalToSubMw}
+              tone={thermalMw === 0 ? 'red' : 'blue'}
+              phase={wirePhase}
+              isPerturbed={animStage === 'perturbing' && perturbedNode === 'thermal'}
+              labelT={0.5}
+              midLabel={
+                thermalMw === 0
+                  ? '0 MW · CAÍDA GAS_CENTRO'
+                  : animStage === 'perturbing' && perturbedNode === 'thermal'
+                  ? `${thermalMw} MW TÉRMICA`
+                  : undefined
+              }
+            />
+
+            {/* 5. Bidirectional AI Battery <-> 500 kV Substation Link */}
+            <AnimatedPowerLink
+              from={k.iso([BATTERY_C[0] + 4, BATTERY_C[1] + 20, 2 + batteryLift], P)}
+              via={[k.iso([0, 0, 2], P)]}
+              to={k.iso([SUBSTATION_C[0] - 4, SUBSTATION_C[1] - 20, 2 + subLift], P)}
+              mw={aiEnabled ? Math.max(60, Math.abs(bessToSubMw)) : 0}
+              tone={aiInjectMw > 0 ? 'blue' : 'green'}
+              phase={wirePhase}
+              reverse={bessToSubMw > 0}
+              isAiSolving={animStage === 'ai_solving'}
+              labelT={0.68}
+              midLabel={
+                animStage === 'ai_solving'
+                  ? aiAbsorbMw > 0
+                    ? 'IA DESCONGESTIONA L2'
+                    : 'IA ESTABILIZA 50 Hz'
+                  : undefined
+              }
+            />
+
+            {/* 6. AI Battery -> Residential Neighborhood (Emergency AI Dispatch Line) */}
+            <AnimatedPowerLink
+              from={k.iso([BATTERY_C[0] + 26, BATTERY_C[1] - 4, 2 + batteryLift], P)}
+              via={[
+                k.iso([28, -76, 2], P),
+                k.iso([78, -82, 2], P),
+              ]}
+              to={k.iso([HOUSES_C[0] - 32, HOUSES_C[1] - 8, 2 + housesLift], P)}
+              mw={bessToHousesMw}
+              tone="blue"
+              phase={wirePhase}
+              isAiSolving={bessToHousesMw > 0}
+              labelT={0.62}
+              midLabel={
+                bessToHousesMw > 0
+                  ? `RESCATE IA +${Math.round(bessToHousesMw)} MW → HOGARES`
+                  : undefined
+              }
+            />
+
+            {/* 7. 500 kV Substation -> Residential Neighborhood (Main Trunk Feeder) */}
+            <AnimatedPowerLink
+              from={k.iso([SUBSTATION_C[0] + 26, SUBSTATION_C[1] - 6, 2 + subLift], P)}
+              via={[
+                k.iso([96, 12, 2], P),
+                k.iso([118, -32, 2], P),
+              ]}
+              to={k.iso([HOUSES_C[0] - 18, HOUSES_C[1] + 26, 2 + housesLift], P)}
+              mw={subToHousesMw}
+              tone={unservedMw > 15 ? 'red' : 'blue'}
+              phase={wirePhase}
+              isPerturbed={
+                animStage === 'perturbing' &&
+                (perturbedNode === 'substation' || perturbedNode === 'houses')
+              }
+              labelT={0.62}
+              midLabel={
+                unservedMw > 15
+                  ? `DÉFICIT -${Math.round(unservedMw)} MW`
+                  : `${Math.round(subToHousesMw)} MW TRONCAL`
+              }
+            />
+          </g>
+
+          {/* =========================================================
+              NODE 01: PLANTA SOLAR ATACAMA (Free-floating 3D arrays)
+             ========================================================= */}
+          <g
+            className="maquette-station-group"
+            onMouseEnter={() => setActiveNode('solar')}
+            onMouseLeave={() => setActiveNode(null)}
+            onClick={() => setActiveNode((n) => (n === 'solar' ? null : 'solar'))}
+          >
+            {[-18, -5, 8, 21].map((dx) =>
+              [-14, 4].map((dy) => {
+                const px = SOLAR_C[0] + dx - 10;
+                const py = SOLAR_C[1] + dy;
+                const pz = SOLAR_C[2] + solarLift;
                 return (
-                  <g key={`pv-${row}-${col}`}>
+                  <g key={`pv-${dx}-${dy}`}>
+                    <path
+                      className="iso-halo"
+                      d={k.haloOf({ x: px, y: py, w: 10.5, d: 12.5, r: 1 }, pz - 1, 2, P)}
+                    />
+                    <Solid
+                      paths={k.cylinder(px + 5.2, py + 6.2, 1.3, pz - 2, 2.2, P, 12)}
+                      tone="lo"
+                      crease="none"
+                    />
                     <Solid
                       paths={k.slabOf(
-                        { x: sx, y: sy, w: 16, d: 13, r: 1.0 },
-                        0,
-                        h,
+                        { x: px, y: py, w: 10.5, d: 12.5, r: 0.9 },
+                        pz,
+                        2.4,
                         P,
-                        3,
-                        0.3
+                        4,
+                        0.4
                       )}
-                      tone={active ? 'hi' : 'mid'}
-                      lit={active && state.sunPct >= 60}
+                      tone={solarMw > 50 ? 'hi' : 'mid'}
+                      lit={activeNode === 'solar' || solarMw >= 800}
                       inner={
                         <Line
                           d={
-                            k.lineOnTop(
-                              [sx + 2, sy + 4.3],
-                              [sx + 14, sy + 4.3],
-                              h,
-                              P
-                            ) +
-                            k.lineOnTop(
-                              [sx + 2, sy + 8.6],
-                              [sx + 14, sy + 8.6],
-                              h,
-                              P
-                            )
+                            k.topTicks(
+                              px + 1.8,
+                              px + 8.8,
+                              2.4,
+                              1,
+                              py + 1.4,
+                              pz + 2.4,
+                              [9.6, 9.6],
+                              P,
+                              'x'
+                            ).minor +
+                            k.topTicks(
+                              py + 2.2,
+                              py + 10.4,
+                              2.8,
+                              1,
+                              px + 1.4,
+                              pz + 2.4,
+                              [7.8, 7.8],
+                              P,
+                              'y'
+                            ).minor
                           }
-                          tone={active ? 'green' : 'faint'}
+                          tone={curtailedSolarMw > 10 ? 'red' : 'green'}
                         />
                       }
                     />
@@ -558,581 +1179,636 @@ export const ChileIsoMaquette: React.FC<ChileIsoMaquetteProps> = ({
               })
             )}
 
-            {/* Curtailment plume if solar energy is being wasted */}
-            {state.solarWastedMw > 10 && (
-              <g>
-                <Line
-                  d={k.rise([-117, -48], 4, 18, P)}
-                  tone="red"
-                  dashed
-                  flow
-                />
-                <Line d={k.ring(-117, -48, 6, 18, P, 24)} tone="red" />
-              </g>
-            )}
-
-            <FaceText
-              transform={k.topMatrix([SOLAR_PAD.x + 8, SOLAR_PAD.y + 51], 0.2, P)}
-              size={3.4}
-              tone="hi"
-            >
-              01 · PLANTA SOLAR
-            </FaceText>
-          </g>
-
-          {/* ============================================================
-              STATION 2 (BOTTOM-LEFT): 🔥 CENTRAL TÉRMICA + EÓLICA
-             ============================================================ */}
-          <g
-            transform={k.translateAlong(P, [0, 0, liftThermal])}
-            style={{ cursor: 'pointer' }}
-            onClick={() =>
-              onSelectStation(selectedStation === 'thermal' ? null : 'thermal')
-            }
-          >
-            <StationPlinth
-              plan={THERMAL_PAD}
-              selected={selectedStation === 'thermal'}
-              alert={state.thermalBroken}
-            />
-
-            {/* Main Turbine Generator Hall */}
             <Solid
               paths={k.slabOf(
-                { x: THERMAL_PAD.x + 8, y: THERMAL_PAD.y + 10, w: 36, d: 28, r: 2 },
-                0,
-                11,
-                P,
-                4,
-                0.7
-              )}
-              tone={state.thermalBroken ? 'lo' : 'hi'}
-              inner={
-                <Line
-                  d={k.sideSeam(
-                    { x: THERMAL_PAD.x + 8, y: THERMAL_PAD.y + 10, w: 36, d: 28, r: 2 },
-                    5.5,
-                    P,
-                    4
-                  )}
-                  tone={state.thermalBroken ? 'red' : 'faint'}
-                />
-              }
-            />
-
-            {/* Two Exhaust Chimneys + Trip Valve */}
-            {[0, 1].map((cIdx) => (
-              <Solid
-                key={`chimney-${cIdx}`}
-                paths={k.cylinder(
-                  THERMAL_PAD.x + 18 + cIdx * 13,
-                  THERMAL_PAD.y + 22,
-                  4.2,
-                  11,
-                  11,
-                  P,
-                  24,
-                  0.35
-                )}
-                tone={state.thermalBroken ? 'lo' : 'hi'}
-                inner={
-                  <Line
-                    d={k.sideArc(
-                      THERMAL_PAD.x + 18 + cIdx * 13,
-                      THERMAL_PAD.y + 22,
-                      4.2,
-                      19,
-                      P,
-                      16
-                    )}
-                    tone={state.thermalBroken ? 'red' : 'lo'}
-                  />
-                }
-              />
-            ))}
-
-            {/* Red Fault Breaker Plunger when Thermal Plant is Broken */}
-            <g transform={k.translateAlong(P, [0, 0, easedBreaker * 6])}>
-              <Solid
-                paths={k.cylinder(
-                  THERMAL_PAD.x + 26,
-                  THERMAL_PAD.y + 30,
-                  3.5,
-                  11,
-                  4,
-                  P,
-                  20
-                )}
-                tone="hi"
-                lit={state.thermalBroken}
-              />
-            </g>
-            {state.thermalBroken && (
-              <Line
-                d={k.ring(THERMAL_PAD.x + 26, THERMAL_PAD.y + 30, 8, 12, P, 24)}
-                tone="red"
-              />
-            )}
-
-            {/* Wind Turbine on the right side of Station 2 */}
-            <g>
-              <Solid
-                paths={k.cylinder(
-                  THERMAL_PAD.x + 58,
-                  THERMAL_PAD.y + 24,
-                  3.8,
-                  0,
-                  2.2,
-                  P,
-                  20
-                )}
-                tone="mid"
-                crease="none"
-              />
-              <Solid
-                paths={k.cylinder(
-                  THERMAL_PAD.x + 58,
-                  THERMAL_PAD.y + 24,
-                  1.6,
-                  2.2,
-                  19,
-                  P,
-                  20
-                )}
-                tone="hi"
-                crease="none"
-              />
-              <Solid
-                paths={k.slabOf(
-                  {
-                    x: THERMAL_PAD.x + 55,
-                    y: THERMAL_PAD.y + 22,
-                    w: 6,
-                    d: 4.5,
-                    r: 1,
-                  },
-                  21.2,
-                  3.2,
-                  P,
-                  3
-                )}
-                tone="hi"
-              />
-              {[0, 1, 2].map((bIdx) => {
-                const ang = (state.sunPct * 0.05) + (bIdx * Math.PI * 2) / 3;
-                const wx = THERMAL_PAD.x + 58;
-                const wy = THERMAL_PAD.y + 24;
-                return (
-                  <Line
-                    key={`wind-b-${bIdx}`}
-                    d={k.segment(
-                      [wx, wy + 2.2, 22.8],
-                      [
-                        wx + 1.5,
-                        wy + 2.2 + Math.cos(ang) * 9.5,
-                        22.8 + Math.sin(ang) * 9.5,
-                      ],
-                      P
-                    )}
-                    tone="green"
-                  />
-                );
-              })}
-            </g>
-
-            <FaceText
-              transform={k.topMatrix([THERMAL_PAD.x + 8, THERMAL_PAD.y + 54], 0.2, P)}
-              size={3.4}
-              tone="hi"
-            >
-              02 · TÉRMICA + EÓLICA
-            </FaceText>
-          </g>
-
-          {/* ============================================================
-              STATION 3 (CENTER-TOP): 🤖 BATERÍA DEL AGENTE IA
-             ============================================================ */}
-          <g
-            transform={k.translateAlong(P, [0, 0, liftBattery])}
-            style={{ cursor: 'pointer' }}
-            onClick={() =>
-              onSelectStation(selectedStation === 'battery' ? null : 'battery')
-            }
-          >
-            <StationPlinth
-              plan={BATTERY_PAD}
-              selected={selectedStation === 'battery'}
-            />
-
-            {/* Main Battery Enclosure & AI Controller Core */}
-            <g
-              transform={k.translateAlong(P, [0, 0, (1 - easedAgent) * 5])}
-              opacity={0.45 + easedAgent * 0.55}
-            >
-              <Solid
-                paths={k.slabOf(
-                  {
-                    x: BATTERY_PAD.x + 9,
-                    y: BATTERY_PAD.y + 9,
-                    w: 60,
-                    d: 34,
-                    r: 2.5,
-                  },
-                  0,
-                  9.5,
-                  P,
-                  5,
-                  0.7
-                )}
-                tone={state.agentEnabled ? 'hi' : 'lo'}
-                lit={state.agentEnabled && (isCharging || isDischarging)}
-                inner={
-                  <Line
-                    d={
-                      k.sideTicks(
-                        BATTERY_PAD.x + 14,
-                        BATTERY_PAD.x + 64,
-                        4.2,
-                        2,
-                        BATTERY_PAD.y + 43,
-                        8.2,
-                        [5.5, 6.8],
-                        P,
-                        'x'
-                      ).minor
-                    }
-                    tone={
-                      isCharging
-                        ? 'green'
-                        : isDischarging
-                        ? 'blue'
-                        : 'lo'
-                    }
-                  />
-                }
-              />
-
-              {/* 4 Vertical Storage Cells whose height reflects real-time SOC % */}
-              {[0, 1, 2, 3].map((cIdx) => {
-                const cx = BATTERY_PAD.x + 18 + cIdx * 13.5;
-                const cy = BATTERY_PAD.y + 25;
-                const cellH = 2.5 + easedSoc * 9.5;
-                return (
-                  <Solid
-                    key={`bcell-${cIdx}`}
-                    paths={k.cylinder(cx, cy, 4.2, 9.5, cellH, P, 24, 0.35)}
-                    tone="hi"
-                    lit={state.agentEnabled}
-                    inner={
-                      <Line
-                        d={k.sideArc(cx, cy, 4.2, 9.5 + cellH * 0.6, P, 16)}
-                        tone={isCharging ? 'green' : isDischarging ? 'blue' : 'lo'}
-                      />
-                    }
-                  />
-                );
-              })}
-
-              {/* Glowing perimeter ring showing AI Agent activity */}
-              {state.agentEnabled && (
-                <Line
-                  d={k.planOutline(
-                    {
-                      x: BATTERY_PAD.x + 7,
-                      y: BATTERY_PAD.y + 7,
-                      w: 64,
-                      d: 38,
-                      r: 3,
-                    },
-                    0.3,
-                    P,
-                    4
-                  )}
-                  tone={
-                    isCharging ? 'green' : isDischarging ? 'blue' : 'lit'
-                  }
-                />
-              )}
-            </g>
-
-            <FaceText
-              transform={k.topMatrix([BATTERY_PAD.x + 8, BATTERY_PAD.y + 51], 0.2, P)}
-              size={3.4}
-              tone="hi"
-            >
-              03 · BATERÍA AGENTE IA
-            </FaceText>
-          </g>
-
-          {/* ============================================================
-              STATION 4 (CENTER-BOTTOM): ⚡ SUBESTACIÓN Y CABLE CENTRAL
-             ============================================================ */}
-          <g
-            transform={k.translateAlong(P, [0, 0, liftGrid])}
-            style={{ cursor: 'pointer' }}
-            onClick={() =>
-              onSelectStation(selectedStation === 'grid' ? null : 'grid')
-            }
-          >
-            <StationPlinth
-              plan={GRID_PAD}
-              selected={selectedStation === 'grid'}
-              alert={state.cableSaturated}
-            />
-
-            {/* High-Voltage Transformer Block + Copper Coils */}
-            <Solid
-              paths={k.slabOf(
-                { x: GRID_PAD.x + 10, y: GRID_PAD.y + 8, w: 58, d: 20, r: 2 },
-                0,
+                { x: SOLAR_C[0] + 15, y: SOLAR_C[1] - 10, w: 10, d: 18, r: 1.2 },
+                SOLAR_C[2] + solarLift,
                 7.5,
                 P,
                 4,
-                0.55
+                0.5
+              )}
+              tone="hi"
+              lit={activeNode === 'solar'}
+            />
+            <Solid
+              paths={k.cylinder(
+                SOLAR_C[0] + 20,
+                SOLAR_C[1] - 1,
+                2.0,
+                SOLAR_C[2] + 7.5 + solarLift,
+                4.2,
+                P,
+                14
               )}
               tone="mid"
             />
-            <Line
-              d={
-                k.coil(
-                  GRID_PAD.x + 18,
-                  GRID_PAD.x + 60,
-                  [GRID_PAD.y + 18, 9.5],
-                  3.5,
-                  9,
-                  'x',
-                  P
-                ).front
-              }
-              tone={state.cableSaturated ? 'red' : 'hi'}
-            />
-
-            {/* Precision Analog Dial Gauge for Central Cable Load */}
-            <Solid
-              paths={k.cylinder(DIAL_X, DIAL_Y, DIAL_R, 0, DIAL_Z, P, 48, 0.7)}
-              tone="hi"
-              crease="lo"
-              lit={state.cableSaturated}
-              inner={
-                <Line
-                  d={
-                    k.knurl(DIAL_X, DIAL_Y, DIAL_R, 1.6, DIAL_Z, 52, P, 0.3) +
-                    k.sideArc(DIAL_X, DIAL_Y, DIAL_R, 1.6, P, 32)
-                  }
-                  tone="lo"
-                />
-              }
-            />
-            <Line
-              d={k.ring(DIAL_X, DIAL_Y, DIAL_R - 1.8, DIAL_Z, P, 48)}
-              tone="lo"
-            />
-            <Line d={DIAL_TICKS.minor} tone="lo" />
-            <Line d={DIAL_TICKS.major} tone="mid" />
-            <Line
-              d={k.lineOnTop(needleTail, needleTip, DIAL_Z + 0.25, P)}
-              tone={state.cableSaturated ? 'red' : 'blue'}
-            />
-            <Line
-              d={k.ring(DIAL_X, DIAL_Y, 1.6, DIAL_Z + 0.25, P, 16)}
-              tone="hi"
-            />
           </g>
 
-          {/* ============================================================
-              STATION 5 (RIGHT): 🏘️ BARRIO DE CASAS (CONSUMIDOR FINAL)
-             ============================================================ */}
+          {/* =========================================================
+              NODE 04: BATERÍA AGENTE IA (BESS) (Upper-Center in space)
+             ========================================================= */}
           <g
-            transform={k.translateAlong(P, [0, 0, liftHouses])}
-            style={{ cursor: 'pointer' }}
-            onClick={() =>
-              onSelectStation(selectedStation === 'houses' ? null : 'houses')
-            }
+            className="maquette-station-group"
+            onMouseEnter={() => setActiveNode('battery')}
+            onMouseLeave={() => setActiveNode(null)}
+            onClick={() => setActiveNode((n) => (n === 'battery' ? null : 'battery'))}
           >
-            <StationPlinth
-              plan={HOUSES_PAD}
-              selected={selectedStation === 'houses'}
-              alert={hasBlackout}
-            />
+            {/* Expanding 3D Isometric AI Agent Sonar Rings during Stage 2 solution */}
+            {(animStage === 'ai_solving' || aiAbsorbMw > 0 || aiInjectMw > 0) &&
+              aiEnabled && (
+                <g>
+                  <path
+                    d={k.ring(
+                      BATTERY_C[0],
+                      BATTERY_C[1] + 2,
+                      26 + wirePhase * 16,
+                      BATTERY_C[2] + 1 + batteryLift,
+                      P,
+                      36
+                    )}
+                    fill="none"
+                    stroke={aiInjectMw > 0 ? '#2563eb' : '#16a34a'}
+                    strokeWidth={1.3}
+                    opacity={Math.max(0, 0.65 - wirePhase * 0.65)}
+                  />
+                  <path
+                    d={k.ring(
+                      BATTERY_C[0],
+                      BATTERY_C[1] + 2,
+                      26 + ((wirePhase + 0.5) % 1) * 16,
+                      BATTERY_C[2] + 1 + batteryLift,
+                      P,
+                      36
+                    )}
+                    fill="none"
+                    stroke={aiInjectMw > 0 ? '#2563eb' : '#16a34a'}
+                    strokeWidth={1.1}
+                    opacity={Math.max(0, 0.55 - ((wirePhase + 0.5) % 1) * 0.55)}
+                  />
+                </g>
+              )}
 
-            {/* Neighborhood Streets & Internal Power Distribution Lines */}
-            <Line
-              d={
-                k.lineOnTop(
-                  [HOUSES_PAD.x + 8, HOUSES_PAD.y + 44],
-                  [HOUSES_PAD.x + 78, HOUSES_PAD.y + 44],
-                  0.15,
-                  P
-                ) +
-                k.lineOnTop(
-                  [HOUSES_PAD.x + 43, HOUSES_PAD.y + 10],
-                  [HOUSES_PAD.x + 43, HOUSES_PAD.y + 78],
-                  0.15,
-                  P
-                )
-              }
-              tone={hasBlackout ? 'red' : 'green'}
-            />
-
-            {/* 6 Isometric Houses with Pitched Roofs in a Neighborhood Grid */}
-            {[
-              { hx: HOUSES_PAD.x + 10, hy: HOUSES_PAD.y + 12, w: 22, d: 18, wallH: 7.5, roofH: 5.2, idx: 0 },
-              { hx: HOUSES_PAD.x + 48, hy: HOUSES_PAD.y + 12, w: 24, d: 18, wallH: 8.5, roofH: 5.5, idx: 1 },
-              { hx: HOUSES_PAD.x + 10, hy: HOUSES_PAD.y + 34, w: 22, d: 18, wallH: 7.0, roofH: 4.8, idx: 2 },
-              { hx: HOUSES_PAD.x + 48, hy: HOUSES_PAD.y + 34, w: 24, d: 18, wallH: 8.0, roofH: 5.2, idx: 3 },
-              { hx: HOUSES_PAD.x + 10, hy: HOUSES_PAD.y + 56, w: 22, d: 18, wallH: 7.2, roofH: 4.8, idx: 4 },
-              { hx: HOUSES_PAD.x + 48, hy: HOUSES_PAD.y + 56, w: 24, d: 18, wallH: 7.5, roofH: 5.0, idx: 5 },
-            ].map((h) => {
-              // If there is a partial blackout, the last houses lose power first
-              const houseThresholdPct = ((h.idx + 1) / 6) * 100;
-              const isHouseDark =
-                hasBlackout && state.housesLitPct < houseThresholdPct;
+            {/* 4 Modular BESS Rack Enclosures (back row) */}
+            {[-20, -8, 4, 16].map((dx, i) => {
+              const bx = BATTERY_C[0] + dx;
+              const by = BATTERY_C[1] - 14;
+              const bz = BATTERY_C[2] + batteryLift;
               return (
-                <PitchedHouse
-                  key={`house-${h.idx}`}
-                  x={h.hx}
-                  y={h.hy}
-                  w={h.w}
-                  d={h.d}
-                  z={0}
-                  wallH={h.wallH}
-                  roofH={h.roofH}
-                  lit={!isHouseDark}
-                  blackout={isHouseDark}
-                />
+                <g key={`bess-rack-${i}`}>
+                  <path
+                    className="iso-halo"
+                    d={k.haloOf({ x: bx, y: by, w: 9.5, d: 11, r: 1.2 }, bz - 1, 2.2, P)}
+                  />
+                  <Solid
+                    paths={k.slabOf(
+                      { x: bx, y: by, w: 9.5, d: 11, r: 1.1 },
+                      bz,
+                      9.5,
+                      P,
+                      4,
+                      0.5
+                    )}
+                    tone={aiEnabled ? 'hi' : 'mid'}
+                    lit={aiEnabled}
+                    inner={
+                      <Line
+                        d={
+                          k.sideTicks(
+                            bx + 1.8,
+                            bx + 7.7,
+                            2.0,
+                            1,
+                            by + 11,
+                            bz + 7.5,
+                            [5.2, 5.2],
+                            P,
+                            'x'
+                          ).minor
+                        }
+                        tone={!aiEnabled ? 'lo' : aiInjectMw > 0 ? 'blue' : 'green'}
+                      />
+                    }
+                  />
+                </g>
               );
             })}
 
-            {/* Streetlight / Neighborhood Power Poles */}
+            {/* 4 Cylindrical Energy Cores (height physically rises/falls with SoC) */}
+            {[-15, -5, 5, 15].map((dx, idx) => {
+              const cx = BATTERY_C[0] + dx;
+              const cy = BATTERY_C[1] + 6;
+              const cz = BATTERY_C[2] + batteryLift;
+              return (
+                <g key={`cell-${idx}`}>
+                  <path
+                    className="iso-halo"
+                    d={k.haloOf({ x: cx - 4, y: cy - 4, w: 8, d: 8, r: 4 }, cz - 1, 2, P)}
+                  />
+                  <Solid
+                    paths={k.cylinder(cx, cy, 4.0, cz, 2.0, P, 20)}
+                    tone="lo"
+                  />
+                  <Solid
+                    paths={k.cylinder(cx, cy, 3.4, cz + 2.0, bessCoreHeight, P, 20)}
+                    tone={aiEnabled ? 'hi' : 'mid'}
+                    lit={aiEnabled}
+                    inner={
+                      <Line
+                        d={k.ring(cx, cy, 2.2, cz + 2.0 + bessCoreHeight, P, 18)}
+                        tone={!aiEnabled ? 'lo' : aiInjectMw > 0 ? 'blue' : 'green'}
+                      />
+                    }
+                  />
+                </g>
+              );
+            })}
+
+            {/* AI Dispatch Core Module */}
+            <Solid
+              paths={k.slabOf(
+                { x: BATTERY_C[0] - 8, y: BATTERY_C[1] + 15, w: 16, d: 9, r: 1.4 },
+                BATTERY_C[2] + batteryLift,
+                5.5,
+                P,
+                4,
+                0.5
+              )}
+              tone="hi"
+              lit={aiEnabled}
+            />
             <Dots
               points={[
-                k.iso([HOUSES_PAD.x + 43, HOUSES_PAD.y + 24, 1.5], P),
-                k.iso([HOUSES_PAD.x + 43, HOUSES_PAD.y + 44, 1.5], P),
-                k.iso([HOUSES_PAD.x + 43, HOUSES_PAD.y + 64, 1.5], P),
+                k.iso([BATTERY_C[0] - 3, BATTERY_C[1] + 19.5, BATTERY_C[2] + 5.8 + batteryLift], P),
+                k.iso([BATTERY_C[0], BATTERY_C[1] + 19.5, BATTERY_C[2] + 5.8 + batteryLift], P),
+                k.iso([BATTERY_C[0] + 3, BATTERY_C[1] + 19.5, BATTERY_C[2] + 5.8 + batteryLift], P),
               ]}
-              size={0.85}
-              tone={hasBlackout ? 'hi' : 'hi'}
-              pulse={!hasBlackout}
-            />
-
-            <FaceText
-              transform={k.topMatrix([HOUSES_PAD.x + 10, HOUSES_PAD.y + 88], 0.2, P)}
-              size={3.4}
+              size={1.15}
               tone="hi"
-            >
-              05 · BARRIO DE CASAS
-            </FaceText>
+              pulse={aiEnabled}
+            />
           </g>
 
-          {/* ============================================================
-              SCHEMATIC ENERGY FLOW WIRES CONNECTING THE 5 STATIONS
-             ============================================================ */}
-          {/* 1. Solar Plant -> AI Battery (when AI charges from solar) */}
-          <Wire
-            from={k.iso([-78, -48, 4], P)}
-            to={k.iso([-38, -52, 4], P)}
-            tone={isCharging ? 'green' : state.solarAvailableMw > 20 ? 'lo' : 'faint'}
-            flow={isCharging}
-            ends="both"
-            size={1.4}
-          />
+          {/* =========================================================
+              NODE 02: PARQUE EÓLICO NORTE (Middle-Left in space)
+             ========================================================= */}
+          <g
+            className="maquette-station-group"
+            onMouseEnter={() => setActiveNode('wind')}
+            onMouseLeave={() => setActiveNode(null)}
+            onClick={() => setActiveNode((n) => (n === 'wind' ? null : 'wind'))}
+          >
+            <FloatingWindTurbine
+              tx={WIND_C[0] - 14}
+              ty={WIND_C[1] - 10}
+              tz={WIND_C[2] + windLift}
+              towerH={24}
+              bladeR={12.5}
+              angleRad={rotorPhase}
+              highlighted={activeNode === 'wind'}
+            />
+            <FloatingWindTurbine
+              tx={WIND_C[0] + 4}
+              ty={WIND_C[1] - 2}
+              tz={WIND_C[2] + windLift}
+              towerH={26}
+              bladeR={13.5}
+              angleRad={rotorPhase + 1.1}
+              highlighted={activeNode === 'wind'}
+            />
+            <FloatingWindTurbine
+              tx={WIND_C[0] - 6}
+              ty={WIND_C[1] + 14}
+              tz={WIND_C[2] + windLift}
+              towerH={22}
+              bladeR={11.5}
+              angleRad={rotorPhase + 2.3}
+              highlighted={activeNode === 'wind'}
+            />
+            <Solid
+              paths={k.slabOf(
+                { x: WIND_C[0] + 12, y: WIND_C[1] + 6, w: 11, d: 11, r: 1.2 },
+                WIND_C[2] + windLift,
+                6.5,
+                P,
+                4,
+                0.5
+              )}
+              tone="hi"
+              lit={activeNode === 'wind'}
+            />
+          </g>
 
-          {/* 2. Solar Plant -> Central Substation */}
-          <Wire
-            from={k.iso([-78, -32, 3], P)}
-            via={[k.iso([-58, -10, 3], P)]}
-            to={k.iso([-38, 22, 3], P)}
-            tone={
-              state.solarAvailableMw > 20
-                ? state.cableSaturated
-                  ? 'red'
-                  : 'green'
-                : 'faint'
-            }
-            flow={state.solarAvailableMw > 20}
-            ends="both"
-            size={1.4}
-          />
+          {/* =========================================================
+              NODE 05: SUBESTACIÓN TRONCAL L2 500 kV (Lower-Center)
+             ========================================================= */}
+          <g
+            className="maquette-station-group"
+            onMouseEnter={() => setActiveNode('substation')}
+            onMouseLeave={() => setActiveNode(null)}
+            onClick={() => setActiveNode((n) => (n === 'substation' ? null : 'substation'))}
+          >
+            <path
+              className="iso-halo"
+              d={k.haloOf(
+                { x: SUBSTATION_C[0] - 22, y: SUBSTATION_C[1] - 18, w: 44, d: 20, r: 2 },
+                SUBSTATION_C[2] - 1 + subLift,
+                3,
+                P
+              )}
+            />
+            <Solid
+              paths={k.slabOf(
+                { x: SUBSTATION_C[0] - 22, y: SUBSTATION_C[1] - 18, w: 44, d: 20, r: 1.8 },
+                SUBSTATION_C[2] + subLift,
+                7.2,
+                P,
+                5,
+                0.7
+              )}
+              tone="hi"
+              lit={activeNode === 'substation' || l2CapMw > 450}
+              inner={
+                <Line
+                  d={
+                    k.coil(
+                      SUBSTATION_C[0] - 14,
+                      SUBSTATION_C[0] + 14,
+                      [SUBSTATION_C[1] + 2, SUBSTATION_C[2] + 3.6 + subLift],
+                      3.2,
+                      l2CapMw > 450 ? 12 : 9,
+                      'x',
+                      P
+                    ).front
+                  }
+                  tone={curtailedSolarMw > 10 ? 'red' : 'blue'}
+                />
+              }
+            />
+            {[-15, -5, 5, 15].map((dx, idx) => (
+              <Solid
+                key={`bushing-${idx}`}
+                paths={k.cylinder(
+                  SUBSTATION_C[0] + dx,
+                  SUBSTATION_C[1] - 13,
+                  1.5,
+                  SUBSTATION_C[2] + 7.2 + subLift,
+                  6.2,
+                  P,
+                  14
+                )}
+                tone="mid"
+              />
+            ))}
 
-          {/* 3. Thermal + Wind Plant -> Central Substation */}
-          <Wire
-            from={k.iso([-78, 38, 3], P)}
-            to={k.iso([-38, 38, 3], P)}
-            tone={
-              state.thermalBroken
-                ? 'red'
-                : state.thermalOutputMw + state.windOutputMw > 20
-                ? 'blue'
-                : 'lo'
-            }
-            flow={state.thermalOutputMw + state.windOutputMw > 20}
-            ends="both"
-            size={1.4}
-          />
+            {/* Precision 50.00 Hz / MVA Dial Gauge floating in front of the transformer */}
+            <path
+              className="iso-halo"
+              d={k.haloOf(
+                { x: dialX - dialR, y: dialY - dialR, w: dialR * 2, d: dialR * 2, r: dialR },
+                SUBSTATION_C[2] - 1 + subLift,
+                2.5,
+                P
+              )}
+            />
+            <Solid
+              paths={k.cylinder(
+                dialX,
+                dialY,
+                dialR,
+                SUBSTATION_C[2] + subLift,
+                3.2,
+                P,
+                36
+              )}
+              tone="hi"
+              lit={activeNode === 'substation'}
+              inner={
+                <g>
+                  <Line
+                    d={k.knurl(
+                      dialX,
+                      dialY,
+                      dialR,
+                      SUBSTATION_C[2] + 0.4 + subLift,
+                      SUBSTATION_C[2] + 2.8 + subLift,
+                      28,
+                      P
+                    )}
+                    tone="faint"
+                  />
+                  <Line d={dialTicks.minor} tone="lo" />
+                  <Line d={dialTicks.major} tone="hi" />
+                  <Line
+                    d={k.ring(dialX, dialY, dialR - 1.5, dialZ, P, 32)}
+                    tone={curtailedSolarMw > 10 || unservedMw > 15 ? 'red' : 'blue'}
+                  />
+                  <Line
+                    d={k.pathOf([
+                      k.iso([dialX, dialY, dialZ + 0.4], P),
+                      k.iso(needleTip, P),
+                    ])}
+                    tone={curtailedSolarMw > 10 || unservedMw > 15 ? 'red' : 'blue'}
+                  />
+                </g>
+              }
+            />
+            <Solid
+              paths={k.cylinder(dialX, dialY, 2.0, dialZ, 1.3, P, 16)}
+              tone="mid"
+            />
+          </g>
 
-          {/* 4. AI Battery <-> Central Substation / Neighborhood */}
-          <Wire
-            from={k.iso([1, -24, 4], P)}
-            to={k.iso([1, 10, 4], P)}
-            tone={
-              isDischarging
-                ? 'blue'
-                : isCharging
-                ? 'green'
-                : 'lo'
-            }
-            flow={isCharging || isDischarging}
-            ends="both"
-            size={1.4}
-          />
+          {/* =========================================================
+              NODE 03: CENTRAL TÉRMICA GAS (Bottom-Left in space)
+             ========================================================= */}
+          <g
+            className="maquette-station-group"
+            onMouseEnter={() => setActiveNode('thermal')}
+            onMouseLeave={() => setActiveNode(null)}
+            onClick={() => setActiveNode((n) => (n === 'thermal' ? null : 'thermal'))}
+          >
+            <path
+              className="iso-halo"
+              d={k.haloOf(
+                { x: THERMAL_C[0] - 24, y: THERMAL_C[1] - 16, w: 38, d: 28, r: 2 },
+                THERMAL_C[2] - 1 + thermalLift,
+                3.5,
+                P
+              )}
+            />
+            <Solid
+              paths={k.slabOf(
+                { x: THERMAL_C[0] - 24, y: THERMAL_C[1] - 16, w: 34, d: 24, r: 1.8 },
+                THERMAL_C[2] + thermalLift,
+                11.5,
+                P,
+                5,
+                0.8
+              )}
+              tone={thermalMw === 0 ? 'mid' : 'hi'}
+              lit={activeNode === 'thermal'}
+              inner={
+                <Line
+                  d={
+                    k.sideTicks(
+                      THERMAL_C[0] - 20,
+                      THERMAL_C[0] + 6,
+                      3.2,
+                      2,
+                      THERMAL_C[1] + 8,
+                      THERMAL_C[2] + 9.0 + thermalLift,
+                      [6.5, 6.5],
+                      P,
+                      'x'
+                    ).minor
+                  }
+                  tone={thermalMw === 0 ? 'red' : 'lo'}
+                />
+              }
+            />
+            <Solid
+              paths={k.slabOf(
+                { x: THERMAL_C[0] + 10, y: THERMAL_C[1] - 12, w: 14, d: 18, r: 1.4 },
+                THERMAL_C[2] + thermalLift,
+                8.5,
+                P,
+                4,
+                0.6
+              )}
+              tone="mid"
+              lit={activeNode === 'thermal'}
+            />
+            <Solid
+              paths={k.cylinder(
+                THERMAL_C[0] - 14,
+                THERMAL_C[1] - 4,
+                3.2,
+                THERMAL_C[2] + 11.5 + thermalLift,
+                13.5,
+                P,
+                20
+              )}
+              tone="mid"
+            />
+            <Solid
+              paths={k.cylinder(
+                THERMAL_C[0] - 2,
+                THERMAL_C[1] - 4,
+                3.2,
+                THERMAL_C[2] + 11.5 + thermalLift,
+                11.0,
+                P,
+                20
+              )}
+              tone="mid"
+            />
+            <Solid
+              paths={k.cylinder(
+                THERMAL_C[0] - 14,
+                THERMAL_C[1] + 18,
+                6.2,
+                THERMAL_C[2] + thermalLift,
+                7.2,
+                P,
+                24
+              )}
+              tone={thermalMw === 0 ? 'mid' : 'hi'}
+              lit={activeNode === 'thermal'}
+            />
+          </g>
 
-          {/* Direct Emergency AI Feed from Battery -> Neighborhood of Houses */}
-          <Wire
-            from={k.iso([40, -52, 4], P)}
-            to={k.iso([76, -24, 4], P)}
-            tone={isDischarging ? 'blue' : 'faint'}
-            flow={isDischarging}
-            ends="both"
-            size={1.45}
-          />
+          {/* =========================================================
+              NODE 06: BARRIO RESIDENCIAL · CASAS (Right in space)
+             ========================================================= */}
+          <g
+            className="maquette-station-group"
+            onMouseEnter={() => setActiveNode('houses')}
+            onMouseLeave={() => setActiveNode(null)}
+            onClick={() => setActiveNode((n) => (n === 'houses' ? null : 'houses'))}
+          >
+            <Line
+              d={k.pathOf([
+                k.iso([HOUSES_C[0] - 24, HOUSES_C[1] - 8, 5 + housesLift], P),
+                k.iso([HOUSES_C[0] + 24, HOUSES_C[1] - 8, 5 + housesLift], P),
+              ])}
+              tone="faint"
+              dashed
+            />
+            <Line
+              d={k.pathOf([
+                k.iso([HOUSES_C[0] - 24, HOUSES_C[1] + 16, 5 + housesLift], P),
+                k.iso([HOUSES_C[0] + 24, HOUSES_C[1] + 16, 5 + housesLift], P),
+              ])}
+              tone="faint"
+              dashed
+            />
 
-          {/* 5. Central Substation -> Neighborhood of Houses (Main Consumer Line) */}
-          <Wire
-            from={k.iso([40, 32, 4], P)}
-            to={k.iso([76, 12, 4], P)}
-            tone={
-              hasBlackout
-                ? 'red'
-                : state.cableSaturated
-                ? 'red'
-                : 'green'
-            }
-            flow={state.housesServedMw > 10}
-            ends="both"
-            size={1.55}
-          />
-        </IsoFigure>
+            {[
+              { hx: HOUSES_C[0] - 28, hy: HOUSES_C[1] - 28, hw: 15, hd: 16, wallH: 6.8, roofH: 4.8 },
+              { hx: HOUSES_C[0] - 6,  hy: HOUSES_C[1] - 28, hw: 15, hd: 16, wallH: 7.5, roofH: 5.2 },
+              { hx: HOUSES_C[0] + 16, hy: HOUSES_C[1] - 28, hw: 15, hd: 16, wallH: 6.4, roofH: 4.5 },
+              { hx: HOUSES_C[0] - 28, hy: HOUSES_C[1] - 2,  hw: 15, hd: 16, wallH: 7.2, roofH: 5.0 },
+              { hx: HOUSES_C[0] - 6,  hy: HOUSES_C[1] - 2,  hw: 15, hd: 16, wallH: 8.0, roofH: 5.4 },
+              { hx: HOUSES_C[0] + 16, hy: HOUSES_C[1] - 2,  hw: 15, hd: 16, wallH: 6.8, roofH: 4.8 },
+            ].map((h, idx) => (
+              <FloatingHouse
+                key={`house-${idx}`}
+                x={h.hx}
+                y={h.hy}
+                w={h.hw}
+                d={h.hd}
+                z={HOUSES_C[2] + housesLift}
+                wallH={h.wallH}
+                roofH={h.roofH}
+                highlighted={activeNode === 'houses'}
+                powered={idx < litHousesCount}
+              />
+            ))}
 
-        {/* OPTIONAL POPOVER IF USER CLICKS A 3D MAQUETTE */}
-        {selectedStation && (
-          <div className="maquette-zone-toast">
-            <div>
-              <strong>{stationInfo[selectedStation].title}</strong>
-              <p>{stationInfo[selectedStation].subtitle}</p>
-              <span className="toast-metric">
-                {stationInfo[selectedStation].metric}
-              </span>
-            </div>
-            <button
-              type="button"
-              className="maquette-toast-close"
-              onClick={() => onSelectStation(null)}
+            <Solid
+              paths={k.cylinder(
+                HOUSES_C[0] - 32,
+                HOUSES_C[1] - 8,
+                1.8,
+                HOUSES_C[2] + housesLift,
+                8.5,
+                P,
+                14
+              )}
+              tone="mid"
+            />
+            <Dots
+              points={[
+                k.iso([HOUSES_C[0] - 32, HOUSES_C[1] - 8, HOUSES_C[2] + 8.8 + housesLift], P),
+              ]}
+              size={1.2}
+              tone="hi"
+              pulse={unservedMw <= 15}
+            />
+          </g>
+        </svg>
+
+        {/* =========================================================
+            BORDERLESS 4-DATUM LABELS + INLINE PARAMETER SLIDERS
+           ========================================================= */}
+        {nodeSpecs.map((spec) => {
+          const isPerturbedThis = animStage === 'perturbing' && perturbedNode === spec.id;
+          const isAiThis = animStage === 'ai_solving' && spec.id === 'battery';
+          return (
+            <div
+              key={spec.id}
+              className={`bare-node-label align-${spec.align} ${
+                activeNode === spec.id || isPerturbedThis || isAiThis ? 'is-active' : ''
+              }`}
+              style={spec.pos}
+              onMouseEnter={() => setActiveNode(spec.id)}
+              onMouseLeave={() => setActiveNode(null)}
             >
-              Cerrar ×
-            </button>
-          </div>
-        )}
+              <div
+                className="bare-node-title"
+                onClick={() => setActiveNode((n) => (n === spec.id ? null : spec.id))}
+              >
+                <span
+                  className="bare-node-dot"
+                  style={{ backgroundColor: spec.dotColor }}
+                />
+                {spec.name}
+              </div>
+
+              <div className="bare-node-meta">
+                <span className="bare-datum-primary">{spec.d1}</span>
+                <span>{spec.d2}</span>
+                <span>{spec.d3}</span>
+              </div>
+
+              {/* Minimalist borderless inline parameter slider directly under the plant */}
+              {spec.slider && (
+                <div
+                  className="bare-inline-control"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    className="bare-step-btn"
+                    title="Reducir parámetro"
+                    onClick={() =>
+                      spec.slider!.onChange(
+                        Math.max(spec.slider!.min, spec.slider!.value - spec.slider!.step)
+                      )
+                    }
+                  >
+                    −
+                  </button>
+                  <input
+                    type="range"
+                    className="bare-range-slider"
+                    min={spec.slider.min}
+                    max={spec.slider.max}
+                    step={spec.slider.step}
+                    value={spec.slider.value}
+                    style={
+                      {
+                        '--slider-accent': spec.slider.accent,
+                      } as React.CSSProperties
+                    }
+                    onChange={(e) => spec.slider!.onChange(Number(e.target.value))}
+                  />
+                  <button
+                    type="button"
+                    className="bare-step-btn"
+                    title="Aumentar parámetro"
+                    onClick={() =>
+                      spec.slider!.onChange(
+                        Math.min(spec.slider!.max, spec.slider!.value + spec.slider!.step)
+                      )
+                    }
+                  >
+                    +
+                  </button>
+                  {spec.slider.quickLabel && spec.slider.onQuickClick && (
+                    <button
+                      type="button"
+                      className="bare-quick-trigger"
+                      onClick={spec.slider.onQuickClick}
+                    >
+                      {spec.slider.quickLabel}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Special inline AI Agent switch directly on 04 · BATERÍA AGENTE IA */}
+              {spec.id === 'battery' && (
+                <div
+                  className="bare-inline-control"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    className="bare-quick-trigger"
+                    onClick={() => {
+                      const next = !aiEnabled;
+                      setAiEnabled(next);
+                      triggerTwoStageReaction('battery', next);
+                    }}
+                  >
+                    {aiEnabled ? 'Pausar Agente IA' : 'Activar Agente IA'}
+                  </button>
+                  <span className="bare-sep">·</span>
+                  <button
+                    type="button"
+                    className="bare-quick-trigger"
+                    onClick={() => applyScenarioPreset('normal')}
+                  >
+                    Simular Absorción Solar
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-    </Plate>
+    </Stage>
   );
 };
