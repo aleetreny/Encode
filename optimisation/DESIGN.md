@@ -116,7 +116,8 @@ Demo topology: a 5-node north–south chain (Norte Grande → Norte Chico → Ce
   "objective": {
     "unserved_energy_penalty_usd_per_mwh": 10000,
     "curtailment_penalty_usd_per_mwh": 0,
-    "battery_throughput_cost_usd_per_mwh": 0.5
+    "battery_throughput_cost_usd_per_mwh": 0.5,
+    "transmission_tiebreak_usd_per_mwh": 0.01
   },
   "modification_limits": { "...optional overrides of section 2.1..." },
   "events": [ "...optional, see section 6..." ]
@@ -165,8 +166,10 @@ batteries `b`.
 Σ_t Δt · [ Σ_d c_d p[d,t]                                  thermal/dispatchable cost
          + VoLL · Σ_n u[n,t]                               unserved-energy penalty (10 000)
          + c_curt · Σ_r (avail[r,t] − p[r,t])              curtailment penalty (default 0)
-         + c_thr · Σ_b (ch[b,t] + dis[b,t]) ]              battery throughput cost (0.5)
+         + c_thr · Σ_b (ch[b,t] + dis[b,t])                battery throughput cost (0.5)
+         + c_tx · Σ_l |f[l,t]| ]                           transmission tie-break (0.01)
 ```
+`|f|` is modelled as `f = f⁺ − f⁻` with `f⁺, f⁻ ≥ 0` (still an LP).
 
 **Why these numbers.**
 - `c_curt = 0`: renewables already beat thermal on cost. With no reward for "not curtailing", the
@@ -174,6 +177,9 @@ batteries `b`.
 - `c_thr = 0.5`: makes pointless cycling strictly worse and breaks ties, so the LP is safe without
   binary variables. The validator still flags any simultaneous charge/discharge.
 - `VoLL = 10 000`: dominates every other term without numerical trouble.
+- `c_tx = 0.01`: without it, unserved energy (equal penalty everywhere) can be "placed" at any node,
+  e.g. shedding load in the north while exporting northern power south. A tiny cost on moving power
+  makes the solver shed load where the deficit actually is and makes flows unique.
 - Thermal minimum output 0 and no on/off decisions keep the problem an LP (milliseconds to solve).
 
 **Solver:** HiGHS via `highspy` (pinned), single thread, deterministic. Problem size for the demo:
@@ -223,7 +229,8 @@ A reserve requirement is a stretch goal (section 11).
   "solver": {"name": "HiGHS", "version": "1.15.1", "solve_time_s": 0.02, "solves": 1},
   "objective": {"total_usd": 0.0,
                 "terms": {"dispatchable_cost_usd": 0.0, "unserved_penalty_usd": 0.0,
-                          "curtailment_penalty_usd": 0.0, "battery_throughput_cost_usd": 0.0}},
+                          "curtailment_penalty_usd": 0.0, "battery_throughput_cost_usd": 0.0,
+                          "transmission_tiebreak_usd": 0.0}},
   "assets": {"batteries": ["...effective batteries incl. added"], "lines": ["...effective capacities"]},
   "timeseries": {
     "generation_mw":         {"gen_id": ["T values"]},
@@ -239,7 +246,8 @@ A reserve requirement is a stretch goal (section 11).
     "curtailment_mwh": 0.0, "curtailment_mwh_by_generator": {},
     "unserved_mwh": 0.0,    "unserved_mwh_by_node": {},
     "renewable_used_mwh": 0.0, "dispatchable_mwh": 0.0,
-    "demand_mwh": 0.0, "battery_losses_mwh": 0.0,
+    "demand_mwh": 0.0, "battery_charge_mwh": 0.0, "battery_discharge_mwh": 0.0,
+    "battery_losses_mwh": 0.0,
     "assumed_cost_proxy_usd": 0.0,            // dispatchable cost only
     "line_hours_at_limit": {"L2": 0}
   },
@@ -278,7 +286,8 @@ the raw numbers with NumPy:
 | `metrics_recomputed` | every reported metric and objective term matches recomputation |
 
 Returns `{"passed", "checks_run", "violations": [{"check","id","hour","magnitude","detail"}],
-"max_residual_mw"}`. Tolerances: 1e-4 MW for flows/balances, 1e-3 MWh/USD-relative for metrics.
+"violation_count", "max_residual_mw"}` (at most 200 violations listed). It also checks that every outage
+defined in the scenario is present in the solution (`events_consistent`) and that the time axis matches. Tolerances: 1e-4 MW for flows/balances, 1e-3 MWh/USD-relative for metrics.
 
 "No hindsight" for sudden outages (pre-event hours identical to the plan) is proven by tests.
 
@@ -293,6 +302,7 @@ Input: two `solve()` outputs (optionally with their validation results). Output:
  "both_valid": true,
  "metrics": {"curtailment_mwh": {"baseline": 0, "candidate": 0, "delta": 0}, "...": {}},
  "curtailment_reduction_mwh": 0, "unserved_reduction_mwh": 0, "assumed_cost_delta_usd": 0,
+ "objective_delta_usd": 0, "line_hours_at_limit": {"L2": {"baseline": 8, "candidate": 8, "delta": 0}},
  "binding_constraints": {"baseline": [...], "candidate": [...]},
  "notes": ["Investment cost of modifications is not modelled.", "..."]}
 ```
@@ -366,3 +376,37 @@ validate each → stress-test the best with a sudden outage → compare → repo
 - Units: MW for power, MWh for energy (= MW × `time_step_hours`), USD labelled *assumed-cost proxy*.
 - Topology and asset data are synthetic unless P4 documents otherwise in `provenance`.
 - A delta of zero (or a worse result) is reported as is.
+
+---
+
+## 14. Implementation status and demo results
+
+Implemented in this package (all milestones M0–M4; stretch goals not started).
+
+```bash
+pip install -r optimisation/requirements.txt
+pytest optimisation/tests -q          # 101 tests
+python -m optimisation.demo --write   # prints the table below and refreshes optimisation/examples/
+```
+
+Demo scenario (`fixtures/demo_scenario.json`, fully **synthetic**, built by
+`fixtures/build_demo_scenario.py`): 5-node chain, 4 lines (L2 Norte Chico → Centro = 400 MW is the
+bottleneck), 1 000 MW of northern solar, 200 MW northern wind, 200 MW southern wind, gas in the north
+and centre, coal, hydro, diesel, and a small existing 30 MW / 60 MWh battery in the centre.
+
+Results from `python -m optimisation.demo` (every row validated):
+
+| Case | Curtailment MWh | Unserved MWh | Note |
+|---|---|---|---|
+| Baseline | 1 368.2 | 0 | L2 at its limit hours 9–16 |
+| + 150 MW / 600 MWh battery, Norte Grande | 736.6 | 0 | −631.6 MWh curtailment |
+| + same battery, Sur | 1 368.2 | 0 | 0 MWh reduction: wrong side of the bottleneck |
+| + L2 uprated to 600 MW | 375.2 | 0 | −993 MWh curtailment |
+| Baseline + sudden gas_centro trip 18–22 h | 1 368.2 | 1 921.9 | shed only at Centro |
+| North battery + trip | 736.6 | 1 530.0 | −391.9 MWh unserved |
+| South battery + trip | 1 368.2 | 1 678.9 | −243.1 MWh unserved |
+| L2 uprate + trip | 375.2 | 1 921.9 | no help during the outage |
+| Strict mode + trip | — | — | `infeasible`, with the hours and shortfall named |
+
+Example outputs for Persons 1, 2 and 4: `optimisation/examples/*.json`
+(`solution_*.json`, `validation_*.json`, `comparison*.json`, `menu.json`).
