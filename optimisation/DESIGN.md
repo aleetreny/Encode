@@ -164,6 +164,9 @@ batteries `b`.
 - Ramp (dispatchables with a ramp rate): for each `t ≥ 1` where the unit is **online at t**:
   `|p[d,t] − p[d,t−1]| ≤ ramp_d·Δt`. The step *into* an outage is exempt (a trip drops output
   instantly); recovery after an outage ramps up from 0. Hour 0 is unconstrained.
+- Emergency runback: in an hour `t ∈ runback_hours` (the start hour of a sudden event), the
+  ramp-*down* limit becomes `p[d,t−1] − p[d,t] ≤ ramp_d·Δt + rb[d,t]` with a penalised slack
+  `rb ≥ 0`; ramping up stays limited. See section 6.
 
 **Objective** (minimise, USD — an *assumed-cost proxy*, not CEN cost):
 ```
@@ -171,7 +174,8 @@ batteries `b`.
          + VoLL · Σ_n u[n,t]                               unserved-energy penalty (10 000)
          + c_curt · Σ_r (avail[r,t] − p[r,t])              curtailment penalty (default 0)
          + c_thr · Σ_b (ch[b,t] + dis[b,t])                battery throughput cost (0.5)
-         + c_tx · Σ_l |f[l,t]| ]                           transmission tie-break (0.01)
+         + c_tx · Σ_l |f[l,t]|                             transmission tie-break (0.01)
+         + c_rb · Σ_d rb[d,t] ]                            emergency runback penalty (1 000)
 ```
 `|f|` is modelled as `f = f⁺ − f⁻` with `f⁺, f⁻ ≥ 0` (still an LP).
 
@@ -184,6 +188,9 @@ batteries `b`.
 - `c_tx = 0.01`: without it, unserved energy (equal penalty everywhere) can be "placed" at any node,
   e.g. shedding load in the north while exporting northern power south. A tiny cost on moving power
   makes the solver shed load where the deficit actually is and makes flows unique.
+- `c_rb = 1 000`: above every fuel cost, so runback is never used to save fuel — only when nothing
+  else can absorb surplus generation after a sudden event (otherwise a crash could look *cheaper*
+  than planning for it; the outage sweep caught exactly that with a free runback).
 - Thermal minimum output 0 and no on/off decisions keep the problem an LP (milliseconds to solve).
 
 **Charge/discharge exclusivity.** The LP is solved first. If any battery charges and discharges in
@@ -218,8 +225,18 @@ battery-hour (`ch ≤ P·z`, `dis ≤ P·(1−z)`), which forbids it exactly. `s
   other dispatchables (within ramp limits) → imports over lines → finally unserved energy, which is
   **always reported** per node and hour, never hidden.
 
+- **Emergency runback.** A sudden *line* outage can leave a plant on an island producing more than
+  the island needs (e.g. L1 opening while `gas_ng` exports south). With only ramp limits that would
+  be infeasible even in normal mode. Real grids trip or run back generators automatically (EDAG in
+  Chile), so in the hour a sudden event starts, plants may drop faster than their ramp rate at the
+  penalty `c_rb`. Reported as `metrics.emergency_runback_mwh`, objective term
+  `emergency_runback_penalty_usd`, and binding constraint `emergency_runback`. Planned outages never
+  need it (the plant is ramped down in advance).
+- **Guarantee:** in normal mode (`allow_unserved: true`) every outage combination solves. Checked
+  by `python -m optimisation.stress` (section 11).
+
 Not modelled (state this in reports): sub-hourly dynamics after a trip, reserve holding, N-1 security.
-A reserve requirement is a stretch goal (section 11).
+A reserve requirement is a stretch goal (section 12).
 
 ---
 
@@ -240,7 +257,7 @@ A reserve requirement is a stretch goal (section 11).
   "objective": {"total_usd": 0.0,
                 "terms": {"dispatchable_cost_usd": 0.0, "unserved_penalty_usd": 0.0,
                           "curtailment_penalty_usd": 0.0, "battery_throughput_cost_usd": 0.0,
-                          "transmission_tiebreak_usd": 0.0}},
+                          "transmission_tiebreak_usd": 0.0, "emergency_runback_penalty_usd": 0.0}},
   "assets": {"batteries": ["...effective batteries incl. added"], "lines": ["...effective capacities"]},
   "timeseries": {
     "generation_mw":         {"gen_id": ["T values"]},
@@ -259,6 +276,7 @@ A reserve requirement is a stretch goal (section 11).
     "demand_mwh": 0.0, "battery_charge_mwh": 0.0, "battery_discharge_mwh": 0.0,
     "battery_losses_mwh": 0.0,
     "assumed_cost_proxy_usd": 0.0,            // dispatchable cost only
+    "emergency_runback_mwh": 0.0,             // see section 6
     "line_hours_at_limit": {"L2": 0}
   },
   "binding_constraints": [
@@ -267,7 +285,8 @@ A reserve requirement is a stretch goal (section 11).
 }
 ```
 - `binding_constraints.type` ∈ `line_limit`, `battery_full`, `battery_empty`, `battery_power_limit`,
-  `dispatchable_at_capacity`, `ramp_limit`, `renewable_curtailed`, `unserved_energy`, `outage`.
+  `dispatchable_at_capacity`, `ramp_limit`, `emergency_runback`, `renewable_curtailed`,
+  `unserved_energy`, `outage`.
 - Errors/infeasibility return the same envelope with `timeseries`/`metrics` = `null` and a message.
   Infeasible messages name the hours/islands where demand exceeds the maximum possible supply.
 - Everything is plain JSON (no NumPy types, no NaN).
@@ -368,6 +387,14 @@ validate each → stress-test the best with a sudden outage → compare → repo
 16. No simultaneous charge/discharge in solutions.
 17. JSON round-trip of every output.
 18. Randomised property test: random feasible radial scenarios → solve then validate passes.
+19. Emergency runback after a sudden line trip that islands an exporting plant; none when planned.
+20. Example files match the current code; options consistency; bad timestamps; solar without profile.
+21. **Outage sweep** (`python -m optimisation.stress`; reduced version in the test suite): every
+    generator and line × planned/sudden × 5 time windows × baseline and every candidate × normal and
+    strict mode, plus combined maintenance-and-crash days (532 cases, ~2 000 solves). Checks: normal
+    mode always `optimal` and validated; outaged asset at 0; no hindsight; planned ≤ sudden; losing an
+    asset never lowers the objective; adding one never raises it (planned); strict mode is `optimal`
+    with 0 unserved or `infeasible` with a reason, never `error`.
 
 ---
 
@@ -393,12 +420,15 @@ validate each → stress-test the best with a sudden outage → compare → repo
 
 ## 14. Implementation status and demo results
 
-Implemented in this package (all milestones M0–M4; stretch goals not started).
+Implemented in this package (all milestones M0–M4; stretch goals not started). For a plain-language
+explanation and the developer guide (architecture, invariants, how to extend, testing), see
+[`README.md`](README.md).
 
 ```bash
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q          # 110 tests
+pytest optimisation/tests -q          # 113 tests
 python -m optimisation.demo --write   # prints the table below and refreshes optimisation/examples/
+python -m optimisation.stress         # full outage sweep, all checks must pass
 ```
 
 Demo scenario (`fixtures/demo_scenario.json`, fully **synthetic**, built by
@@ -418,6 +448,11 @@ Results from `python -m optimisation.demo` (every row validated):
 | North battery + trip | 736.6 | 1 530.0 | −391.9 MWh unserved |
 | South battery + trip | 1 368.2 | 1 678.9 | −243.1 MWh unserved |
 | L2 uprate + trip | 375.2 | 1 921.9 | no help during the outage |
+| Baseline + **planned** gas_centro maintenance 18–22 h | 1 368.2 | 1 921.9 | same as sudden: nothing to prepare |
+| North battery + maintenance | 736.6 | 1 501.5 | −420.4 (vs −391.9 when sudden) |
+| South battery + maintenance | 1 368.2 | 1 501.5 | −420.4 (vs −243.1 when sudden): pre-charges next to the deficit |
+| L2 uprate + maintenance | 375.2 | 1 921.9 | no help |
+| Baseline + sudden L1 trip 06–10 h | 1 570.4 | 0 | Norte Grande islanded; 19.5 MWh emergency runback of `gas_ng` |
 | Strict mode + trip | — | — | `infeasible`, with the hours and shortfall named |
 
 Example outputs for Persons 1, 2 and 4: `optimisation/examples/*.json`

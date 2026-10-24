@@ -22,6 +22,7 @@ DEFAULT_OBJECTIVE = {
     "curtailment_penalty_usd_per_mwh": 0.0,
     "battery_throughput_cost_usd_per_mwh": 0.5,
     "transmission_tiebreak_usd_per_mwh": 0.01,
+    "emergency_runback_penalty_usd_per_mwh": 1000.0,
 }
 
 DEFAULT_LIMITS = {
@@ -65,6 +66,7 @@ class Grid:
     avail: np.ndarray  # (G, T) MW, 0 during outages
     gen_online: np.ndarray  # (G, T) bool
     line_cap: np.ndarray  # (L, T) MW, 0 during outages
+    runback_hours: set[int]  # hours where a sudden event starts: units may drop faster than ramp
     objective: dict
     options: dict
     candidate_id: str = "baseline"
@@ -518,5 +520,6 @@ def build_grid(
         scenario_id=sid, T=T, dt=dt, timestamps=list(stamps), node_ids=node_ids, lines=lines,
         generators=generators, batteries=batteries, demand=demand, avail=avail,
         gen_online=gen_online, line_cap=line_cap, objective=objective,
+        runback_hours={ev["from_hour"] for ev in evs if ev["mode"] == "sudden" and ev["from_hour"] > 0},
         options=normalise_options(options), candidate_id=cid, modifications=mods, events=evs,
     )

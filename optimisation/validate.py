@@ -233,9 +233,13 @@ def validate(scenario: dict, solution: dict, options: dict | None = None) -> dic
         r = g["ramp_rate_mw_per_h"]
         if r is None:
             continue
-        step = np.abs(np.diff(p[g["id"]]))
+        step = np.diff(p[g["id"]])
         online = grid.gen_online[i, 1:]
-        excess = np.where(online, step - r * dt, 0.0)
+        # a drop in the hour a sudden event starts is an allowed emergency runback
+        runback = np.array([t in grid.runback_hours for t in range(1, grid.T)], dtype=bool)
+        up_excess = step - r * dt
+        down_excess = np.where(runback, -np.inf, -step - r * dt)
+        excess = np.where(online, np.maximum(up_excess, down_excess), 0.0)
         for t in np.flatnonzero(excess > TOL_MW):
             rep.fail("ramp_limits", g["id"], int(t) + 1, excess[t], f"output changes faster than {r:g} MW/h")
 
@@ -263,8 +267,17 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
         + float(dis[b["id"]].sum()) * dt * (1 / b["discharge_efficiency"] - 1)
         for b in bats
     )
+    runback = 0.0
+    for i, g in enumerate(gens):
+        r = g["ramp_rate_mw_per_h"]
+        if r is None:
+            continue
+        for t in grid.runback_hours:
+            if 0 < t < grid.T and grid.gen_online[i, t]:
+                runback += max(0.0, float(p[g["id"]][t - 1] - p[g["id"]][t]) - r * dt) * dt
     expected = {
         "curtailment_mwh": curt_mwh,
+        "emergency_runback_mwh": runback,
         "unserved_mwh": uns_mwh,
         "renewable_used_mwh": ren,
         "dispatchable_mwh": disp,
@@ -301,6 +314,7 @@ def _check_metrics(rep, grid, solution, p, ch, dis, f, u, curt) -> None:
         "battery_throughput_cost_usd": (ch_tot + dis_tot) * obj["battery_throughput_cost_usd_per_mwh"],
         "transmission_tiebreak_usd": sum(float(np.abs(f[k]).sum()) for k in f)
         * dt * obj["transmission_tiebreak_usd_per_mwh"],
+        "emergency_runback_penalty_usd": runback * obj["emergency_runback_penalty_usd_per_mwh"],
     }
     for key, val in exp_terms.items():
         got = terms.get(key)

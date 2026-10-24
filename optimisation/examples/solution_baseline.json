@@ -50,7 +50,8 @@
       "unserved_penalty_usd": 0.0,
       "curtailment_penalty_usd": 0.0,
       "battery_throughput_cost_usd": 60.078947,
-      "transmission_tiebreak_usd": 193.826
+      "transmission_tiebreak_usd": 193.826,
+      "emergency_runback_penalty_usd": 0.0
     }
   },
   "assets": {
@@ -1020,6 +1021,7 @@
     "battery_discharge_mwh": 57.0,
     "battery_losses_mwh": 6.157895,
     "assumed_cost_proxy_usd": 1665362.99993,
+    "emergency_runback_mwh": 0.0,
     "line_hours_at_limit": {
       "L1": 0.0,
       "L2": 8.0,

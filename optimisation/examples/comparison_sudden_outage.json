@@ -114,8 +114,7 @@
         "hours": [
           16,
           17,
-          18,
-          19
+          18
         ],
         "detail": "state of charge at 60 MWh capacity (end of hour)"
       },
@@ -307,7 +306,8 @@
         "hours": [
           15,
           16,
-          17
+          17,
+          18
         ],
         "detail": "state of charge at 600 MWh capacity (end of hour)"
       },
@@ -336,6 +336,7 @@
           13,
           14,
           19,
+          21,
           23
         ],
         "detail": "charging or discharging at 150 MW limit"
@@ -472,7 +473,8 @@
           18,
           19,
           20,
-          21
+          21,
+          22
         ],
         "detail": "demand not served"
       }

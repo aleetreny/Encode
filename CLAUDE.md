@@ -56,7 +56,11 @@ pip install -r optimisation/requirements.txt
 pytest optimisation/tests -q              # full test suite
 python -m optimisation.demo               # end-to-end demo run printed to the terminal
 python -m optimisation.demo --write       # also refresh optimisation/examples/*.json
+python -m optimisation.stress             # outage sweep: every asset, planned + sudden (must pass)
 ```
+
+Before changing anything in `optimisation/`, read the developer guide (Part B) in
+`optimisation/README.md`: invariants, how to extend, testing and the pre-push checklist.
 
 Public API (`from optimisation import ...`):
 - `solve(scenario, candidate=None, events=None, options=None)` → solution dict
@@ -70,7 +74,8 @@ Layout:
 - `optimisation/model.py` — LP construction and HiGHS solve (incl. sudden-outage re-dispatch)
 - `optimisation/validate.py` — independent validator (must never import `model.py`)
 - `optimisation/compare.py` — deltas between two solutions
-- `optimisation/README.md` — plain-language explanation of the module (start here)
+- `optimisation/stress.py` — outage sweep (planned maintenance and sudden crashes on every asset)
+- `optimisation/README.md` — plain-language explanation + developer guide (start here)
 - `optimisation/fixtures/` — synthetic demo scenario and its generator script
 - `optimisation/examples/` — example outputs for Persons 1, 2, 4 to code against
 - `optimisation/tests/` — pytest suite

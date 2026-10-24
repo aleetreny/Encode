@@ -532,3 +532,44 @@ def test_examples_match_current_code():
             data = {**data, "solver": {**data["solver"], "solve_time_s": 0.0}}
         stored = json.loads((demo.EXAMPLES / f"{name}.json").read_text())
         assert stored == json.loads(json.dumps(data)), f"examples/{name}.json is stale: run python -m optimisation.demo --write"
+
+
+# ------------------------------------------------------------------ outage sweep
+
+
+def test_line_trip_islanding_exporting_plant_uses_emergency_runback(scen):
+    """L1 trips while gas_ng exports north->south: the Norte Grande island has more generation
+    than demand and gas_ng cannot ramp down fast enough, so it must be run back (cf. EDAG)."""
+    trip = {"type": "line_outage", "id": "L1", "from_hour": 6, "to_hour": 10, "mode": "sudden"}
+    sol = solve(scen, events=[trip])
+    ok(scen, sol)
+    assert sol["metrics"]["emergency_runback_mwh"] > 0
+    assert 6 in binding(sol, "emergency_runback", "gas_ng")
+    assert sol["objective"]["terms"]["emergency_runback_penalty_usd"] == pytest.approx(
+        sol["metrics"]["emergency_runback_mwh"] * 1000, rel=1e-6)
+    # planned in advance, the plant is ramped down beforehand: no runback needed
+    planned = solve(scen, events=[{**trip, "mode": "planned"}])
+    ok(scen, planned)
+    assert planned["metrics"]["emergency_runback_mwh"] == 0
+    assert planned["objective"]["total_usd"] <= sol["objective"]["total_usd"]
+
+
+def test_validator_rejects_fast_drop_outside_sudden_event_hour(scen):
+    sol = solve(scen)
+    bad = copy.deepcopy(sol)
+    bad["timeseries"]["generation_mw"]["gas_ng"][5] = 0.0  # 350 -> 0 MW without any event
+    assert "ramp_limits" in {v["check"] for v in validate(scen, bad)["violations"]}
+
+
+def test_outage_stress_sweep_quick():
+    """Every generator and line, planned and sudden, midday and evening, baseline and one
+    candidate, normal and strict mode (python -m optimisation.stress runs the full sweep)."""
+    import contextlib
+    import io
+
+    from optimisation import stress
+
+    with contextlib.redirect_stdout(io.StringIO()):
+        summary = stress.run(quick=True, verbose=False)
+    assert summary["passed"], summary["failures"][:5]
+    assert summary["cases"] >= 100

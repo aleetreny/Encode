@@ -101,12 +101,12 @@ GridPilot does not treat regulation as decorative text: each row below names the
   3. **Crisis Stress-Test:** Automatically subject baseline and winning candidates to a sudden generator trip (`gas_centro` outage hours 18–22), quantify household impact (`unserved_mwh` & equivalent households reconnected), and recommend the most resilient compliant plan.
 
 ### Person 3 — Energy Optimisation, Crisis Redispatch & Independent Validation
-**Owns:** everything in **`optimisation/`** (`feature/optimisation`, Bernardo Guterres); the deterministic mathematical core (HiGHS via `highspy`, `NumPy`, `pytest`). **Status: M0–M4 implemented and verified with 110 passing tests; integrated and verified against Person 4's backend bridge (see `optimisation/README.md` for a plain-language guide and `optimisation/DESIGN.md` for the specification).**
+**Owns:** everything in **`optimisation/`** (`feature/optimisation`, Bernardo Guterres); the deterministic mathematical core (HiGHS via `highspy`, `NumPy`, `pytest`). **Status: M0–M4 implemented and verified with 113 passing tests and a 532-case outage sweep (planned maintenance and sudden crashes on every plant and line); integrated and verified against Person 4's backend bridge (see `optimisation/README.md` for a plain-language guide and `optimisation/DESIGN.md` for the specification).**
 
 **Built & Maintained:**
 - **5-node Chilean radial backbone (`DC-equivalent transport model`)** with renewable (`solar`, `wind`) and dispatchable (`hydro`, `gas`, `coal`, `diesel`) generators, transmission lines (`L1`–`L4`), and batteries (`BESS`).
 - **Multi-hour LP dispatch (`optimisation/model.py`):** Minimises an assumed dispatchable-cost proxy + Value of Lost Load (`VoLL = $10,000/MWh`) + small battery-throughput and transmission tie-breaks, subject to nodal balance, battery SOC dynamics (`soc[T] >= soc[0]`, or an exact `final_soc_mwh` when the scenario sets one), line thermal capacities, and generator **ramp rates (`ramp_rate_mw_per_h`)**. If any objective weights would make a battery charge and discharge in the same hour, it automatically re-solves with that forbidden exactly (MILP fallback).
-- **Planned & Sudden Crisis Outages (`mode: "planned" | "sudden"`):** True **no-hindsight sudden-outage re-dispatch** (locks hours `< from_hour` to pre-trip plan, trips the generator or line, and re-solves hours `>= from_hour` subject to physical ramp limits and islanded balances).
+- **Planned & Sudden Crisis Outages (`mode: "planned" | "sudden"`):** True **no-hindsight sudden-outage re-dispatch** (locks hours `< from_hour` to pre-trip plan, trips the generator or line, and re-solves hours `>= from_hour` subject to physical ramp limits and islanded balances), with a penalised **emergency runback** (cf. EDAG) when a line trip leaves an exporting plant islanded. Planned maintenance is optimised for the whole day in advance.
 - **Independent Validator (`optimisation/validate.py`):** Never imports `model.py` (shares only input parsing); independently checks nodal balances, line limits, ramp rates, battery recursion, simultaneous charge/discharge, and recomputes all metrics within `1e-4 MW` tolerance.
 - **Comparator & Menu (`optimisation/compare.py`, `modification_menu`):** Deterministic deltas for curtailment, cost proxy, unserved energy (`unserved_reduction_mwh`), and binding constraints.
 
@@ -255,9 +255,10 @@ Encode/
 │   ├── model.py               # HiGHS LP solver (normal + no-hindsight sudden outages)
 │   ├── validate.py            # Independent physics & regulatory validator
 │   ├── compare.py             # Baseline vs candidate & crisis delta calculator
+│   ├── stress.py              # Outage sweep: planned maintenance & sudden crashes on every asset
 │   ├── fixtures/              # 5-node Chilean corridor scenario
 │   ├── examples/              # Pre-computed validated JSON outputs for P1, P2, P4
-│   └── tests/                 # 110 deterministic pytest tests
+│   └── tests/                 # 113 deterministic pytest tests
 ├── backend/                   # Person 4 — FastAPI routes & service integration
 └── data/                      # Person 4 — CEN historical datasets & provenance
 ```
