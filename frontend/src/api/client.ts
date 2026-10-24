@@ -47,10 +47,9 @@ export async function startBackendAgentRun(
       body: JSON.stringify({
         preset_id: presetId,
         candidate_ids: [
-          'c1_battery_norte_grande',
-          'c2_battery_sur',
-          'c3_uprate_l2',
-          'c4_grid_stabiliser_centro',
+          'north_bess',
+          'south_bess',
+          'uprate_l2',
         ],
       }),
     });

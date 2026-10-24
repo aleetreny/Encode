@@ -634,29 +634,29 @@ export const ChileIsoMaquette: React.FC = () => {
     void startBackendAgentRun(preset);
     void postOperatorDecision({
       investigation_id: `sen-${preset}`,
-      candidate_id: preset === 'planned_maintenance' ? 'c3_uprate_l2' : 'c1_battery_norte_grande',
+      candidate_id: preset === 'planned_maintenance' ? 'uprate_l2' : 'north_bess',
       decision: 'approved',
     });
   };
 
-  // Live two-stage narrative text for top borderless telemetry bar
+  // Live two-stage narrative text for top borderless telemetry bar (exact HiGHS LP numbers from Bernardo's feature/optimisation)
   let stage1Summary = '';
   let stage2Summary = '';
 
   if (unservedMw > 10) {
-    stage1Summary = `ALERTA DE RED: Déficit térmico de ${Math.round(rawDeficitMw)} MW hacia 06 · Barrio Residencial`;
-    stage2Summary = `AGENTE IA APAGADO: ${Math.round(unservedMw)} MW sin suministro (${6 - litHousesCount} manzanas a oscuras · Activa IA para rescatar 243,058 hogares)`;
+    stage1Summary = `ALERTA DE RED: Déficit térmico de ${Math.round(rawDeficitMw)} MW hacia 06 · Barrio Residencial (1,921.9 MWh apagón base)`;
+    stage2Summary = `AGENTE IA APAGADO: ${Math.round(unservedMw)} MW sin suministro (${6 - litHousesCount} manzanas a oscuras · Activa north_bess para salvar 391,875 hogares-h)`;
   } else if (aiInjectMw > 0) {
-    stage1Summary = `FASE 1 · PERTURBACIÓN: Caída en 03 · Central Gas deja déficit de ${Math.round(rawDeficitMw)} MW en hora punta`;
-    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA: 04 · Batería BESS inyecta +${Math.round(aiInjectMw)} MW de emergencia → 100% hogares iluminados (243,058 hogares protegidos)`;
+    stage1Summary = `FASE 1 · PERTURBACIÓN: Caída súbita en 03 · Central Gas (18:00–22:00) deja déficit de ${Math.round(rawDeficitMw)} MW en hora punta`;
+    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA (north_bess / south_bess): Inyecta +${Math.round(aiInjectMw)} MW → 100% hogares iluminados (-391.9 MWh apagón · 391,875 hogares-h protegidos)`;
   } else if (curtailedSolarMw > 10) {
     stage1Summary = `SATURACIÓN L2: Excedente renovable de +${Math.round(rawCorridorOverflowMw)} MW supera capacidad de 05 · Troncal L2 (${l2CapMw} MW)`;
-    stage2Summary = `AGENTE IA APAGADO: Se pierden ${Math.round(curtailedSolarMw)} MW de energía solar limpia (Activa Agente IA para almacenar en BESS)`;
+    stage2Summary = `AGENTE IA APAGADO: Se desperdician ${Math.round(curtailedSolarMw)} MW solares (1,368.2 MWh/día en baseline · Activa IA para almacenar en BESS)`;
   } else if (aiAbsorbMw > 0) {
-    const savedUsd = Math.round((aiAbsorbMw / 400) * 51950);
-    const savedMwh = ((aiAbsorbMw / 400) * 631.6).toFixed(1);
+    const savedUsd = Math.round((aiAbsorbMw / 480) * 74230);
+    const savedMwh = ((aiAbsorbMw / 480) * 631.6).toFixed(1);
     stage1Summary = `FASE 1 · PERTURBACIÓN: Generación Norte (${Math.round(northRenewableMw)} MW) supera capacidad de 05 · Troncal L2 (${l2CapMw} MW)`;
-    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA: 04 · Batería BESS absorbe +${Math.round(aiAbsorbMw)} MW por línea directa → 0 MW recorte (-${savedMwh} MWh · -$${savedUsd.toLocaleString()} USD/día)`;
+    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA (north_bess): Absorbe +${Math.round(aiAbsorbMw)} MW por línea directa → 0 MW recorte (-${savedMwh} MWh · -$${savedUsd.toLocaleString()} USD/día)`;
   } else {
     stage1Summary = `FLUJO NOMINAL SEN: Generación limpia (${Math.round(northRenewableMw)} MW) + Térmica (${thermalMw} MW) abasteciendo ${demandMw} MW`;
     stage2Summary = `AGENTE IA EN GUARDIA (HiGHS LP): Corredor L2 al ${Math.round(corridorLoadRatio * 100)}% (${Math.round(solarToSubMw + windToSubMw)}/${l2CapMw} MW) · 50.00 Hz estables`;
