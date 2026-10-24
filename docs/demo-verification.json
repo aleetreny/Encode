@@ -97,11 +97,30 @@
     "source": "frontend/src/App.tsx",
     "current_behavior": "Local JavaScript sandbox calculations and timer-based SOC; no backend scenario/run/decision/report calls"
   },
-  "numerical_generated_examples_refreshed": 2,
+  "numerical_generated_examples_refreshed": 0,
   "numerical_solver_validator_tests_source_modified": false,
   "browser_verification": {
     "completed": false,
     "reason": "Earlier browser authorization denied localhost access; not retried or bypassed"
   },
-  "integrated_live_demo_ready": false
+  "integrated_live_demo_ready": false,
+  "numerical_examples_restored_to_owner": true,
+  "numerical_platform_difference": {
+    "case": "sudden_outage/c2_battery_sur",
+    "original_independent_validation_passed": true,
+    "current_independent_validation_passed": true,
+    "original_no_hindsight_passed": true,
+    "current_no_hindsight_passed": true,
+    "metrics_identical": true,
+    "objective_identical": true,
+    "hourly_arrays_identical": false,
+    "policy": "Preserve numerical owner examples; document platform-dependent degenerate optimum; do not change physics/tests."
+  },
+  "local_test_result_with_preserved_owner_examples": {
+    "passed": 208,
+    "failed": 1,
+    "failed_test": "optimisation/tests/test_optimisation.py::test_examples_match_current_code",
+    "reason": "platform-dependent degenerate optimum; all metrics/objective and independent physics/no-hindsight checks agree",
+    "tests_skipped_or_relaxed": false
+  }
 }
