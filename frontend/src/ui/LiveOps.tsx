@@ -85,7 +85,7 @@ function Screen() {
   }, [countdown?.active]);
   useEffect(() => {
     if (phase !== 'executing') return;
-    const byGemini = wasCountingDown.current;
+    const byGemini = state.applied_by ? state.applied_by === 'gemini_autonomous' : wasCountingDown.current;
     wasCountingDown.current = false;
     setToast({ kind: 'plan', title: byGemini ? 'Gemini aplicó el plan por su cuenta' : 'Plan aplicado por el operador', sub: byGemini ? 'Modo autónomo · validado por el solver antes de ejecutarse' : 'Validado por el solver antes de ejecutarse', key: Date.now() });
   }, [phase]);
@@ -238,6 +238,7 @@ function Screen() {
           <div className="gp-options-head">
             <b>¿Qué hacemos?</b>
             <span>{countdown?.active ? `Modo autónomo: Gemini aplica su recomendación en ${countdown.seconds_left} s` : 'Elige un camino. Pasa el cursor para ver cómo quedaría la red.'}</span>
+            {state.model_execution && <ModelBadge m={state.model_execution} />}
           </div>
           <div className="gp-options-row">
             {options.map((o) => {
@@ -377,4 +378,14 @@ function Spark({ series, cap, hour }: { series?: number[]; cap: number; hour: nu
       <line x1={(hour / 24) * w} x2={(hour / 24) * w} y1="0" y2={h} className="gp-spark-now" />
     </svg>
   );
+}
+
+// Who actually answered. A deterministic fallback or a cached answer must never pass for a live call.
+function ModelBadge({ m }: { m: NonNullable<ReturnType<typeof useLiveSession>['state']['model_execution']> }) {
+  const deterministic = (m.response_id ?? '').startsWith('det-');
+  const label = m.status === 'timeout' ? `${m.model} no respondió a tiempo · ranking del solver`
+    : m.status === 'error' ? `${m.model} con error · ranking del solver`
+    : deterministic ? 'Planificador determinista · sin llamada a Gemini'
+    : `${m.model} · ${(m.latency_ms / 1000).toLocaleString('es-CL', { maximumFractionDigits: 1 })} s${m.cached ? ' · respuesta en caché' : ''}`;
+  return <em className={`gp-model${deterministic || m.status !== 'ok' ? ' is-warn' : ''}`}>{label}</em>;
 }

@@ -285,3 +285,5 @@
 .gp-toast.is-fault b { background: var(--red); }
 .gp-toast.is-plan b { background: linear-gradient(135deg, var(--gem-a), var(--gem-b)); }
 @keyframes gp-toast { 0% { opacity: 0; transform: translate(-50%, -12px) scale(.98); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -6px); } }
+.gp-model { margin-left: auto; font: 10.5px var(--mono); font-style: normal; color: var(--gem-b); }
+.gp-model.is-warn { color: var(--amber); }
