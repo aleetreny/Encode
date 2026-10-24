@@ -1,306 +1,401 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChileIsoMaquette } from './components/ChileIsoMaquette';
 import {
-  computeZoneSnapshot,
-  getSolution,
-  HourlyZoneSnapshot,
-  NODES,
-} from './data/scenarioData';
-import { CandidateId, NodeId, OperationMode } from './types/grid';
-
-interface DecisionCardMeta {
-  id: CandidateId;
-  badge: string;
-  title: string;
-  verdict: string;
-  tone: 'neutral' | 'green' | 'blue' | 'red';
-}
-
-const DECISIONS: DecisionCardMeta[] = [
-  {
-    id: 'baseline',
-    badge: 'ESTADO ACTUAL',
-    title: 'Sin cambios en la red',
-    verdict: 'Se tira el sol al mediodía y hay apagón a las 18:00',
-    tone: 'red',
-  },
-  {
-    id: 'c1_battery_norte_grande',
-    badge: '★ SOLUCIÓN IA',
-    title: 'Batería en el Norte',
-    verdict: 'Guarda el sol del desierto y salva a Santiago a las 18:00',
-    tone: 'green',
-  },
-  {
-    id: 'c3_uprate_l2',
-    badge: 'OPCIÓN CABLE',
-    title: 'Ampliar Cable Central',
-    verdict: 'Desatasca el mediodía, pero no guarda luz para la tarde',
-    tone: 'blue',
-  },
-  {
-    id: 'c2_battery_sur',
-    badge: 'ERROR COMÚN',
-    title: 'Batería en el Sur',
-    verdict: 'Inútil para el sol: el atasco del cable está antes',
-    tone: 'neutral',
-  },
-];
+  ChileIsoMaquette,
+  GridSandboxState,
+  StationId,
+} from './components/ChileIsoMaquette';
 
 export function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Start at 13:00 (step 52) in baseline so the user sees the problem FIRST, or let them click the IA solution in 1 click!
-  // Wait: starting on the IA solution or baseline? Let's start at 13:00 with IA solution or baseline?
-  // Starting on 'baseline' at 13:00 immediately shows the RED "SOL DESPERDICIADO" and "CABLE ATASCADO" problem, making clicking "★ Batería en el Norte (IA)" super rewarding!
-  const [step96, setStep96] = useState<number>(52);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [mode, setMode] = useState<OperationMode>('normal');
-  const [candidateId, setCandidateId] = useState<CandidateId>('baseline');
-  const [selectedZone, setSelectedZone] = useState<NodeId | 'all'>('all');
+  // 4 Simple Game Controls that the user alters in real time
+  const [sunPct, setSunPct] = useState<number>(95); // 0..100%
+  const [demandMw, setDemandMw] = useState<number>(420); // 300..850 MW
+  const [cableCapMw, setCableCapMw] = useState<number>(420); // 300..650 MW
+  const [thermalBroken, setThermalBroken] = useState<boolean>(false);
+  const [agentEnabled, setAgentEnabled] = useState<boolean>(true);
+  const [selectedStation, setSelectedStation] = useState<StationId | null>(null);
 
-  useEffect(() => {
-    if (!isPlaying) return;
-    const timer = window.setInterval(() => {
-      setStep96((prev) => {
-        const next = (prev + 1) % 96;
-        // Automatically trigger evening outage mode when passing 17:00 so the 24h loop tells the full story
-        if (next >= 68 && next <= 84) {
-          setMode('sudden_outage');
-        } else {
-          setMode('normal');
+  // Live battery charge level that evolves smoothly when charging/discharging
+  const [batterySocPct, setBatterySocPct] = useState<number>(62);
+
+  // Compute real-time grid physics & AI Agent response from the 4 controls
+  const sandboxState: GridSandboxState = useMemo(() => {
+    const solarAvailableMw = Math.round((sunPct / 100) * 700); // up to 700 MW solar
+    const windOutputMw = 140; // steady 140 MW wind
+    const maxThermalMw = thermalBroken ? 0 : 320;
+
+    // Step 1: How much solar + wind can pass through the central cable toward the houses?
+    const rawCleanGen = solarAvailableMw + windOutputMw;
+
+    let batteryFlowMw = 0; // negative = charging, positive = discharging
+    let solarWastedMw = 0;
+    let cableFlowMw = 0;
+    let thermalOutputMw = 0;
+    let housesServedMw = 0;
+    let housesBlackoutMw = 0;
+
+    let agentActionTitle = '';
+    let agentActionReason = '';
+    let agentTone: 'green' | 'blue' | 'red' | 'neutral' = 'green';
+
+    // Check if there is excess solar blocked by the cable OR excess solar above house demand
+    const maxDeliverableViaCable = Math.min(rawCleanGen, cableCapMw);
+    const excessSolarAtSource = Math.max(0, rawCleanGen - maxDeliverableViaCable);
+
+    // Deficit at the neighborhood if only clean energy + available thermal is used
+    const totalPossibleToHouses = Math.min(
+      cableCapMw,
+      rawCleanGen + maxThermalMw
+    );
+    const deficitWithoutBattery = Math.max(0, demandMw - totalPossibleToHouses);
+
+    if (agentEnabled) {
+      if (deficitWithoutBattery > 5 && batterySocPct > 5) {
+        // AI AGENT EMERGENCY DISCHARGE: Inject battery power directly to save the neighborhood!
+        const neededFromBattery = Math.min(380, deficitWithoutBattery);
+        batteryFlowMw = neededFromBattery;
+        cableFlowMw = totalPossibleToHouses;
+        thermalOutputMw = Math.min(
+          maxThermalMw,
+          Math.max(0, cableFlowMw - rawCleanGen)
+        );
+        housesServedMw = Math.min(demandMw, cableFlowMw + batteryFlowMw);
+        housesBlackoutMw = Math.max(0, demandMw - housesServedMw);
+
+        agentTone = housesBlackoutMw > 5 ? 'red' : 'blue';
+        agentActionTitle = `⚡ Agente IA inyectando +${Math.round(
+          batteryFlowMw
+        )} MW desde la batería hacia el barrio`;
+        agentActionReason = thermalBroken
+          ? 'Detectó la avería en la Central Térmica y activó el respaldo instantáneo para evitar el apagón en las casas.'
+          : 'El cable central llegó a su límite; el Agente IA suple el pico de consumo de las casas con energía guardada.';
+      } else if (excessSolarAtSource > 10 && batterySocPct < 99) {
+        // AI AGENT SMART CHARGE: Absorb excess solar that doesn't fit in the cable!
+        const absorbedMw = Math.min(420, excessSolarAtSource);
+        batteryFlowMw = -absorbedMw; // charging
+        solarWastedMw = Math.max(0, excessSolarAtSource - absorbedMw);
+        cableFlowMw = Math.min(demandMw, maxDeliverableViaCable);
+        thermalOutputMw = Math.min(
+          maxThermalMw,
+          Math.max(0, demandMw - cableFlowMw)
+        );
+        housesServedMw = Math.min(demandMw, cableFlowMw + thermalOutputMw);
+        housesBlackoutMw = Math.max(0, demandMw - housesServedMw);
+
+        agentTone = 'green';
+        agentActionTitle = `🔋 Agente IA desviando +${Math.round(
+          absorbedMw
+        )} MW solares a la batería`;
+        agentActionReason =
+          'El cable central está lleno. En lugar de desperdiciar el sol sobrante de Atacama, el Agente lo almacena para la noche.';
+      } else {
+        // Balanced grid: AI optimizes clean dispatch & minimizes gas
+        cableFlowMw = Math.min(demandMw, maxDeliverableViaCable);
+        const remainingDemand = Math.max(0, demandMw - cableFlowMw);
+        if (remainingDemand > 0 && batterySocPct > 25 && sunPct < 40) {
+          // Use battery before burning gas at night
+          batteryFlowMw = Math.min(180, remainingDemand);
         }
+        thermalOutputMw = Math.min(
+          maxThermalMw,
+          Math.max(0, demandMw - cableFlowMw - Math.max(0, batteryFlowMw))
+        );
+        housesServedMw = Math.min(
+          demandMw,
+          cableFlowMw + thermalOutputMw + Math.max(0, batteryFlowMw)
+        );
+        housesBlackoutMw = Math.max(0, demandMw - housesServedMw);
+        solarWastedMw = Math.max(0, rawCleanGen - cableFlowMw);
+
+        agentTone = 'green';
+        agentActionTitle =
+          batteryFlowMw > 5
+            ? `🌙 Agente IA alimentando casas con sol nocturno (+${Math.round(
+                batteryFlowMw
+              )} MW)`
+            : '✅ Agente IA equilibrando el flujo hacia el barrio (100% cubierto)';
+        agentActionReason =
+          batteryFlowMw > 5
+            ? 'Prioriza descargar energía limpia de la batería antes de encender más gas.'
+            : 'Red estable: toda la demanda del barrio se cubre sin atascos ni cortes.';
+      }
+    } else {
+      // AI AGENT DISABLED: No battery intervention!
+      batteryFlowMw = 0;
+      cableFlowMw = Math.min(demandMw, maxDeliverableViaCable);
+      thermalOutputMw = Math.min(
+        maxThermalMw,
+        Math.max(0, Math.min(cableCapMw, demandMw) - cableFlowMw)
+      );
+      cableFlowMw = Math.min(cableCapMw, cableFlowMw + thermalOutputMw);
+      housesServedMw = Math.min(demandMw, cableFlowMw);
+      housesBlackoutMw = Math.max(0, demandMw - housesServedMw);
+      solarWastedMw = Math.max(0, solarAvailableMw - Math.max(0, cableFlowMw - windOutputMw));
+
+      agentTone = 'neutral';
+      agentActionTitle = '⚠️ Agente IA desactivado (Red sin control inteligente)';
+      agentActionReason =
+        housesBlackoutMw > 5
+          ? `¡Se apagaron casas! Faltan ${Math.round(
+              housesBlackoutMw
+            )} MW en el barrio porque la batería está desconectada.`
+          : solarWastedMw > 10
+          ? `Se están tirando a la basura ${Math.round(
+              solarWastedMw
+            )} MW de sol porque nadie los guarda en la batería.`
+          : 'Activa el Agente IA para que gestione automáticamente los excesos y cortes.';
+    }
+
+    const solarUsedMw = Math.max(0, solarAvailableMw - solarWastedMw);
+    const cableUtilPct = Math.min(100, (cableFlowMw / cableCapMw) * 100);
+    const cableSaturated = cableUtilPct >= 97;
+    const housesLitPct =
+      demandMw > 0 ? Math.min(100, (housesServedMw / demandMw) * 100) : 100;
+
+    return {
+      sunPct,
+      demandMw,
+      cableCapMw,
+      thermalBroken,
+      agentEnabled,
+      solarAvailableMw,
+      solarUsedMw,
+      solarWastedMw,
+      thermalOutputMw,
+      windOutputMw,
+      batteryFlowMw,
+      batterySocPct,
+      cableFlowMw,
+      cableUtilPct,
+      cableSaturated,
+      housesServedMw,
+      housesBlackoutMw,
+      housesLitPct,
+      agentActionTitle,
+      agentActionReason,
+      agentTone,
+    };
+  }, [sunPct, demandMw, cableCapMw, thermalBroken, agentEnabled, batterySocPct]);
+
+  // Animate battery SOC % slowly in real time as it charges or discharges
+  useEffect(() => {
+    if (!agentEnabled || Math.abs(sandboxState.batteryFlowMw) < 5) return;
+    const timer = window.setInterval(() => {
+      setBatterySocPct((prev) => {
+        const delta = sandboxState.batteryFlowMw < 0 ? 1.2 : -1.2;
+        const next = prev + delta;
+        if (next > 96) return 28; // loop smoothly for continuous visual feedback
+        if (next < 12) return 85;
         return next;
       });
-    }, 280);
+    }, 350);
     return () => window.clearInterval(timer);
-  }, [isPlaying]);
+  }, [agentEnabled, sandboxState.batteryFlowMw]);
 
-  const activeSolution = useMemo(
-    () => getSolution(mode, candidateId),
-    [mode, candidateId]
-  );
-
-  const baselineSolution = useMemo(
-    () => getSolution(mode, 'baseline'),
-    [mode]
-  );
-
-  const nationalSnapshot = useMemo(
-    () => computeZoneSnapshot(activeSolution, step96, 'all'),
-    [activeSolution, step96]
-  );
-
-  const zoneSnapshots = useMemo(() => {
-    const map = {} as Record<NodeId, HourlyZoneSnapshot>;
-    for (const n of NODES) {
-      map[n.id] = computeZoneSnapshot(activeSolution, step96, n.id);
+  // Quick 1-click preset situations
+  const applyPreset = (preset: 'sunny_bottleneck' | 'night_crisis' | 'peak_storm') => {
+    if (preset === 'sunny_bottleneck') {
+      setSunPct(95);
+      setDemandMw(420);
+      setCableCapMw(420);
+      setThermalBroken(false);
+    } else if (preset === 'night_crisis') {
+      setSunPct(0);
+      setDemandMw(390);
+      setCableCapMw(480);
+      setThermalBroken(true);
+    } else if (preset === 'peak_storm') {
+      setSunPct(35);
+      setDemandMw(720);
+      setCableCapMw(500);
+      setThermalBroken(false);
     }
-    return map;
-  }, [activeSolution, step96]);
-
-  // Simple human metrics
-  const baseCurtailment = baselineSolution.metrics.curtailment_mwh; // ~1369 MWh
-  const activeCurtailment = activeSolution.metrics.curtailment_mwh;
-  const savedSolarMwh = Math.max(0, baseCurtailment - activeCurtailment);
-  // Total daily solar generated in Chile scenario is ~4900 MWh; calculate % of excess solar rescued
-  const solarUtilPct =
-    candidateId === 'c3_uprate_l2'
-      ? 92
-      : candidateId === 'c1_battery_norte_grande'
-      ? 84
-      : 54;
-
-  const isEveningScene = step96 >= 68;
-  const hasNorthBattery = candidateId === 'c1_battery_norte_grande';
-
-  const selectMiddayScene = () => {
-    setIsPlaying(false);
-    setMode('normal');
-    setStep96(52); // 13:00 CLST
-  };
-
-  const selectEveningCrisisScene = () => {
-    setIsPlaying(false);
-    setMode('sudden_outage');
-    setStep96(72); // 18:00 CLST
   };
 
   return (
     <div className="iso anatomy-shell" data-theme={theme}>
       <main className="anatomy-page">
-        {/* 1. SUPER CLEAR HUMAN HEADER */}
+        {/* 1. MINIMALIST HEADER + QUICK SITUATIONS */}
         <header className="anatomy-header">
           <div>
             <div className="anatomy-eyebrow">
-              MAQUETA INTERACTIVA · EL PROBLEMA ELÉCTRICO DE CHILE
+              SIMULADOR INTERACTIVO · RED ELÉCTRICA Y AGENTE IA
             </div>
             <h1 className="anatomy-title">
-              ¿Dónde enchufarías una batería para no desperdiciar el sol de Atacama?
+              Pon a prueba al Agente IA de la Red Eléctrica
             </h1>
             <p className="anatomy-subtitle">
-              Al mediodía sobra sol en el <strong>Norte</strong>, pero el cable hacia{' '}
-              <strong>Santiago</strong> se atasca. Al atardecer se va el sol y falta luz.{' '}
-              <strong>Toca la maqueta</strong> para ver cómo nuestra IA elige la mejor solución.
+              Altera el <strong>sol</strong>, el <strong>consumo del barrio</strong> o provoca una{' '}
+              <strong>avería en la planta térmica</strong> y observa en el esquema 3D cómo reacciona el{' '}
+              <strong>Agente IA</strong> en tiempo real para llevar luz a las casas.
             </p>
+          </div>
+
+          <div className="header-actions">
+            <button
+              type="button"
+              className="anatomy-play-btn"
+              onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+            >
+              {theme === 'light' ? '☾ MODO OSCURO' : '☀ MODO PAPEL'}
+            </button>
+          </div>
+        </header>
+
+        {/* QUICK PRESET SCENARIOS */}
+        <section className="preset-bar" aria-label="Situaciones rápidas">
+          <span className="preset-label">SITUACIONES RÁPIDAS:</span>
+          <div className="preset-buttons">
+            <button
+              type="button"
+              className="preset-pill"
+              onClick={() => applyPreset('sunny_bottleneck')}
+            >
+              ☀️ 1. Mediodía: Exceso de Sol y Cable Atascado
+            </button>
+            <button
+              type="button"
+              className="preset-pill"
+              onClick={() => applyPreset('night_crisis')}
+            >
+              💥 2. Noche: Avería en Planta Térmica
+            </button>
+            <button
+              type="button"
+              className="preset-pill"
+              onClick={() => applyPreset('peak_storm')}
+            >
+              🏘️ 3. Pico Máximo de Consumo en el Barrio
+            </button>
+          </div>
+        </section>
+
+        {/* 2. BIG SCHEMATIC 3D MAQUETTE (PLANTS -> AI BATTERY & GRID -> HOUSES) */}
+        <ChileIsoMaquette
+          state={sandboxState}
+          selectedStation={selectedStation}
+          onSelectStation={setSelectedStation}
+          onToggleThermalBreak={() => setThermalBroken((b) => !b)}
+          onToggleAgent={() => setAgentEnabled((a) => !a)}
+        />
+
+        {/* 3. REAL-TIME AI AGENT REACTION BANNER */}
+        <section
+          className="agent-live-banner"
+          data-tone={sandboxState.agentTone}
+          aria-label="Respuesta del Agente IA en tiempo real"
+        >
+          <div className="agent-live-left">
+            <span className="agent-live-tag">REACCIÓN DEL AGENTE IA EN TIEMPO REAL</span>
+            <strong className="agent-live-title">
+              {sandboxState.agentActionTitle}
+            </strong>
+            <p className="agent-live-reason">{sandboxState.agentActionReason}</p>
           </div>
 
           <button
             type="button"
-            className="anatomy-play-btn"
-            onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+            className="agent-toggle-btn"
+            data-active={agentEnabled}
+            onClick={() => setAgentEnabled((a) => !a)}
           >
-            {theme === 'light' ? '☾ MODO OSCURO' : '☀ MODO PAPEL'}
+            {agentEnabled ? '🤖 Agente IA: ACTIVADO' : '⚠️ Agente IA: APAGADO (Activar)'}
           </button>
-        </header>
-
-        {/* 2. TWO-SCENE STORY BAR (ELIGE EL MOMENTO DEL DÍA) */}
-        <section className="story-moment-bar" aria-label="Elige el momento del día">
-          <div className="story-moment-label">PASO 1 · HORA:</div>
-          <div className="story-moment-buttons">
-            <button
-              type="button"
-              className="story-moment-btn"
-              data-active={!isEveningScene}
-              onClick={selectMiddayScene}
-            >
-              <span className="story-moment-icon">☀️</span>
-              <div>
-                <strong>1. Mediodía (13:00)</strong>
-                <span>Sobra sol en el Norte · Cable lleno</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              className="story-moment-btn"
-              data-active={isEveningScene}
-              data-alert="true"
-              onClick={selectEveningCrisisScene}
-            >
-              <span className="story-moment-icon">🌆</span>
-              <div>
-                <strong>2. Atardecer (18:00 · Crisis)</strong>
-                <span>Sin sol · Falla central en Santiago</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              className="story-play-pill"
-              data-playing={isPlaying}
-              onClick={() => setIsPlaying((p) => !p)}
-              title="Reproducir las 24 horas automáticamente"
-            >
-              {isPlaying ? '❚❚ Pausar' : '▶ Simular 24h'}
-            </button>
-          </div>
         </section>
 
-        {/* 3. INTERACTIVE MAQUETTE OF CHILE WITH FLOATING PINS & DIRECT PLUG BUTTONS */}
-        <ChileIsoMaquette
-          snapshot={nationalSnapshot}
-          zoneSnapshots={zoneSnapshots}
-          candidateId={candidateId}
-          mode={mode}
-          selectedZone={selectedZone}
-          onSelectZone={setSelectedZone}
-          onSelectCandidate={setCandidateId}
-        />
-
-        {/* 4. STEP 2: 4 VISUAL DECISION CARDS (CHOOSE WHAT TO INSTALL) */}
-        <section className="decision-section" aria-label="Prueba una solución en la maqueta">
-          <div className="decision-header">
-            <span>PASO 2 · PRUEBA QUÉ INSTALAR EN CHILE:</span>
-            <span className="decision-hint">
-              (Haz clic en una opción y observa cómo cambia la maqueta arriba)
-            </span>
+        {/* 4. FEW SIMPLE GAME PARAMETERS (MUEVE LOS VALORES Y MIRA CÓMO REACCIONA) */}
+        <section className="sandbox-controls" aria-label="Parámetros de la red">
+          {/* SLIDER 1: SUN INTENSITY */}
+          <div className="control-card">
+            <div className="control-top">
+              <label htmlFor="slider-sun">☀️ 1. Sol en Planta Solar</label>
+              <strong>{sunPct}% ({sandboxState.solarAvailableMw} MW)</strong>
+            </div>
+            <input
+              id="slider-sun"
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={sunPct}
+              onChange={(e) => setSunPct(Number(e.target.value))}
+              className="anatomy-range"
+            />
+            <div className="control-Ends">
+              <span>☾ Noche (0%)</span>
+              <span>☀️ Sol Máximo (100%)</span>
+            </div>
           </div>
 
-          <div className="decision-grid">
-            {DECISIONS.map((d) => {
-              const active = candidateId === d.id;
-              return (
-                <button
-                  key={d.id}
-                  type="button"
-                  className="decision-card"
-                  data-active={active}
-                  data-tone={d.tone}
-                  onClick={() => setCandidateId(d.id)}
-                >
-                  <div className="decision-card-top">
-                    <span className="decision-badge" data-tone={d.tone}>
-                      {d.badge}
-                    </span>
-                    <span className="decision-radio">{active ? '●' : '○'}</span>
-                  </div>
-                  <div className="decision-title">{d.title}</div>
-                  <div className="decision-verdict">{d.verdict}</div>
-                </button>
-              );
-            })}
+          {/* SLIDER 2: NEIGHBORHOOD HOUSE DEMAND */}
+          <div className="control-card">
+            <div className="control-top">
+              <label htmlFor="slider-demand">🏘️ 2. Consumo del Barrio (Casas)</label>
+              <strong>{demandMw} MW</strong>
+            </div>
+            <input
+              id="slider-demand"
+              type="range"
+              min={300}
+              max={850}
+              step={20}
+              value={demandMw}
+              onChange={(e) => setDemandMw(Number(e.target.value))}
+              className="anatomy-range"
+            />
+            <div className="control-Ends">
+              <span>Bajo (300 MW)</span>
+              <span>Pico en Casas (850 MW)</span>
+            </div>
           </div>
-        </section>
 
-        {/* 5. ONLY TWO HUMAN SCORECARDS WITH PROGRESS BARS */}
-        <section className="impact-strip" aria-label="Resultado de tu decisión">
-          <div className="impact-card">
-            <div className="impact-top">
-              <span className="impact-label">☀️ 1. APROVECHAMIENTO DEL SOL DEL NORTE</span>
+          {/* SLIDER 3: CENTRAL CABLE CAPACITY */}
+          <div className="control-card">
+            <div className="control-top">
+              <label htmlFor="slider-cable">⚡ 3. Capacidad del Cable Central</label>
+              <strong>{cableCapMw} MW máx.</strong>
+            </div>
+            <input
+              id="slider-cable"
+              type="range"
+              min={300}
+              max={650}
+              step={25}
+              value={cableCapMw}
+              onChange={(e) => setCableCapMw(Number(e.target.value))}
+              className="anatomy-range"
+            />
+            <div className="control-Ends">
+              <span>Cuello estrecho (300)</span>
+              <span>Cable amplio (650)</span>
+            </div>
+          </div>
+
+          {/* BUTTON 4: SABOTAGE / BREAK THERMAL PLANT */}
+          <div className="control-card control-card--button">
+            <div className="control-top">
+              <span>🔥 4. Estado Planta Térmica</span>
               <strong
-                className="impact-score"
-                data-tone={savedSolarMwh > 10 ? 'green' : 'red'}
+                style={{
+                  color: thermalBroken
+                    ? 'var(--anatomy-red)'
+                    : 'var(--anatomy-green)',
+                }}
               >
-                {savedSolarMwh > 10
-                  ? `+${Math.round(savedSolarMwh)} MWh rescatados`
-                  : 'Se pierde el exceso solar'}
+                {thermalBroken ? '💥 AVERIADA (0 MW)' : '✓ Operativa (320 MW)'}
               </strong>
             </div>
-            <div className="impact-bar-track">
-              <div
-                className="impact-bar-fill"
-                data-tone={savedSolarMwh > 10 ? 'green' : 'red'}
-                style={{ width: `${solarUtilPct}%` }}
-              />
-            </div>
-            <p className="impact-explain">
-              {candidateId === 'c1_battery_norte_grande'
-                ? 'La Batería Norte absorbe el sol que no cabe en el cable al mediodía.'
-                : candidateId === 'c3_uprate_l2'
-                ? 'El cable más ancho deja pasar más sol directo hacia Santiago.'
-                : candidateId === 'c2_battery_sur'
-                ? 'La Batería en el Sur no puede recibir el sol porque el cable central sigue atascado.'
-                : 'Sin baterías ni nuevo cable, el sol extra de Atacama se desperdicia.'}
-            </p>
-          </div>
-
-          <div className="impact-card">
-            <div className="impact-top">
-              <span className="impact-label">🏙️ 2. PROTECCIÓN DE SANTIAGO A LAS 18:00</span>
-              <strong
-                className="impact-score"
-                data-tone={hasNorthBattery ? 'green' : 'red'}
-              >
-                {hasNorthBattery
-                  ? '✓ +98.000 hogares salvados'
-                  : '⚠️ Riesgo de apagón en la tarde'}
-              </strong>
-            </div>
-            <div className="impact-bar-track">
-              <div
-                className="impact-bar-fill"
-                data-tone={hasNorthBattery ? 'green' : 'red'}
-                style={{ width: hasNorthBattery ? '100%' : '42%' }}
-              />
-            </div>
-            <p className="impact-explain">
-              {hasNorthBattery
-                ? 'A las 18:00, la Batería Norte descarga el sol guardado y evita el apagón en Santiago.'
-                : candidateId === 'c3_uprate_l2'
-                ? 'Ampliar el cable ayuda a las 13:00, pero a las 18:00 ya no hay sol que transportar.'
-                : 'Cuando cae una central térmica a las 18:00, no hay energía guardada para responder.'}
-            </p>
+            <button
+              type="button"
+              className="sabotage-btn"
+              data-broken={thermalBroken}
+              onClick={() => setThermalBroken((b) => !b)}
+            >
+              {thermalBroken
+                ? '🔧 Reparar Central Térmica'
+                : '💥 Provocar Avería en Central Térmica'}
+            </button>
           </div>
         </section>
       </main>

@@ -15,14 +15,14 @@ html, body {
   min-height: 100vh;
   background: var(--anatomy-page);
   color: var(--anatomy-text);
-  font: 14px/1.55 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   transition: background-color 220ms var(--anatomy-ease), color 220ms var(--anatomy-ease);
 }
 
 .anatomy-page {
-  width: min(860px, 100% - 32px);
+  width: min(940px, 100% - 32px);
   margin: 0 auto;
-  padding: 28px 0 64px;
+  padding: 24px 0 56px;
 }
 
 /* 1. Header */
@@ -31,7 +31,7 @@ html, body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .anatomy-eyebrow {
@@ -48,16 +48,16 @@ html, body {
   font-size: 22px;
   font-weight: 650;
   letter-spacing: -0.02em;
-  line-height: 1.22;
+  line-height: 1.2;
   color: var(--anatomy-strong);
 }
 
 .anatomy-subtitle {
   margin: 0;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.48;
   color: var(--anatomy-text);
-  max-width: 680px;
+  max-width: 720px;
 }
 
 .anatomy-subtitle strong {
@@ -82,106 +82,57 @@ html, body {
   border-color: var(--anatomy-hi);
 }
 
-/* 2. Two-Moment Story Bar */
-.story-moment-bar {
+/* Quick Preset Bar */
+.preset-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   background: var(--anatomy-card);
-  box-shadow: 0 0 0 1px var(--anatomy-faint);
-  margin-bottom: 14px;
+  border: 1px solid var(--anatomy-faint);
+  margin-bottom: 12px;
 }
 
-.story-moment-label {
+.preset-label {
   font-family: var(--anatomy-mono);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--anatomy-muted);
 }
 
-.story-moment-buttons {
+.preset-buttons {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  justify-content: flex-end;
+  gap: 6px;
 }
 
-.story-moment-btn {
-  appearance: none;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-align: left;
-  padding: 7px 12px;
-  border: 1px solid var(--anatomy-faint);
-  background: var(--anatomy-page);
-  color: var(--anatomy-text);
-  cursor: pointer;
-  transition: all 150ms ease;
-}
-
-.story-moment-btn:hover {
-  border-color: var(--anatomy-mid);
-}
-
-.story-moment-btn[data-active="true"] {
-  background: var(--anatomy-top);
-  border-color: var(--anatomy-hi);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-}
-
-.story-moment-btn[data-alert="true"][data-active="true"] {
-  border-color: var(--anatomy-red);
-}
-
-.story-moment-icon {
-  font-size: 17px;
-  line-height: 1;
-}
-
-.story-moment-btn strong {
-  display: block;
-  font-size: 12.5px;
-  color: var(--anatomy-strong);
-  line-height: 1.2;
-}
-
-.story-moment-btn span {
-  display: block;
-  font-size: 11px;
-  color: var(--anatomy-muted);
-}
-
-.story-play-pill {
+.preset-pill {
   appearance: none;
   border: 1px solid var(--anatomy-mid);
   background: var(--anatomy-top);
   color: var(--anatomy-strong);
   font-family: var(--anatomy-mono);
   font-size: 11px;
-  padding: 9px 12px;
+  padding: 5px 10px;
   cursor: pointer;
-  white-space: nowrap;
+  transition: all 140ms ease;
 }
 
-.story-play-pill[data-playing="true"] {
-  border-color: var(--anatomy-green);
-  color: var(--anatomy-green);
+.preset-pill:hover {
+  border-color: var(--anatomy-hi);
+  transform: translateY(-1px);
 }
 
-/* 3. Maquette Stage & Floating Callout Pins */
+/* 2. Schematic 3D Maquette Stage & Floating Station Tags */
 .anatomy-shell .iso-figure {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
 }
 
 .anatomy-shell .iso-plate {
-  padding: 44px 16px 38px;
+  padding: 46px 16px 40px;
 }
 
 .maquette-stage {
@@ -196,7 +147,7 @@ html, body {
   z-index: 3;
 }
 
-.maquette-pin {
+.station-tag {
   pointer-events: auto;
   position: absolute;
   transform: translate(-50%, -95%);
@@ -207,107 +158,72 @@ html, body {
   padding: 6px 10px;
   background: var(--anatomy-top);
   border: 1px solid var(--anatomy-mid);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
   cursor: pointer;
   text-align: left;
-  min-width: 175px;
-  max-width: 225px;
-  transition: transform 160ms ease, border-color 160ms ease;
+  min-width: 162px;
+  max-width: 215px;
+  transition: transform 150ms ease, border-color 150ms ease;
 }
 
-.maquette-pin:hover {
-  transform: translate(-50%, -98%) scale(1.02);
+.station-tag:hover {
+  transform: translate(-50%, -98%) scale(1.03);
 }
 
-.maquette-pin--bottom {
-  transform: translate(-50%, 8%);
+.station-tag--bottom {
+  transform: translate(-50%, 6%);
 }
 
-.maquette-pin--bottom:hover {
-  transform: translate(-50%, 5%) scale(1.02);
+.station-tag--bottom:hover {
+  transform: translate(-50%, 3%) scale(1.03);
 }
 
-.maquette-pin[data-tone="green"] {
+.station-tag[data-tone="green"] {
   border-left: 3px solid var(--anatomy-green);
 }
 
-.maquette-pin[data-tone="red"] {
+.station-tag[data-tone="red"] {
   border-left: 3px solid var(--anatomy-red);
 }
 
-.maquette-pin[data-tone="blue"] {
+.station-tag[data-tone="blue"] {
   border-left: 3px solid var(--anatomy-blue);
 }
 
-.maquette-pin-zone {
+.station-tag-title {
   font-family: var(--anatomy-mono);
   font-size: 9.5px;
+  font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--anatomy-muted);
-  text-transform: uppercase;
 }
 
-.maquette-pin-badge {
+.station-tag-val {
   font-family: var(--anatomy-mono);
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--anatomy-strong);
 }
 
-.maquette-pin[data-tone="green"] .maquette-pin-badge {
+.station-tag[data-tone="green"] .station-tag-val {
   color: var(--anatomy-green);
 }
 
-.maquette-pin[data-tone="red"] .maquette-pin-badge {
+.station-tag[data-tone="red"] .station-tag-val {
   color: var(--anatomy-red);
 }
 
-.maquette-pin[data-tone="blue"] .maquette-pin-badge {
+.station-tag[data-tone="blue"] .station-tag-val {
   color: var(--anatomy-blue);
 }
 
-.maquette-pin-sub {
+.station-tag-sub {
   font-size: 11px;
-  line-height: 1.25;
+  line-height: 1.22;
   color: var(--anatomy-text);
 }
 
-/* Direct Interactive Socket Buttons on Maquette */
-.maquette-socket-btn {
-  pointer-events: auto;
-  position: absolute;
-  transform: translate(-50%, 15%);
-  appearance: none;
-  padding: 6px 11px;
-  font-family: var(--anatomy-mono);
-  font-size: 11px;
-  font-weight: 650;
-  background: var(--anatomy-top);
-  color: var(--anatomy-strong);
-  border: 1.5px dashed var(--anatomy-mid);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.09);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 150ms ease;
-}
-
-.maquette-socket-btn[data-recommended="true"] {
-  border-color: var(--anatomy-green);
-  color: var(--anatomy-green);
-}
-
-.maquette-socket-btn:hover {
-  transform: translate(-50%, 10%) scale(1.04);
-}
-
-.maquette-socket-btn[data-active="true"] {
-  border-style: solid;
-  border-color: var(--anatomy-green);
-  background: var(--anatomy-green);
-  color: #ffffff;
-}
-
-/* Zone Click Toast inside Maquette */
+/* Optional Station Detail Toast */
 .maquette-zone-toast {
   margin-top: 8px;
   padding: 10px 14px;
@@ -326,9 +242,16 @@ html, body {
 }
 
 .maquette-zone-toast p {
-  margin: 2px 0 0;
+  margin: 2px 0 4px;
   font-size: 12.5px;
   color: var(--anatomy-text);
+}
+
+.toast-metric {
+  font-family: var(--anatomy-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--anatomy-strong);
 }
 
 .maquette-toast-close {
@@ -343,202 +266,168 @@ html, body {
   white-space: nowrap;
 }
 
-/* 4. Step 2: 4 Visual Decision Cards */
-.decision-section {
-  margin-bottom: 16px;
-}
-
-.decision-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-family: var(--anatomy-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--anatomy-muted);
-}
-
-.decision-hint {
-  font-weight: 400;
-  letter-spacing: 0.01em;
-}
-
-.decision-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.decision-card {
-  appearance: none;
-  text-align: left;
-  padding: 11px 12px;
-  background: var(--anatomy-card);
-  border: 1px solid var(--anatomy-faint);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: all 150ms ease;
-}
-
-.decision-card:hover {
-  border-color: var(--anatomy-mid);
-}
-
-.decision-card[data-active="true"] {
-  background: var(--anatomy-top);
-  border-color: var(--anatomy-hi);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.decision-card[data-active="true"][data-tone="green"] {
-  border-color: var(--anatomy-green);
-  box-shadow: 0 0 0 1px var(--anatomy-green);
-}
-
-.decision-card[data-active="true"][data-tone="red"] {
-  border-color: var(--anatomy-red);
-}
-
-.decision-card[data-active="true"][data-tone="blue"] {
-  border-color: var(--anatomy-blue);
-}
-
-.decision-card-top {
+/* 3. Real-Time AI Agent Reaction Banner */
+.agent-live-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--anatomy-card);
+  border: 1px solid var(--anatomy-mid);
+  border-left-width: 4px;
+  margin-bottom: 12px;
 }
 
-.decision-badge {
+.agent-live-banner[data-tone="green"] {
+  border-left-color: var(--anatomy-green);
+}
+
+.agent-live-banner[data-tone="blue"] {
+  border-left-color: var(--anatomy-blue);
+}
+
+.agent-live-banner[data-tone="red"] {
+  border-left-color: var(--anatomy-red);
+}
+
+.agent-live-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-live-tag {
   font-family: var(--anatomy-mono);
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--anatomy-muted);
 }
 
-.decision-badge[data-tone="green"] {
-  color: var(--anatomy-green);
-}
-
-.decision-badge[data-tone="red"] {
-  color: var(--anatomy-red);
-}
-
-.decision-badge[data-tone="blue"] {
-  color: var(--anatomy-blue);
-}
-
-.decision-radio {
-  font-family: var(--anatomy-mono);
-  font-size: 12px;
-  color: var(--anatomy-strong);
-}
-
-.decision-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--anatomy-strong);
-}
-
-.decision-verdict {
-  font-size: 11.5px;
-  line-height: 1.35;
-  color: var(--anatomy-muted);
-}
-
-/* 5. Two Visual Impact Scorecards */
-.impact-strip {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.impact-card {
-  padding: 14px 16px;
-  background: var(--anatomy-card);
-  border: 1px solid var(--anatomy-faint);
-}
-
-.impact-top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.impact-label {
-  font-family: var(--anatomy-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--anatomy-strong);
-}
-
-.impact-score {
-  font-family: var(--anatomy-mono);
-  font-size: 12px;
+.agent-live-title {
+  font-size: 15px;
   font-weight: 650;
+  color: var(--anatomy-strong);
 }
 
-.impact-score[data-tone="green"] {
-  color: var(--anatomy-green);
-}
-
-.impact-score[data-tone="red"] {
-  color: var(--anatomy-red);
-}
-
-.impact-bar-track {
-  width: 100%;
-  height: 7px;
-  background: var(--anatomy-faint);
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.impact-bar-fill {
-  height: 100%;
-  transition: width 360ms var(--anatomy-ease), background-color 240ms ease;
-}
-
-.impact-bar-fill[data-tone="green"] {
-  background: var(--anatomy-green);
-}
-
-.impact-bar-fill[data-tone="red"] {
-  background: var(--anatomy-red);
-}
-
-.impact-explain {
+.agent-live-reason {
   margin: 0;
   font-size: 12.5px;
   color: var(--anatomy-text);
-  line-height: 1.4;
 }
 
-@media (max-width: 740px) {
-  .decision-grid {
+.agent-toggle-btn {
+  appearance: none;
+  padding: 8px 14px;
+  font-family: var(--anatomy-mono);
+  font-size: 11.5px;
+  font-weight: 650;
+  border: 1.5px solid var(--anatomy-mid);
+  background: var(--anatomy-top);
+  color: var(--anatomy-strong);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.agent-toggle-btn[data-active="true"] {
+  border-color: var(--anatomy-green);
+  color: var(--anatomy-green);
+}
+
+.agent-toggle-btn[data-active="false"] {
+  border-color: var(--anatomy-red);
+  color: var(--anatomy-red);
+}
+
+/* 4. Four Simple Game Control Cards */
+.sandbox-controls {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.control-card {
+  padding: 12px 14px;
+  background: var(--anatomy-card);
+  border: 1px solid var(--anatomy-faint);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.control-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--anatomy-strong);
+}
+
+.control-top label,
+.control-top span {
+  font-weight: 600;
+}
+
+.control-top strong {
+  font-family: var(--anatomy-mono);
+  font-size: 11.5px;
+  color: var(--anatomy-strong);
+}
+
+.anatomy-range {
+  width: 100%;
+  accent-color: var(--anatomy-hi);
+  cursor: pointer;
+  margin: 2px 0;
+}
+
+.control-Ends {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--anatomy-mono);
+  font-size: 10px;
+  color: var(--anatomy-muted);
+}
+
+.sabotage-btn {
+  appearance: none;
+  width: 100%;
+  padding: 8px 10px;
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  font-weight: 650;
+  border: 1px solid var(--anatomy-red);
+  background: var(--anatomy-top);
+  color: var(--anatomy-red);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.sabotage-btn[data-broken="true"] {
+  background: var(--anatomy-red);
+  color: #ffffff;
+}
+
+.sabotage-btn:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 820px) {
+  .sandbox-controls {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .impact-strip {
-    grid-template-columns: 1fr;
   }
   .maquette-overlay {
     position: static;
     display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
     margin-bottom: 10px;
   }
-  .maquette-pin,
-  .maquette-socket-btn {
+  .station-tag {
     position: static;
     transform: none !important;
     max-width: none;
