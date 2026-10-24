@@ -1,0 +1,835 @@
+[
+ {
+  "name": "daily-sum/2025-02-10",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-10"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-11",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-11"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-12",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-12"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-13",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-13"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-14",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-14"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-15",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-15"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-16",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-16"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-17",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-17"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-18",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-18"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-19",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-19"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-20",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-20"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-21",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-21"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-22",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-22"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-23",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-23"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-24",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-24"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-25",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-25"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-26",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-26"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-27",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-27"
+  }
+ },
+ {
+  "name": "daily-sum/2025-02-28",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-02-28"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-01",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-01"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-02",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-02"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-03",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-03"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-04",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-04"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-05",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-05"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-06",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-06"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-07",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-07"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-08",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-08"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-09",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-09"
+  }
+ },
+ {
+  "name": "daily-sum/2025-03-10",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2025-03-10"
+  }
+ },
+ {
+  "name": "daily-sum/2026-07-26",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-07-26"
+  }
+ },
+ {
+  "name": "daily-sum/2026-07-27",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-07-27"
+  }
+ },
+ {
+  "name": "daily-sum/2026-07-28",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-07-28"
+  }
+ },
+ {
+  "name": "daily-sum/2026-07-29",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-07-29"
+  }
+ },
+ {
+  "name": "daily-sum/2026-07-30",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-07-30"
+  }
+ },
+ {
+  "name": "daily-sum/2026-07-31",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-07-31"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-01",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-01"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-02",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-02"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-03",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-03"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-04",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-04"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-05",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-05"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-06",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-06"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-07",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-07"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-08",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-08"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-09",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-09"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-10",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-10"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-11",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-11"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-12",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-12"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-13",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-13"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-14",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-14"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-15",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-15"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-16",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-16"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-17",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-17"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-18",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-18"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-19",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-19"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-20",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-20"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-21",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-21"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-22",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-22"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-23",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-23"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-24",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-24"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-25",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-25"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-26",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-26"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-27",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-27"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-28",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-28"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-29",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-29"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-30",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-30"
+  }
+ },
+ {
+  "name": "daily-sum/2026-08-31",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-08-31"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-01",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-01"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-02",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-02"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-03",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-03"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-04",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-04"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-05",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-05"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-06",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-06"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-07",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-07"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-08",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-08"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-09",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-09"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-10",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-10"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-11",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-11"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-12",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-12"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-13",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-13"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-14",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-14"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-15",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-15"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-16",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-16"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-17",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-17"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-18",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-18"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-19",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-19"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-20",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-20"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-21",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-21"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-22",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-22"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-23",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-23"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-24",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-24"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-25",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-25"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-26",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-26"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-27",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-27"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-28",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-28"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-29",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-29"
+  }
+ },
+ {
+  "name": "daily-sum/2026-09-30",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-09-30"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-01",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-01"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-02",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-02"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-03",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-03"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-04",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-04"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-05",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-05"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-06",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-06"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-07",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-07"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-08",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-08"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-09",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-09"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-10",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-10"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-11",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-11"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-12",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-12"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-13",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-13"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-14",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-14"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-15",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-15"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-16",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-16"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-17",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-17"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-18",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-18"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-19",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-19"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-20",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-20"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-21",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-21"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-22",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-22"
+  }
+ },
+ {
+  "name": "daily-sum/2026-10-23",
+  "endpoint": "/generacion-real/v3/getDailySum",
+  "params": {
+   "date": "2026-10-23"
+  }
+ }
+]

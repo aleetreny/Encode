@@ -11,3 +11,5 @@ dist/
 *.egg-info/
 .ruff_cache/
 .vite/
+.env.local
+.env.*.local

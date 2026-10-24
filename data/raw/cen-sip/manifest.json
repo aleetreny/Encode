@@ -1,0 +1,1708 @@
+{
+  "datasets": {
+    "ens-2025-2026": {
+      "name": "ens-2025-2026",
+      "endpoint": "/energia-no-suministrada/v4/findByDate",
+      "params": {
+        "startDate": "2025-01-01",
+        "endDate": "2026-10-23"
+      },
+      "page_size": 5000,
+      "pages": 4,
+      "rows": 16927,
+      "sha256_of_pages": "8a4514d3671484fea93295edd13883c887396522455f94900d149c77af2e5670",
+      "url_without_key": "https://sipub.api.coordinador.cl/energia-no-suministrada/v4/findByDate?startDate=2025-01-01&endDate=2026-10-23",
+      "retrieved_at_utc": "2026-10-24T20:59:42+00:00"
+    },
+    "generacion-real/2025-02-25": {
+      "name": "generacion-real/2025-02-25",
+      "endpoint": "/generacion-real/v3/findByDate",
+      "params": {
+        "startDate": "2025-02-25",
+        "endDate": "2025-02-25"
+      },
+      "page_size": 5000,
+      "pages": 7,
+      "rows": 32204,
+      "sha256_of_pages": "5fe699c212ee1d60b920892f760e7b6e035de6b371937fc0b2fbd7aabb6c5eaa",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/findByDate?startDate=2025-02-25&endDate=2025-02-25",
+      "retrieved_at_utc": "2026-10-24T21:08:27+00:00"
+    },
+    "demanda-neta/2025-02-25": {
+      "name": "demanda-neta/2025-02-25",
+      "endpoint": "/demanda-neta/v4/findByDate",
+      "params": {
+        "startDate": "2025-02-25",
+        "endDate": "2025-02-25"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 24,
+      "sha256_of_pages": "d5034c9faa48d190c15417fca8e72d23ad53fdc127b0578c411d4678295b3080",
+      "url_without_key": "https://sipub.api.coordinador.cl/demanda-neta/v4/findByDate?startDate=2025-02-25&endDate=2025-02-25",
+      "retrieved_at_utc": "2026-10-24T21:08:30+00:00"
+    },
+    "instrucciones-sscc/2025-02-25": {
+      "name": "instrucciones-sscc/2025-02-25",
+      "endpoint": "/instrucciones-operacionales-sscc/v4/findByDate",
+      "params": {
+        "startDate": "2025-02-25",
+        "endDate": "2025-02-25"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 1023,
+      "sha256_of_pages": "45119fe2609af567ad734b9c4939bd442117c242c25fdc98f3939ae7541251eb",
+      "url_without_key": "https://sipub.api.coordinador.cl/instrucciones-operacionales-sscc/v4/findByDate?startDate=2025-02-25&endDate=2025-02-25",
+      "retrieved_at_utc": "2026-10-24T21:08:45+00:00"
+    },
+    "limitaciones-transmision/2025-02-25": {
+      "name": "limitaciones-transmision/2025-02-25",
+      "endpoint": "/limitaciones-transmision/v4/findByDate",
+      "params": {
+        "startDate": "2025-02-25",
+        "endDate": "2025-02-25"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 2,
+      "sha256_of_pages": "50c3866421f01c31baeb03787bb8622788c2bddd641499cb681c6d18f84a77c9",
+      "url_without_key": "https://sipub.api.coordinador.cl/limitaciones-transmision/v4/findByDate?startDate=2025-02-25&endDate=2025-02-25",
+      "retrieved_at_utc": "2026-10-24T21:09:26+00:00"
+    },
+    "generacion-real/2025-02-24": {
+      "name": "generacion-real/2025-02-24",
+      "endpoint": "/generacion-real/v3/findByDate",
+      "params": {
+        "startDate": "2025-02-24",
+        "endDate": "2025-02-24"
+      },
+      "page_size": 5000,
+      "pages": 7,
+      "rows": 32208,
+      "sha256_of_pages": "831bcecfb356e1b20247a8f196233f621089efa80a892a18bf75b28db7227f19",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/findByDate?startDate=2025-02-24&endDate=2025-02-24",
+      "retrieved_at_utc": "2026-10-24T21:10:53+00:00"
+    },
+    "demanda-neta/2025-02-24": {
+      "name": "demanda-neta/2025-02-24",
+      "endpoint": "/demanda-neta/v4/findByDate",
+      "params": {
+        "startDate": "2025-02-24",
+        "endDate": "2025-02-24"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 24,
+      "sha256_of_pages": "945abad60b266da70af62e8ed89c58c27492187b03cfda47f050ea123caad948",
+      "url_without_key": "https://sipub.api.coordinador.cl/demanda-neta/v4/findByDate?startDate=2025-02-24&endDate=2025-02-24",
+      "retrieved_at_utc": "2026-10-24T21:11:01+00:00"
+    },
+    "generacion-real/2026-10-14": {
+      "name": "generacion-real/2026-10-14",
+      "endpoint": "/generacion-real/v3/findByDate",
+      "params": {
+        "startDate": "2026-10-14",
+        "endDate": "2026-10-14"
+      },
+      "page_size": 5000,
+      "pages": 8,
+      "rows": 35792,
+      "sha256_of_pages": "d2af5460c59d3cd0bd55363e9aae9ac2e14db6e7fbe5bc1be44fe93adcf240f2",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/findByDate?startDate=2026-10-14&endDate=2026-10-14",
+      "retrieved_at_utc": "2026-10-24T21:13:03+00:00"
+    },
+    "demanda-neta/2026-10-14": {
+      "name": "demanda-neta/2026-10-14",
+      "endpoint": "/demanda-neta/v4/findByDate",
+      "params": {
+        "startDate": "2026-10-14",
+        "endDate": "2026-10-14"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 24,
+      "sha256_of_pages": "6cc4210f436aa80a58083415ff1c74588eb70d1f05814661fe16c6d61efd8169",
+      "url_without_key": "https://sipub.api.coordinador.cl/demanda-neta/v4/findByDate?startDate=2026-10-14&endDate=2026-10-14",
+      "retrieved_at_utc": "2026-10-24T21:13:09+00:00"
+    },
+    "limitaciones-transmision/2026-10-14": {
+      "name": "limitaciones-transmision/2026-10-14",
+      "endpoint": "/limitaciones-transmision/v4/findByDate",
+      "params": {
+        "startDate": "2026-10-14",
+        "endDate": "2026-10-14"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 0,
+      "sha256_of_pages": "b48a14e7d1cac9a9b722e8fd2f3a412f32f415358978ddf9f9167dabb8e855a5",
+      "url_without_key": "https://sipub.api.coordinador.cl/limitaciones-transmision/v4/findByDate?startDate=2026-10-14&endDate=2026-10-14",
+      "retrieved_at_utc": "2026-10-24T21:13:12+00:00"
+    },
+    "instrucciones-sscc/2026-10-14": {
+      "name": "instrucciones-sscc/2026-10-14",
+      "endpoint": "/instrucciones-operacionales-sscc/v4/findByDate",
+      "params": {
+        "startDate": "2026-10-14",
+        "endDate": "2026-10-14"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 826,
+      "sha256_of_pages": "8f3a07a256e4ee7aba846428ed617a44b6cb1c96501f1c8ea40ed93ca2191563",
+      "url_without_key": "https://sipub.api.coordinador.cl/instrucciones-operacionales-sscc/v4/findByDate?startDate=2026-10-14&endDate=2026-10-14",
+      "retrieved_at_utc": "2026-10-24T21:13:36+00:00"
+    },
+    "daily-sum/2025-02-10": {
+      "name": "daily-sum/2025-02-10",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-10"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "fc233fc9e04f0db12c9551f1dfaba802352009caedfe61b2236a0d164152277e",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-10",
+      "retrieved_at_utc": "2026-10-24T21:13:39+00:00"
+    },
+    "daily-sum/2025-02-11": {
+      "name": "daily-sum/2025-02-11",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-11"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "afd8ad9e8a61ccedd73c6398062a0faf4e1e7e42cf487c0e7410fe8f8612a44a",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-11",
+      "retrieved_at_utc": "2026-10-24T21:13:41+00:00"
+    },
+    "daily-sum/2025-02-12": {
+      "name": "daily-sum/2025-02-12",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-12"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "da945273c4a29477b30c1945fea915fbf62f4482218b7bc2d2421e219706245b",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-12",
+      "retrieved_at_utc": "2026-10-24T21:13:43+00:00"
+    },
+    "daily-sum/2025-02-13": {
+      "name": "daily-sum/2025-02-13",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-13"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "4e97f36386d434e37832ca81f4332f23a1cdae4adffbba24a25399e425c69019",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-13",
+      "retrieved_at_utc": "2026-10-24T21:13:46+00:00"
+    },
+    "daily-sum/2025-02-14": {
+      "name": "daily-sum/2025-02-14",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-14"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "c0b3b0ed12ff84b0c862803d819b27356343170ac1b45b5d75c3dc8db22cbbe0",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-14",
+      "retrieved_at_utc": "2026-10-24T21:13:48+00:00"
+    },
+    "daily-sum/2025-02-15": {
+      "name": "daily-sum/2025-02-15",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-15"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "0c399dc452bcb61e75341a2b78faf05f85c0b435620e54d75b464ff0f5668e45",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-15",
+      "retrieved_at_utc": "2026-10-24T21:13:50+00:00"
+    },
+    "daily-sum/2025-02-16": {
+      "name": "daily-sum/2025-02-16",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-16"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "09906cc6c5038e8df332b22b2d7d5175143b578556bbb22a18bb073d8cf45f73",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-16",
+      "retrieved_at_utc": "2026-10-24T21:13:53+00:00"
+    },
+    "daily-sum/2025-02-17": {
+      "name": "daily-sum/2025-02-17",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-17"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "7b0187d553ca22621340a0b39e227f58df2a8e42291d49148ae113af70a46600",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-17",
+      "retrieved_at_utc": "2026-10-24T21:13:55+00:00"
+    },
+    "daily-sum/2025-02-18": {
+      "name": "daily-sum/2025-02-18",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-18"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "5fd7b82e42168570e91427a135201398dd769b4de6a87564d2552d0b2795c613",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-18",
+      "retrieved_at_utc": "2026-10-24T21:13:57+00:00"
+    },
+    "daily-sum/2025-02-19": {
+      "name": "daily-sum/2025-02-19",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-19"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "24a3009f64b77fb5d927479f1b58a409ef46e556bd163dcc1616d74cbc9681f6",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-19",
+      "retrieved_at_utc": "2026-10-24T21:14:00+00:00"
+    },
+    "daily-sum/2025-02-20": {
+      "name": "daily-sum/2025-02-20",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-20"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "322cce47cbf955c88a85fe88b490cb3ee1ecf13fdcaa293271dc5008fec3ce2a",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-20",
+      "retrieved_at_utc": "2026-10-24T21:14:02+00:00"
+    },
+    "daily-sum/2025-02-21": {
+      "name": "daily-sum/2025-02-21",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-21"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "a59ea2833c8564de7727a78ab82418d47d541bca4d8e45d2f2a2ebc9fef2a186",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-21",
+      "retrieved_at_utc": "2026-10-24T21:14:04+00:00"
+    },
+    "daily-sum/2025-02-22": {
+      "name": "daily-sum/2025-02-22",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-22"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "3d015cba5094ab0398d8153c796addf629d8cfd20926da25fa1c4201b7d91912",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-22",
+      "retrieved_at_utc": "2026-10-24T21:14:07+00:00"
+    },
+    "daily-sum/2025-02-23": {
+      "name": "daily-sum/2025-02-23",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-23"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "2648c6c7c4640e0f88d52c618203cbdf1003495d6748e4a197f9eb23fb83fa4d",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-23",
+      "retrieved_at_utc": "2026-10-24T21:14:09+00:00"
+    },
+    "daily-sum/2025-02-24": {
+      "name": "daily-sum/2025-02-24",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-24"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "6fb841011ca218ad7a780c93759337dd1b637216fe16ba349a443f64ada8c91a",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-24",
+      "retrieved_at_utc": "2026-10-24T21:14:12+00:00"
+    },
+    "daily-sum/2025-02-25": {
+      "name": "daily-sum/2025-02-25",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-25"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "4ce8336f4cdf745ae25313ff2ce5e88f1ddbf30a2b2b176333bfea2a7fecfa48",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-25",
+      "retrieved_at_utc": "2026-10-24T21:14:14+00:00"
+    },
+    "daily-sum/2025-02-26": {
+      "name": "daily-sum/2025-02-26",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-26"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "d85439fbce736a86104d3b978b9ce1d699ab120af4a228002de2e218c2fa9a58",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-26",
+      "retrieved_at_utc": "2026-10-24T21:14:16+00:00"
+    },
+    "daily-sum/2025-02-27": {
+      "name": "daily-sum/2025-02-27",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-27"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "65ed0721157c502a5027cf0a79ee7eb3bbba4aac11cdfbaad58275ed1e4f92f6",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-27",
+      "retrieved_at_utc": "2026-10-24T21:14:19+00:00"
+    },
+    "daily-sum/2025-02-28": {
+      "name": "daily-sum/2025-02-28",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-02-28"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "d31926dfc0cd8dc7990103ecd90aacb3b4fe27026994f28e983152dc187c5dbf",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-02-28",
+      "retrieved_at_utc": "2026-10-24T21:14:21+00:00"
+    },
+    "daily-sum/2025-03-01": {
+      "name": "daily-sum/2025-03-01",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-01"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "c758f81038f07ffa0ad7beb2ca8a9a70473787ca2ddc4a2975906399a02530ad",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-01",
+      "retrieved_at_utc": "2026-10-24T21:14:23+00:00"
+    },
+    "daily-sum/2025-03-02": {
+      "name": "daily-sum/2025-03-02",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-02"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "b635f6ad845758631f64aa92135d5ea61ecb7c87d043143224fe1169d4031875",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-02",
+      "retrieved_at_utc": "2026-10-24T21:14:26+00:00"
+    },
+    "daily-sum/2025-03-03": {
+      "name": "daily-sum/2025-03-03",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-03"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "9c0e23c0b3cab928475406ee10d8b1bf80e2b5a5b403a077a9a20dd0476c2235",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-03",
+      "retrieved_at_utc": "2026-10-24T21:14:28+00:00"
+    },
+    "daily-sum/2025-03-04": {
+      "name": "daily-sum/2025-03-04",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-04"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "b77c0febc4966dcdf23eada649bec069654a0655c069738b2af88ef0cb74cc73",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-04",
+      "retrieved_at_utc": "2026-10-24T21:14:31+00:00"
+    },
+    "daily-sum/2025-03-05": {
+      "name": "daily-sum/2025-03-05",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-05"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "b650c90cfed0578b9017ca4b62ace4e1f5822ffe19493bbcc8fbb7e30df1460f",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-05",
+      "retrieved_at_utc": "2026-10-24T21:14:33+00:00"
+    },
+    "daily-sum/2025-03-06": {
+      "name": "daily-sum/2025-03-06",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-06"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "d7119b828eaece021566b6b2e4d52a2c05a630c1971e728698b3df4e7975682f",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-06",
+      "retrieved_at_utc": "2026-10-24T21:14:36+00:00"
+    },
+    "daily-sum/2025-03-07": {
+      "name": "daily-sum/2025-03-07",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-07"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "39fec52400513d2bb3eb2e25a2a9e3d96cc429618cdd850d715534a87138bb11",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-07",
+      "retrieved_at_utc": "2026-10-24T21:14:38+00:00"
+    },
+    "daily-sum/2025-03-08": {
+      "name": "daily-sum/2025-03-08",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-08"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "12f629fa9821ab8b77e588c80525b3a98b570dcf9f9dde0e7480b0c86758e571",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-08",
+      "retrieved_at_utc": "2026-10-24T21:14:40+00:00"
+    },
+    "daily-sum/2025-03-09": {
+      "name": "daily-sum/2025-03-09",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-09"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "e6dd6b26fb2bb2a8b02b9fa338167d947d33b579f3d6542974615cfca85e2e3c",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-09",
+      "retrieved_at_utc": "2026-10-24T21:14:43+00:00"
+    },
+    "daily-sum/2025-03-10": {
+      "name": "daily-sum/2025-03-10",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2025-03-10"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "2925fa450038824ff40d8d886fe3c22e66761dec0dc5512d8cbcc16eef49d87b",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2025-03-10",
+      "retrieved_at_utc": "2026-10-24T21:14:45+00:00"
+    },
+    "daily-sum/2026-07-26": {
+      "name": "daily-sum/2026-07-26",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-07-26"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "84d98fe68f59dcf0719b6fdc12b7381fe3e8424a990144c7d8d50808357829f7",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-07-26",
+      "retrieved_at_utc": "2026-10-24T21:14:48+00:00"
+    },
+    "daily-sum/2026-07-27": {
+      "name": "daily-sum/2026-07-27",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-07-27"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "a39eb08bb88122369ab0224b2670c240576d99c3bc5f108d6a3407a651f09271",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-07-27",
+      "retrieved_at_utc": "2026-10-24T21:14:50+00:00"
+    },
+    "daily-sum/2026-07-28": {
+      "name": "daily-sum/2026-07-28",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-07-28"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "7ca2fbcd64eec13c0bf9017a5817f359a48e2b0a479127706683d3490e038719",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-07-28",
+      "retrieved_at_utc": "2026-10-24T21:14:53+00:00"
+    },
+    "daily-sum/2026-07-29": {
+      "name": "daily-sum/2026-07-29",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-07-29"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "f4e5ef332c62f9a87c31b7d9fe95cda84c25bcdd16d2d7af8e428315193e8ca3",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-07-29",
+      "retrieved_at_utc": "2026-10-24T21:14:55+00:00"
+    },
+    "daily-sum/2026-07-30": {
+      "name": "daily-sum/2026-07-30",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-07-30"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "0e7e85f8428cdaeb758cb1828f2e4dded0f9cad1334765d1404a89fd54cedb42",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-07-30",
+      "retrieved_at_utc": "2026-10-24T21:14:57+00:00"
+    },
+    "daily-sum/2026-07-31": {
+      "name": "daily-sum/2026-07-31",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-07-31"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "00a8bab9bbb593d1cf83325de86f017c693afa09343509538aaccbe24d623c35",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-07-31",
+      "retrieved_at_utc": "2026-10-24T21:15:00+00:00"
+    },
+    "daily-sum/2026-08-01": {
+      "name": "daily-sum/2026-08-01",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-01"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "daf38ea2493d6cf043a1fcd55c1537488c89807b42abe4a5a651223f9cabe3d4",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-01",
+      "retrieved_at_utc": "2026-10-24T21:15:02+00:00"
+    },
+    "daily-sum/2026-08-02": {
+      "name": "daily-sum/2026-08-02",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-02"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "0cc4fa7cdf3e6d51c1e99be817d3d108ae426fae4dd80abcb1776fd557e50335",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-02",
+      "retrieved_at_utc": "2026-10-24T21:15:05+00:00"
+    },
+    "daily-sum/2026-08-03": {
+      "name": "daily-sum/2026-08-03",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-03"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "bf260d390d808c1da8348eee3ec0ea9feee1f3bca0ab448ea50fd9e03c8d4a92",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-03",
+      "retrieved_at_utc": "2026-10-24T21:15:07+00:00"
+    },
+    "daily-sum/2026-08-04": {
+      "name": "daily-sum/2026-08-04",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-04"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "bc854ee32f6ec335e199926f111307439ef8e94d86568237e709b79188cb8f4b",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-04",
+      "retrieved_at_utc": "2026-10-24T21:15:09+00:00"
+    },
+    "daily-sum/2026-08-05": {
+      "name": "daily-sum/2026-08-05",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-05"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "0942625deba83ffa6421bd0fe59ed7710ad20f91cb6ffccc5f170a0ba3934297",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-05",
+      "retrieved_at_utc": "2026-10-24T21:15:12+00:00"
+    },
+    "daily-sum/2026-08-06": {
+      "name": "daily-sum/2026-08-06",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-06"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "a9afc75df5f252b7c2d6b0f7c202c47480dbb1198325e8b8d337a205a10a8ac9",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-06",
+      "retrieved_at_utc": "2026-10-24T21:15:14+00:00"
+    },
+    "daily-sum/2026-08-07": {
+      "name": "daily-sum/2026-08-07",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-07"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "95e158a38140fd3dd1945c325c0c545b4886e8aaf98442c0b933e263afc58b7e",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-07",
+      "retrieved_at_utc": "2026-10-24T21:15:16+00:00"
+    },
+    "daily-sum/2026-08-08": {
+      "name": "daily-sum/2026-08-08",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-08"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "248063103dc9a5873e4d3e3fe6982cd3800cf893f21d3e4a19a232e08fde09ed",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-08",
+      "retrieved_at_utc": "2026-10-24T21:15:19+00:00"
+    },
+    "daily-sum/2026-08-09": {
+      "name": "daily-sum/2026-08-09",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-09"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "250c24dd7df3278b808ab5592323e23ee77453179896e95677c57122716f668e",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-09",
+      "retrieved_at_utc": "2026-10-24T21:15:21+00:00"
+    },
+    "daily-sum/2026-08-10": {
+      "name": "daily-sum/2026-08-10",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-10"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "24fd58d784a2f8d1ae6176da9fa619fd25065df2c0923b33b7b6479a88e271dc",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-10",
+      "retrieved_at_utc": "2026-10-24T21:15:24+00:00"
+    },
+    "daily-sum/2026-08-11": {
+      "name": "daily-sum/2026-08-11",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-11"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "8fa93fb0c82d0cde609b9055d2dbc413504c028b3171620c38cc5d869e878647",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-11",
+      "retrieved_at_utc": "2026-10-24T21:15:26+00:00"
+    },
+    "daily-sum/2026-08-12": {
+      "name": "daily-sum/2026-08-12",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-12"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "69ede58397455468ef5d7a87c82bdd534eeee37c15d1b8d228727689957d6f4b",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-12",
+      "retrieved_at_utc": "2026-10-24T21:15:28+00:00"
+    },
+    "daily-sum/2026-08-13": {
+      "name": "daily-sum/2026-08-13",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-13"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "7bddfc289b6437d58159dc77cb22774356967b8e00c776a4a3a5a7007dc236f5",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-13",
+      "retrieved_at_utc": "2026-10-24T21:15:31+00:00"
+    },
+    "daily-sum/2026-08-14": {
+      "name": "daily-sum/2026-08-14",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-14"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "17248bba9c5d8995a572da777f5eb53320e1f6a4c13820aeb09c00f5feb80ac6",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-14",
+      "retrieved_at_utc": "2026-10-24T21:15:33+00:00"
+    },
+    "daily-sum/2026-08-15": {
+      "name": "daily-sum/2026-08-15",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-15"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "0bfb82729a7f33537bd588ba05d19b5df5ad59c9408315c7be804aec3e3cd719",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-15",
+      "retrieved_at_utc": "2026-10-24T21:15:35+00:00"
+    },
+    "daily-sum/2026-08-16": {
+      "name": "daily-sum/2026-08-16",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-16"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "804a6f582ec0dcc1508e891e7c017fccbace06c063606214d76132ade578fc0e",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-16",
+      "retrieved_at_utc": "2026-10-24T21:15:38+00:00"
+    },
+    "daily-sum/2026-08-17": {
+      "name": "daily-sum/2026-08-17",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-17"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "35ac686f366edff12f02f6100ae571f09b9d011d52fbf93da1e8860d09bb2cb1",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-17",
+      "retrieved_at_utc": "2026-10-24T21:15:40+00:00"
+    },
+    "daily-sum/2026-08-18": {
+      "name": "daily-sum/2026-08-18",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-18"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "4c095a39972f10018b28252d4534b0a0302c9b33d7a49acdefc2688513e8f92f",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-18",
+      "retrieved_at_utc": "2026-10-24T21:15:43+00:00"
+    },
+    "daily-sum/2026-08-19": {
+      "name": "daily-sum/2026-08-19",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-19"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "ecfbef3053c7d8651cf4e1d012a46c0411fccf597974259fe78aa7d9afc03013",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-19",
+      "retrieved_at_utc": "2026-10-24T21:15:45+00:00"
+    },
+    "daily-sum/2026-08-20": {
+      "name": "daily-sum/2026-08-20",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-20"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "9c3cf2be66ad4d3bcfa8d93a7006fe03fabd70c6acb0ee753e3da9202dd1e79f",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-20",
+      "retrieved_at_utc": "2026-10-24T21:15:47+00:00"
+    },
+    "daily-sum/2026-08-21": {
+      "name": "daily-sum/2026-08-21",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-21"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "8080668376a87e57bb9030255b1e197117430785f78ff0c62b97776d627d7b61",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-21",
+      "retrieved_at_utc": "2026-10-24T21:15:50+00:00"
+    },
+    "daily-sum/2026-08-22": {
+      "name": "daily-sum/2026-08-22",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-22"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "08809416646c13bb87e4afa2547b6d5c64f3e70580fb1eabcf68194a26c2b401",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-22",
+      "retrieved_at_utc": "2026-10-24T21:15:52+00:00"
+    },
+    "daily-sum/2026-08-23": {
+      "name": "daily-sum/2026-08-23",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-23"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "5fc3954b5321019dbd10db70ae62e2f5816907efe6582f75fcdcd42fc0fe1ca1",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-23",
+      "retrieved_at_utc": "2026-10-24T21:15:55+00:00"
+    },
+    "daily-sum/2026-08-24": {
+      "name": "daily-sum/2026-08-24",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-24"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "97f1af8956c55a36e5b167f716ed0cc944e28235e268928b7f1bb175e29b25e7",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-24",
+      "retrieved_at_utc": "2026-10-24T21:15:57+00:00"
+    },
+    "daily-sum/2026-08-25": {
+      "name": "daily-sum/2026-08-25",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-25"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "33c8cc67612084f6408ce85caffc60eccbc3daf4deb7395b6b2f68ce2b6eeceb",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-25",
+      "retrieved_at_utc": "2026-10-24T21:15:59+00:00"
+    },
+    "daily-sum/2026-08-26": {
+      "name": "daily-sum/2026-08-26",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-26"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "c4c657808981f22f086e744249d8ddb1f9ddd351a7796cadabac5963cea1f48b",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-26",
+      "retrieved_at_utc": "2026-10-24T21:16:02+00:00"
+    },
+    "daily-sum/2026-08-27": {
+      "name": "daily-sum/2026-08-27",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-27"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "3c420c9ba369a2784de0d185628bac0ca24055327a15368d9d9436d3c86719d7",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-27",
+      "retrieved_at_utc": "2026-10-24T21:16:04+00:00"
+    },
+    "daily-sum/2026-08-28": {
+      "name": "daily-sum/2026-08-28",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-28"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "6f4fe9fd2820932bf5f71cdf7e376cc3c33456c542afcb8cf467d5e845d9aec7",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-28",
+      "retrieved_at_utc": "2026-10-24T21:16:07+00:00"
+    },
+    "daily-sum/2026-08-29": {
+      "name": "daily-sum/2026-08-29",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-29"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "46ccd3d1f2551f636a1bdc67a1dc8555ff95f1e04cd76e2a8012ba35f73b778b",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-29",
+      "retrieved_at_utc": "2026-10-24T21:16:10+00:00"
+    },
+    "daily-sum/2026-08-30": {
+      "name": "daily-sum/2026-08-30",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-30"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "6f4d81f89fbacf9a9e0855a4cf0f7494f81b2e6949160908bf7cf3f4fb99d761",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-30",
+      "retrieved_at_utc": "2026-10-24T21:16:12+00:00"
+    },
+    "daily-sum/2026-08-31": {
+      "name": "daily-sum/2026-08-31",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-08-31"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "5fa39bf68d45f9763aa4d55e2482441b5250e39d2b69bd197df5389d6e99ccdd",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-08-31",
+      "retrieved_at_utc": "2026-10-24T21:16:14+00:00"
+    },
+    "daily-sum/2026-09-01": {
+      "name": "daily-sum/2026-09-01",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-01"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "d16a23e23e2ff02cf5a3996d472aab919a9f6be1b60ad6b490de8959e9c0f196",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-01",
+      "retrieved_at_utc": "2026-10-24T21:16:17+00:00"
+    },
+    "daily-sum/2026-09-02": {
+      "name": "daily-sum/2026-09-02",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-02"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "d1e7b17500ba1ad6729e88d0a1250fa56147f67fee405f9a95ef42f9bc09b835",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-02",
+      "retrieved_at_utc": "2026-10-24T21:16:19+00:00"
+    },
+    "daily-sum/2026-09-03": {
+      "name": "daily-sum/2026-09-03",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-03"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "74ec68c181a958d1dca18650c6c1236c5daa6feeb59a5640efbefec95312f858",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-03",
+      "retrieved_at_utc": "2026-10-24T21:16:21+00:00"
+    },
+    "daily-sum/2026-09-04": {
+      "name": "daily-sum/2026-09-04",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-04"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "1cba3d41a89ecf20067791bc500a6598c6252d458d8b35c81bdbef1e6ab49302",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-04",
+      "retrieved_at_utc": "2026-10-24T21:16:24+00:00"
+    },
+    "daily-sum/2026-09-05": {
+      "name": "daily-sum/2026-09-05",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-05"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "5744f57758482678491654a3edd9a9d5f545ca65085408250c091ade1870ba12",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-05",
+      "retrieved_at_utc": "2026-10-24T21:16:27+00:00"
+    },
+    "daily-sum/2026-09-06": {
+      "name": "daily-sum/2026-09-06",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-06"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "97e9241187bed738246c00071db17e3305e8a080266aaaa884c279225f5b9810",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-06",
+      "retrieved_at_utc": "2026-10-24T21:16:29+00:00"
+    },
+    "daily-sum/2026-09-07": {
+      "name": "daily-sum/2026-09-07",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-07"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "b2fc8512e1c88fc588d1779d647fd8dca34b6d131e85dc463690b4aeca75b397",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-07",
+      "retrieved_at_utc": "2026-10-24T21:16:32+00:00"
+    },
+    "daily-sum/2026-09-08": {
+      "name": "daily-sum/2026-09-08",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-08"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "263d6c7c889966b1f47f7a4b9529119b6738b7d01dcbd482a8e26ac0f4cbd2ed",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-08",
+      "retrieved_at_utc": "2026-10-24T21:16:34+00:00"
+    },
+    "daily-sum/2026-09-09": {
+      "name": "daily-sum/2026-09-09",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-09"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "4573fcb32cf6a8860da34ebd473455bd4d3dd23bbaa2d4f26f2a4105ba83cb01",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-09",
+      "retrieved_at_utc": "2026-10-24T21:16:36+00:00"
+    },
+    "daily-sum/2026-09-10": {
+      "name": "daily-sum/2026-09-10",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-10"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "ba1538394402f7f036a0ab6958ccc2b5b1a2d7a60a67f4493d7dd00a3dfc8203",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-10",
+      "retrieved_at_utc": "2026-10-24T21:16:39+00:00"
+    },
+    "daily-sum/2026-09-11": {
+      "name": "daily-sum/2026-09-11",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-11"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "1ca7bf70ee388f17938509ebdd424e4214a9ce967f96cc633530bb1a1d36be75",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-11",
+      "retrieved_at_utc": "2026-10-24T21:16:41+00:00"
+    },
+    "daily-sum/2026-09-12": {
+      "name": "daily-sum/2026-09-12",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-12"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "e3c56fc269e071488a7028d86b639de8ea89e21e50190bf5a1347b25e529cd3e",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-12",
+      "retrieved_at_utc": "2026-10-24T21:16:43+00:00"
+    },
+    "daily-sum/2026-09-13": {
+      "name": "daily-sum/2026-09-13",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-13"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "aa1aa53767358909e699d6ba96dda10c2099f616258d2c3b45735f3e306f98f1",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-13",
+      "retrieved_at_utc": "2026-10-24T21:16:46+00:00"
+    },
+    "daily-sum/2026-09-14": {
+      "name": "daily-sum/2026-09-14",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-14"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "3c9c5528d69d32023a2af367409c79aa96185966d2e985b5f1bea3db5515fb1e",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-14",
+      "retrieved_at_utc": "2026-10-24T21:16:48+00:00"
+    },
+    "daily-sum/2026-09-15": {
+      "name": "daily-sum/2026-09-15",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-15"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "353f84a21d34dc32674cef7e0ff8703c3def01579856f5d557f40649ca7196dc",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-15",
+      "retrieved_at_utc": "2026-10-24T21:16:50+00:00"
+    },
+    "daily-sum/2026-09-16": {
+      "name": "daily-sum/2026-09-16",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-16"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "af0e5e998c4a43461b64cdbb6d7959a6986b9a6bc449cf17eeb8c130c71ed90f",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-16",
+      "retrieved_at_utc": "2026-10-24T21:16:53+00:00"
+    },
+    "daily-sum/2026-09-17": {
+      "name": "daily-sum/2026-09-17",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-17"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "39a4b045ba307032c8136547f61535982f40b5bad21cf9672ca7b6bc4e00d327",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-17",
+      "retrieved_at_utc": "2026-10-24T21:16:55+00:00"
+    },
+    "daily-sum/2026-09-18": {
+      "name": "daily-sum/2026-09-18",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-18"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "329e52b2d904cc65d34f2a199dbb131e2cf6d80c9f42b725d951678a04151b6b",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-18",
+      "retrieved_at_utc": "2026-10-24T21:16:58+00:00"
+    },
+    "daily-sum/2026-09-19": {
+      "name": "daily-sum/2026-09-19",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-19"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "1fbb458474a6d6fd5d425bdc9db4f3d20e027866219e51cf9d941b4a6c7033f8",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-19",
+      "retrieved_at_utc": "2026-10-24T21:17:00+00:00"
+    },
+    "daily-sum/2026-09-20": {
+      "name": "daily-sum/2026-09-20",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-20"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "ed67dc3f8d13c8f620f5ae78c71cce1a6f495b00799ce72b68be1de1eed41083",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-20",
+      "retrieved_at_utc": "2026-10-24T21:17:03+00:00"
+    },
+    "daily-sum/2026-09-21": {
+      "name": "daily-sum/2026-09-21",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-21"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "8f5bb450453a9458c3d6269c43c1c50578b42623c55fba23f4d22e363c1e468a",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-21",
+      "retrieved_at_utc": "2026-10-24T21:17:05+00:00"
+    },
+    "daily-sum/2026-09-22": {
+      "name": "daily-sum/2026-09-22",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-22"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "bebfb26efa6bab5a223f64592f92b2608896a2527c28d2716fbb224c781f83f6",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-22",
+      "retrieved_at_utc": "2026-10-24T21:17:07+00:00"
+    },
+    "daily-sum/2026-09-23": {
+      "name": "daily-sum/2026-09-23",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-23"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "81742c9c00c304910b4586d414499bbf8a71f5d3c0cde1d7ebbaa27c626e2171",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-23",
+      "retrieved_at_utc": "2026-10-24T21:17:10+00:00"
+    },
+    "daily-sum/2026-09-24": {
+      "name": "daily-sum/2026-09-24",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-24"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "e9fee7f595b0e02515b6bd4ec9b45faca082f2108702a165e9f7064f5be0c99a",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-24",
+      "retrieved_at_utc": "2026-10-24T21:17:12+00:00"
+    },
+    "daily-sum/2026-09-25": {
+      "name": "daily-sum/2026-09-25",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-25"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "12c1429ef4a3bbc5f900c193257f4eb1d60f36447b399b6f98527d12ffbc7280",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-25",
+      "retrieved_at_utc": "2026-10-24T21:17:14+00:00"
+    },
+    "daily-sum/2026-09-26": {
+      "name": "daily-sum/2026-09-26",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-26"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "339fc6bea07a7c757fd811be946696278912a33a27adc0d9164314ab6e0fbc43",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-26",
+      "retrieved_at_utc": "2026-10-24T21:17:17+00:00"
+    },
+    "daily-sum/2026-09-27": {
+      "name": "daily-sum/2026-09-27",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-27"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "2d78a960f7a607e283decd93a2777cb5c8a2a7833c587cd282eb8b261d64fda2",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-27",
+      "retrieved_at_utc": "2026-10-24T21:17:19+00:00"
+    },
+    "daily-sum/2026-09-28": {
+      "name": "daily-sum/2026-09-28",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-28"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "564c13de7e41e5a5858085af30ca030aa1bfa4689e2a64afae2b77a837cd1da3",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-28",
+      "retrieved_at_utc": "2026-10-24T21:17:21+00:00"
+    },
+    "daily-sum/2026-09-29": {
+      "name": "daily-sum/2026-09-29",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-29"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "c486f0bacd0f5798fed1f3d2bd5a11e3175ee6b70e0e825aa37ed0d3bfb97060",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-29",
+      "retrieved_at_utc": "2026-10-24T21:17:24+00:00"
+    },
+    "daily-sum/2026-09-30": {
+      "name": "daily-sum/2026-09-30",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-09-30"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "820e8252dc21938353e139f791b214f915f513fe041c30118763edff40ddf908",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-09-30",
+      "retrieved_at_utc": "2026-10-24T21:17:26+00:00"
+    },
+    "daily-sum/2026-10-01": {
+      "name": "daily-sum/2026-10-01",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-01"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "25e3cc293b43d49bb0888e8ff2a7f8cc94d6414a8b3d361ab7414fc6045285b7",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-01",
+      "retrieved_at_utc": "2026-10-24T21:17:29+00:00"
+    },
+    "daily-sum/2026-10-02": {
+      "name": "daily-sum/2026-10-02",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-02"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "8bdb2a73ddd69f18ee93d4709fde194aaefd61234ae611b0ba74efadb1c91446",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-02",
+      "retrieved_at_utc": "2026-10-24T21:17:32+00:00"
+    },
+    "daily-sum/2026-10-03": {
+      "name": "daily-sum/2026-10-03",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-03"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "20e58f7c458937ee5131e2c74456ae3344070f83ce534b78d397248a73bbf90e",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-03",
+      "retrieved_at_utc": "2026-10-24T21:17:34+00:00"
+    },
+    "daily-sum/2026-10-04": {
+      "name": "daily-sum/2026-10-04",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-04"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "06b39f7c18e9eca20ef8521fa105d38db6ec61ab2a520b2ede3e41c7e095104c",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-04",
+      "retrieved_at_utc": "2026-10-24T21:17:36+00:00"
+    },
+    "daily-sum/2026-10-05": {
+      "name": "daily-sum/2026-10-05",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-05"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "7241d665a21e7ba9623dae91c081617f95184cd6a5758bf695aa5eaed9a97f0d",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-05",
+      "retrieved_at_utc": "2026-10-24T21:17:39+00:00"
+    },
+    "daily-sum/2026-10-06": {
+      "name": "daily-sum/2026-10-06",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-06"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "842f784b067f5b4a8d4e00e8c9dc7f51f6be0c46cbace1d0f42242d93a02b05e",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-06",
+      "retrieved_at_utc": "2026-10-24T21:17:41+00:00"
+    },
+    "daily-sum/2026-10-07": {
+      "name": "daily-sum/2026-10-07",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-07"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "f1b88a7dc4a81dbbbb82390ccaae5efe0761b6449c0c14ef0ed96e520b1018b6",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-07",
+      "retrieved_at_utc": "2026-10-24T21:17:43+00:00"
+    },
+    "daily-sum/2026-10-08": {
+      "name": "daily-sum/2026-10-08",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-08"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "cfd20415d88c407a8af94e00aad3256a8146b3114e629fc5b41a038f437074e8",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-08",
+      "retrieved_at_utc": "2026-10-24T21:17:46+00:00"
+    },
+    "daily-sum/2026-10-09": {
+      "name": "daily-sum/2026-10-09",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-09"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "81178a579598dc5292afde9f334f0f56562a8aede122c26070e294a184985286",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-09",
+      "retrieved_at_utc": "2026-10-24T21:17:48+00:00"
+    },
+    "daily-sum/2026-10-10": {
+      "name": "daily-sum/2026-10-10",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-10"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "1ab89174d59657cc1c62869a558d76fe9be7d0a99fd71620e07048670bcd5b7b",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-10",
+      "retrieved_at_utc": "2026-10-24T21:17:50+00:00"
+    },
+    "daily-sum/2026-10-11": {
+      "name": "daily-sum/2026-10-11",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-11"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "c3c9c777bacc74df3719cefac30dcb6a040c9244edbb2946d9361ac289aa6819",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-11",
+      "retrieved_at_utc": "2026-10-24T21:17:53+00:00"
+    },
+    "daily-sum/2026-10-12": {
+      "name": "daily-sum/2026-10-12",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-12"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "ad6416aad85071be2310ee31b0a58b6d81df95489024de3a3b271c97821c7913",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-12",
+      "retrieved_at_utc": "2026-10-24T21:17:55+00:00"
+    },
+    "daily-sum/2026-10-13": {
+      "name": "daily-sum/2026-10-13",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-13"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "df63c1e9b2646314af447b4dc46dc9a4f0123f43b7b651bfbede7446ebff67b2",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-13",
+      "retrieved_at_utc": "2026-10-24T21:17:57+00:00"
+    },
+    "daily-sum/2026-10-14": {
+      "name": "daily-sum/2026-10-14",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-14"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "1885a655de6c221ccf27ba9f9a8d6c560f321f87faf3f77fed6844b90056b107",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-14",
+      "retrieved_at_utc": "2026-10-24T21:18:00+00:00"
+    },
+    "daily-sum/2026-10-15": {
+      "name": "daily-sum/2026-10-15",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-15"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "d84a057a519291a327377dd9f71621a65334408ba0e3a519f760130d016b7d6a",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-15",
+      "retrieved_at_utc": "2026-10-24T21:18:02+00:00"
+    },
+    "daily-sum/2026-10-16": {
+      "name": "daily-sum/2026-10-16",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-16"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "1f19bb3bf9879fa2d4019f513a4c0cb9567202c72dfce7e659542a41d9e573a7",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-16",
+      "retrieved_at_utc": "2026-10-24T21:18:04+00:00"
+    },
+    "daily-sum/2026-10-17": {
+      "name": "daily-sum/2026-10-17",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-17"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "9d28f884efefa1b1f2b998af8f2b60da73217d4c50f6117affa250b40fd534f5",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-17",
+      "retrieved_at_utc": "2026-10-24T21:18:07+00:00"
+    },
+    "daily-sum/2026-10-18": {
+      "name": "daily-sum/2026-10-18",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-18"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "084c13c2015051cb85aa907b7337d83d7922ca8bdc57df0eafd376266fc82c96",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-18",
+      "retrieved_at_utc": "2026-10-24T21:18:09+00:00"
+    },
+    "daily-sum/2026-10-19": {
+      "name": "daily-sum/2026-10-19",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-19"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "af415c9aa9670a3a894d1a25e92e982f0197261c5e9faf844d4fc5b613d5f164",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-19",
+      "retrieved_at_utc": "2026-10-24T21:18:12+00:00"
+    },
+    "daily-sum/2026-10-20": {
+      "name": "daily-sum/2026-10-20",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-20"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "e5f7aefb13563fa6ce1a92e0255e499b912de1411d89b541e32704b6cf62cc6d",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-20",
+      "retrieved_at_utc": "2026-10-24T21:18:14+00:00"
+    },
+    "daily-sum/2026-10-21": {
+      "name": "daily-sum/2026-10-21",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-21"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "43289cbe8adee0cf969aaf0fd363c5319f0c897ab5ed1becd06b99536b26c434",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-21",
+      "retrieved_at_utc": "2026-10-24T21:18:16+00:00"
+    },
+    "daily-sum/2026-10-22": {
+      "name": "daily-sum/2026-10-22",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-22"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "c374550a5207711ce7f31a47619065ecdb43accbe8b547c1d42ea7b9bd61adef",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-22",
+      "retrieved_at_utc": "2026-10-24T21:18:19+00:00"
+    },
+    "daily-sum/2026-10-23": {
+      "name": "daily-sum/2026-10-23",
+      "endpoint": "/generacion-real/v3/getDailySum",
+      "params": {
+        "date": "2026-10-23"
+      },
+      "page_size": 5000,
+      "pages": 1,
+      "rows": 7,
+      "sha256_of_pages": "448a0ef756089333609cd391ebcc117a6fdaa4177cf8914b33c9c2b67dfbcb97",
+      "url_without_key": "https://sipub.api.coordinador.cl/generacion-real/v3/getDailySum?date=2026-10-23",
+      "retrieved_at_utc": "2026-10-24T21:18:21+00:00"
+    }
+  },
+  "publisher": "Coordinador Eléctrico Nacional (SIP API)",
+  "documentation": "https://portal.api.coordinador.cl/documentacion?service=sipubv2",
+  "license": "Public data; attribution to Coordinador Eléctrico Nacional preserved. Contact fields removed."
+}
