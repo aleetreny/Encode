@@ -14,7 +14,7 @@ import argparse
 import json
 from pathlib import Path
 
-from . import compare, load_scenario, modification_menu, solve, validate
+from . import compare, load_scenario, modification_menu, nodal_prices, solve, summarise, validate
 
 HERE = Path(__file__).resolve().parent
 FIXTURE = HERE / "fixtures" / "demo_scenario.json"
@@ -68,12 +68,15 @@ def _cases(scen: dict) -> tuple[dict, dict]:
                      "valid": val["passed"], "metrics": {k: sol["metrics"][k] for k in (
                          "curtailment_mwh", "unserved_mwh", "assumed_cost_proxy_usd",
                          "battery_losses_mwh", "emergency_runback_mwh")}}
+            cmp = None
             if cand is not None:
                 cmp = compare(base, sol, base_v, val)
                 files[f"{stem}.comparison"] = cmp
                 entry["comparison"] = f"{stem}.comparison.json"
                 entry["vs_baseline"] = {k: cmp[k] for k in (
                     "curtailment_reduction_mwh", "unserved_reduction_mwh", "assumed_cost_delta_usd")}
+            files[f"{stem}.summary"] = summarise(sol, val, cmp, nodal_prices(scen, sol))  # compact, for the agent
+            entry["summary"] = f"{stem}.summary.json"
             entries[cid] = entry
         index[situation] = {"description": description, "events": events, "options": entries}
     return files, index

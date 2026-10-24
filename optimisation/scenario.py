@@ -301,6 +301,19 @@ def normalise_events(events: Any, T: int, gen_ids: set[str], line_ids: set[str])
     return out
 
 
+def candidate_from_solution(solution: dict) -> dict | None:
+    """Rebuild the candidate a ``solve()`` output was computed for (None for the baseline)."""
+    mods = solution.get("modifications") or []
+    if solution.get("candidate_id", "baseline") == "baseline" and not mods:
+        return None
+    return {
+        "candidate_id": solution.get("candidate_id"),
+        "modifications": [
+            {k: v for k, v in m.items() if k not in ("battery_id", "previous_capacity_mw")} for m in mods
+        ],
+    }
+
+
 def merge_events(scenario: dict, events: Any) -> list[Any]:
     merged = list(scenario.get("events") or [])
     if events is not None:

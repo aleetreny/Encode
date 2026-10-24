@@ -11,7 +11,7 @@ from typing import Any
 import highspy
 import numpy as np
 
-from .scenario import Grid, ScenarioError, build_grid
+from .scenario import Grid, ScenarioError, build_grid, candidate_from_solution
 
 BIND_TOL = 1e-6  # MW / MWh: how close to a limit counts as "binding"
 ROUND = 6
@@ -43,13 +43,15 @@ class _LP:
         self.integer.append(self.var(0.0, 1.0))
         return self.integer[-1]
 
-    def row(self, idx: list[int], val: list[float], lo: float, hi: float) -> None:
+    def row(self, idx: list[int], val: list[float], lo: float, hi: float) -> int:
         self.row_idx.append(idx)
         self.row_val.append(val)
         self.row_lo.append(lo)
         self.row_hi.append(hi)
+        return len(self.row_lo) - 1
 
-    def solve(self, time_limit: float) -> tuple[str, np.ndarray | None]:
+    def solve(self, time_limit: float) -> tuple[str, np.ndarray | None, np.ndarray | None]:
+        """Returns (status, column values, row duals). Duals are None for a MILP."""
         h = highspy.Highs()
         h.setOptionValue("output_flag", False)
         h.setOptionValue("threads", 1)
@@ -78,10 +80,12 @@ class _LP:
         h.run()
         status = h.getModelStatus()
         if status == highspy.HighsModelStatus.kOptimal:
-            return "optimal", np.array(h.getSolution().col_value)
+            sol = h.getSolution()
+            duals = np.array(sol.row_dual) if sol.dual_valid and not self.integer else None
+            return "optimal", np.array(sol.col_value), duals
         if status in (highspy.HighsModelStatus.kInfeasible, highspy.HighsModelStatus.kUnboundedOrInfeasible):
-            return "infeasible", None
-        return "error:" + h.modelStatusToString(status), None
+            return "infeasible", None, None
+        return "error:" + h.modelStatusToString(status), None, None
 
 
 # ---------------------------------------------------------------- core solve
@@ -104,10 +108,18 @@ def _solve_grid(grid: Grid, pinned: dict[str, np.ndarray] | None = None, pin_unt
     # Some objective weights (e.g. a curtailment penalty with no battery throughput cost) make
     # wasting energy through simultaneous charge/discharge losses "optimal". Forbid it exactly.
     status, raw = _build_and_solve(grid, pinned, pin_until, exclusive=True)
+    if raw is not None:
+        # Re-solve as an LP with the charge/discharge choices fixed, to obtain nodal prices.
+        status_lp, raw_lp = _build_and_solve(grid, pinned, pin_until, exclusive=True, fixed_z=raw["z"])
+        if raw_lp is not None:
+            status, raw = status_lp, raw_lp
     return status, raw, True
 
 
-def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until: int, exclusive: bool) -> tuple[str, dict | None]:
+def _build_and_solve(
+    grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until: int, exclusive: bool,
+    fixed_z: np.ndarray | None = None,
+) -> tuple[str, dict | None]:
     T, dt = grid.T, grid.dt
     obj = grid.objective
     voll = obj["unserved_energy_penalty_usd_per_mwh"]
@@ -131,6 +143,7 @@ def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until
     CH = np.zeros((B, T), dtype=int)
     DIS = np.zeros((B, T), dtype=int)
     SOC = np.zeros((B, T + 1), dtype=int)
+    Z: list[int] = []  # charge/discharge choice variables (exclusive mode only)
     for b, bat in enumerate(grid.batteries):
         pmax = bat["power_capacity_mw"]
         for t in range(T):
@@ -146,7 +159,12 @@ def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until
             SOC[b, T] = lp.var(bat["final_soc_mwh"], bat["final_soc_mwh"])
         if exclusive and pmax > 0:
             for t in range(pin_until if pinned is not None else 0, T):
-                z = lp.binary()  # 1 = may charge, 0 = may discharge
+                if fixed_z is None:
+                    z = lp.binary()  # 1 = may charge, 0 = may discharge
+                else:
+                    v = float(round(fixed_z[len(Z)]))
+                    z = lp.var(v, v)
+                Z.append(z)
                 lp.row([CH[b, t], z], [1.0, -pmax], -np.inf, 0.0)
                 lp.row([DIS[b, t], z], [1.0, pmax], -np.inf, pmax)
     # flow f = f_pos - f_neg; a tiny cost on |f| avoids pointless transfers (e.g. shedding
@@ -168,7 +186,8 @@ def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until
             hi = grid.demand[n, t] if allow_u else 0.0
             U[n, t] = lp.var(*bounds("u", n, t, 0.0, hi), dt * voll)
 
-    # nodal balance
+    # nodal balance (its dual is the nodal price: cost of 1 MW more demand at that node and hour)
+    BAL = np.zeros((N, T), dtype=int)
     for n, node in enumerate(grid.node_ids):
         gens = [g for g, gen in enumerate(grid.generators) if gen["node_id"] == node]
         bats = [b for b, bat in enumerate(grid.batteries) if bat["node_id"] == node]
@@ -179,7 +198,7 @@ def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until
             val = [1.0] * len(gens) + [1.0] * len(bats) + [-1.0] * len(bats)
             idx += [F[l, t] for l in inn] + [F[l, t] for l in out] + [U[n, t]]
             val += [1.0] * len(inn) + [-1.0] * len(out) + [1.0]
-            lp.row(idx, val, grid.demand[n, t], grid.demand[n, t])
+            BAL[n, t] = lp.row(idx, val, grid.demand[n, t], grid.demand[n, t])
     # state of charge dynamics
     for b, bat in enumerate(grid.batteries):
         ec, ed = bat["charge_efficiency"], bat["discharge_efficiency"]
@@ -206,11 +225,13 @@ def _build_and_solve(grid: Grid, pinned: dict[str, np.ndarray] | None, pin_until
             else:
                 lp.row([P[g, t], P[g, t - 1]], [1.0, -1.0], -ramp * dt, ramp * dt)
 
-    status, x = lp.solve(grid.options["time_limit_s"])
+    status, x, duals = lp.solve(grid.options["time_limit_s"])
     if x is None:
         return status, None
     return status, {
         "p": x[P], "ch": x[CH], "dis": x[DIS], "soc": x[SOC], "f": x[F], "u": x[U],
+        "z": x[np.array(Z, dtype=int)] if Z else np.zeros(0),
+        "price": None if duals is None else duals[BAL] / dt,
     }
 
 
@@ -413,6 +434,30 @@ def _envelope(scenario: dict, candidate: dict | None, events: Any, options: Any)
 
 def solve(scenario: dict, candidate: dict | None = None, events: list | None = None, options: dict | None = None) -> dict:
     """Optimise the scenario (plus optional candidate and outage events). Never raises for bad input."""
+    return _solve(scenario, candidate, events, options, with_prices=False)
+
+
+def nodal_prices(scenario: dict, solution: dict) -> dict:
+    """Nodal prices for a ``solve()`` result, recomputed on request.
+
+    Kept out of ``solve()`` on purpose: adding a field to the shared output format breaks consumers
+    that compare stored results field by field (e.g. the backend's cached replay). This re-solves
+    the same inputs (candidate, events, options echoed in ``solution``) and returns the LP duals of
+    the nodal balance: the cost of 1 MWh more demand at each node and hour, in USD/MWh. For hours
+    before a sudden event the plan's prices are used. Informational: not independently validated.
+    """
+    if not isinstance(solution, dict) or solution.get("status") != "optimal":
+        return {"status": "error", "message": "prices need an optimal solution", "price_usd_per_mwh": None}
+    redo = _solve(scenario, candidate_from_solution(solution), solution.get("events") or [],
+                  solution.get("options") or {}, with_prices=True)
+    prices = (redo.get("timeseries") or {}).get("price_usd_per_mwh")
+    if redo["status"] != "optimal" or prices is None:
+        return {"status": "error", "message": redo.get("message") or "prices unavailable", "price_usd_per_mwh": None}
+    return {"status": "optimal", "message": None, "price_usd_per_mwh": prices,
+            "note": "LP marginal values (USD per MWh of extra demand); informational, not independently validated"}
+
+
+def _solve(scenario, candidate, events, options, with_prices: bool) -> dict:
     out = _envelope(scenario, candidate, events, options)
     t0 = time.perf_counter()
     try:
@@ -430,7 +475,10 @@ def solve(scenario: dict, candidate: dict | None = None, events: list | None = N
     applied = list(planned)
     grid = build_grid(scenario, candidate, applied, options, include_scenario_events=False)
     status, raw, mip = _solve_grid(grid)
-    solves = 1 + mip
+    solves = 1 + 2 * mip
+    # Prices for each hour come from the solve that actually decided that hour: hours before a
+    # sudden event keep the plan's prices (they are pinned, so later duals would be meaningless).
+    prices = None if raw is None or raw["price"] is None else raw["price"].copy()
     stage = "plan before any sudden outage" if sudden else None
     for ev in sudden:
         if raw is None:
@@ -438,8 +486,12 @@ def solve(scenario: dict, candidate: dict | None = None, events: list | None = N
         applied.append(ev)
         grid = build_grid(scenario, candidate, applied, options, include_scenario_events=False)
         status, raw, used = _solve_grid(grid, pinned=raw, pin_until=ev["from_hour"])
-        solves += 1 + used
+        solves += 1 + 2 * used
         mip = mip or used
+        if raw is not None and prices is not None and raw["price"] is not None:
+            prices[:, ev["from_hour"]:] = raw["price"][:, ev["from_hour"]:]
+        else:
+            prices = None
         stage = f"re-dispatch after sudden {ev['type'].replace('_', ' ')} of {ev['id']} at hour {ev['from_hour']}"
     out["solver"].update(
         solve_time_s=round(time.perf_counter() - t0, 4), solves=solves,
@@ -453,6 +505,8 @@ def solve(scenario: dict, candidate: dict | None = None, events: list | None = N
         return out
 
     ts = _timeseries(grid, raw)
+    if with_prices and prices is not None:
+        ts["price_usd_per_mwh"] = {n: _rlist(prices[i]) for i, n in enumerate(grid.node_ids)}
     metrics, objective = _metrics(grid, ts)
     out.update(
         status="optimal",

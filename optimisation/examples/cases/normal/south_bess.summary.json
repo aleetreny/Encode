@@ -1,0 +1,85 @@
+{
+  "status": "optimal",
+  "message": null,
+  "scenario_id": "chile-sen-5node-demo",
+  "candidate_id": "south_bess",
+  "modifications": [
+    {
+      "type": "add_battery",
+      "node_id": "n_sur",
+      "power_mw": 150.0,
+      "energy_mwh": 600.0
+    }
+  ],
+  "events": [],
+  "allow_unserved": true,
+  "units": "MW power, MWh energy, USD assumed-cost proxy (not CEN costs); hours are step indices from 0",
+  "validation": {
+    "passed": true,
+    "violation_count": 0,
+    "first_violations": []
+  },
+  "metrics": {
+    "curtailment_mwh": 1368.2,
+    "unserved_mwh": 0.0,
+    "assumed_cost_proxy_usd": 1647269.0,
+    "battery_losses_mwh": 23.2,
+    "emergency_runback_mwh": 0.0
+  },
+  "unserved_by_node": {},
+  "binding_constraints": [
+    "line_limit L2: hours 9-16 (flow n_norte_chico -> n_centro at 400 MW limit)",
+    "ramp_limit gas_ng: hours 9, 17 (output changing at the 150 MW/h ramp limit)",
+    "renewable_curtailed solar_ng: hours 10-15 (available renewable output not used)",
+    "dispatchable_at_capacity coal_cs: hours 0-23 (output at 350 MW capacity)",
+    "dispatchable_at_capacity hydro_sur: hours 0-23 (output at 200 MW capacity)",
+    "dispatchable_at_capacity gas_ng: hours 0-7, 18-23 (output at 350 MW capacity)",
+    "dispatchable_at_capacity gas_centro: hours 19-21 (output at 600 MW capacity)"
+  ],
+  "batteries": {
+    "b_centro": {
+      "charged_mwh": 0.0,
+      "discharged_mwh": 0.0,
+      "charging_hours": "",
+      "discharging_hours": ""
+    },
+    "south_bess_bat1": {
+      "charged_mwh": 237.9,
+      "discharged_mwh": 214.7,
+      "charging_hours": "9, 13, 17-18",
+      "discharging_hours": "19-21"
+    }
+  },
+  "prices_usd_per_mwh": {
+    "note": "LP marginal values (cost of 1 MWh more demand at that node and hour); informational, not independently validated",
+    "median_by_node": {
+      "n_norte_grande": 95.0,
+      "n_norte_chico": 95.0,
+      "n_centro": 95.0,
+      "n_centro_sur": 95.0,
+      "n_sur": 95.0
+    },
+    "hours_with_price_separation": "9-16",
+    "largest_separation": {
+      "hour": 10,
+      "spread": 95.0,
+      "cheapest_node": "n_norte_grande",
+      "most_expensive_node": "n_centro"
+    }
+  },
+  "comparison": {
+    "comparable": true,
+    "reason": null,
+    "baseline_id": "baseline",
+    "candidate_id": "south_bess",
+    "curtailment_reduction_mwh": 0.0,
+    "unserved_reduction_mwh": 0.0,
+    "assumed_cost_delta_usd": -18094.0,
+    "both_valid": true,
+    "notes": [
+      "Investment cost of the modifications is not modelled.",
+      "Costs are an assumed-cost proxy on a synthetic, illustrative network, not CEN costs.",
+      "Hourly transport model on a radial network; sub-hourly dynamics and reserves are not modelled."
+    ]
+  }
+}

@@ -144,14 +144,15 @@ What the demo shows:
 ## 6. How teammates use it
 
 ```python
-from optimisation import load_scenario, solve, validate, compare, modification_menu
+from optimisation import (load_scenario, solve, validate, compare, modification_menu,
+                          nodal_prices, summarise)
 
 scenario = load_scenario("optimisation/fixtures/demo_scenario.json")
 
 base = solve(scenario)
 base_check = validate(scenario, base)
 
-cand = solve(scenario, {"candidate_id": "c1", "modifications": [
+cand = solve(scenario, {"candidate_id": "north_bess", "modifications": [
     {"type": "add_battery", "node_id": "n_norte_grande", "power_mw": 150, "energy_mwh": 600}]})
 cand_check = validate(scenario, cand)
 
@@ -161,6 +162,9 @@ print(result["curtailment_reduction_mwh"])        # 631.578947
 crash = [{"type": "generator_outage", "id": "gas_centro", "from_hour": 18, "to_hour": 22, "mode": "sudden"}]
 maintenance = [{**crash[0], "mode": "planned"}]
 stressed = solve(scenario, events=crash)
+
+prices = nodal_prices(scenario, base)        # USD/MWh per node and hour (see section 7)
+short = summarise(cand, cand_check, result, nodal_prices(scenario, cand))   # ~2-3 KB, for Gemini
 ```
 
 All functions take and return plain JSON-style dicts and never raise on bad input: they return
@@ -168,9 +172,9 @@ All functions take and return plain JSON-style dicts and never raise on bad inpu
 
 | Teammate | What they need |
 |---|---|
-| **Person 2 (agent)** | Wrap `solve`, `validate`, `compare` as Gemini tools; put `modification_menu(scenario)` in the prompt (it also lists which plants/lines can be taken out); call `validate(scenario, solution, options)` with the same options given to `solve`; never recommend a candidate whose `validate()["passed"]` is false; quote numbers only from these outputs. |
+| **Person 2 (agent)** | Wrap `solve`, `validate`, `compare` as Gemini tools; put `modification_menu(scenario)` in the prompt (it also lists which plants/lines can be taken out); call `validate(scenario, solution, options)` with the same options given to `solve`; never recommend a candidate whose `validate()["passed"]` is false; quote numbers only from these outputs. **Give Gemini `summarise(...)` output, not the full solution** (it is ~5× smaller, already lists bottlenecks, shortfalls, battery behaviour and price separation, and copies numbers exactly). Examples: `examples/cases/<situation>/<option>.summary.json`. |
 | **Person 4 (backend)** | `POST /api/optimise` → `solve()`, `POST /api/validate` → `validate()`; scenarios use the format in `DESIGN.md` §4. Pass `final_soc_mwh` through (do not strip it). |
-| **Person 1 (frontend)** | Load results from `examples/index.json`: every option (`baseline`, `north_bess`, `south_bess`, `uprate_l2` — the same IDs and modifications as the backend's default candidates, so example files and live runs are interchangeable) in every situation (`normal`, `sudden_outage`, `planned_maintenance`) is a real, validated solution under `examples/cases/<situation>/<option>.solution.json`, with its validation and comparison next to it. Build charts from `timeseries` (hourly values), `metrics` (totals) and `binding_constraints` (what to highlight). **Never edit a solution or type a metric by hand** — if a case is missing, add it to `SITUATIONS`/`CANDIDATES` in `demo.py` and regenerate. |
+| **Person 1 (frontend)** | Load results from `examples/index.json`; it also points to a short `*.summary.json` per case (good for captions and the explanation panel). Every option (`baseline`, `north_bess`, `south_bess`, `uprate_l2` — the same IDs and modifications as the backend's default candidates, so example files and live runs are interchangeable) in every situation (`normal`, `sudden_outage`, `planned_maintenance`) is a real, validated solution under `examples/cases/<situation>/<option>.solution.json`, with its validation and comparison next to it. Build charts from `timeseries` (hourly values), `metrics` (totals) and `binding_constraints` (what to highlight). **Never edit a solution or type a metric by hand** — if a case is missing, add it to `SITUATIONS`/`CANDIDATES` in `demo.py` and regenerate. |
 
 ## 7. Reading the output
 
@@ -190,6 +194,18 @@ All functions take and return plain JSON-style dicts and never raise on bad inpu
 Hours are step indices 0–23; `timestamps_utc[i]` gives the UTC start time of hour `i`
 (the demo day starts at 00:00 Chile time = 03:00 UTC).
 
+**Nodal prices** (`nodal_prices(scenario, solution)`, *not* part of `solve()` output): for each node
+and hour, what one more MWh of demand would cost there, in USD/MWh. They explain the result at a
+glance: at 13:00 Norte Grande is ~0 (its solar is stranded behind the full L2 line) while Centro is
+95 (gas sets the price) — so storage belongs north; at 19:00 ~220 everywhere (diesel); during the
+crash 10 000 (demand being shed). They are LP marginal values: **informational, not independently
+validated**, and can differ between equally good solutions. Label them as such.
+
+**Summary** (`summarise(solution, validation, comparison, prices)`): status, headline metrics,
+unserved demand by node and hours, the most important binding constraints, battery charge/discharge
+hours, median prices and where prices separate, and the validation/comparison verdicts — about 5×
+smaller than the full solution. Every number is copied from the inputs, not estimated.
+
 ## 8. What it does **not** do
 
 - It is not Chile's real grid: topology, plants and prices are synthetic until Person 4 anchors the
@@ -207,7 +223,7 @@ Hours are step indices 0–23; `timestamps_utc[i]` gives the UTC start time of h
 ```bash
 python -m venv .venv && . .venv/bin/activate
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q            # 115 tests, ~5 s (includes a reduced outage sweep)
+pytest optimisation/tests -q            # 123 tests, ~5 s (includes a reduced outage sweep)
 python -m optimisation.demo             # the story in section 5
 python -m optimisation.demo --write     # also regenerate examples/*.json
 python -m optimisation.stress           # full outage sweep: 532 cases, ~2 000 solves, ~20 s
@@ -225,11 +241,12 @@ For anyone who changes this code after the hackathon.
 
 | Path | What it is | Rule |
 |---|---|---|
-| `__init__.py` | Public API: `solve`, `validate`, `compare`, `modification_menu`, `load_scenario`, `ScenarioError` | Anything not exported here is internal |
+| `__init__.py` | Public API: `solve`, `validate`, `compare`, `summarise`, `nodal_prices`, `modification_menu`, `load_scenario`, `ScenarioError` | Anything not exported here is internal |
 | `scenario.py` | Reads and checks input; applies candidates and outage events; builds the `Grid` | Data handling only, no optimisation |
 | `model.py` | Builds the LP, calls HiGHS, sudden-event re-dispatch, metrics, binding constraints | The only file that imports `highspy` |
 | `validate.py` | Independent checker | **Must never import `model.py`** (a test enforces it) |
 | `compare.py` | Baseline vs candidate deltas | Refuses unlike or invalid comparisons |
+| `summary.py` | `summarise()`: compact LLM-friendly view of a result | Copies numbers, never computes new ones (except totals/medians) |
 | `demo.py` | The end-to-end demo story; `--write` regenerates `examples/` | |
 | `stress.py` | Outage sweep over every asset, mode and time window | Exit code 1 if any check fails |
 | `fixtures/build_demo_scenario.py` | Generates `fixtures/demo_scenario.json` | Edit the script, never the JSON by hand |
@@ -356,6 +373,10 @@ git log --format='%b' origin/main..HEAD | grep -iE 'co-authored-by|claude-sessio
   instantly); recovery afterwards ramps up from 0; hour 0 is unconstrained.
 - **Timestamps** must be timezone-aware ISO 8601, exactly `time_step_hours` apart.
 - **Solar/wind without a profile** is rejected on purpose: otherwise it would run at night.
+- **Do not add fields to `solve()` output lightly.** The backend replays stored results and compares
+  every `timeseries` field before a sudden event with a fresh plan; a new `timeseries` field made all
+  its cached replays fail (that is why nodal prices are a separate function). Prefer a new function;
+  if a field really must be added, coordinate with the backend owner and regenerate their replay.
 - **New output fields must stay backward compatible.** The backend replays solutions saved by older
   versions. If you add a metric or objective term, add its name to `ADDED_LATER` in `validate.py`
   (missing → read as 0) and add a test like `test_validator_accepts_older_solutions_without_runback_fields`.

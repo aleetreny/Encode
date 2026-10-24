@@ -348,6 +348,21 @@ validation result is provided and failed. Positive "reduction" means the candida
 
 ---
 
+## 9b. `nodal_prices(scenario, solution)` and `summarise(...)`
+
+- `nodal_prices` re-solves the inputs echoed in `solution` and returns the duals of the nodal-balance
+  rows divided by `Δt`: USD per MWh of extra demand at each node and hour
+  (`{"status", "message", "price_usd_per_mwh": {node: [T values]}, "note"}`). Hours before a sudden
+  event take the plan's prices (later solves have them pinned). After the MILP fallback, the problem
+  is re-solved as an LP with the charge/discharge choices fixed to obtain duals. Prices are **not**
+  part of `solve()` output (the backend compares stored `timeseries` field by field) and are not
+  independently validated; they can differ between equally optimal solutions.
+- `summarise(solution, validation=None, comparison=None, prices=None, max_constraints=8)` returns a
+  ~2–3 KB view for the LLM: status/message, inputs, headline metrics, unserved demand by node and
+  hours, ranked binding constraints, battery charge/discharge hours, median prices and price
+  separation, validation and comparison verdicts. It copies numbers (rounded to 0.1) and computes
+  nothing beyond totals and medians.
+
 ## 10. How it plugs into the system
 
 ```
@@ -364,6 +379,7 @@ Frontend (P1) ──POST /api/agent/run──► Backend (P4) ──run_investig
 | `validate_candidate(solution)` | `optimisation.validate` | must pass before any recommendation |
 | `compare_results(a, b)` | `optimisation.compare` | the only source of deltas |
 | *(helper)* | `optimisation.modification_menu(scenario)` | lists allowed nodes, lines and bounds for the prompt |
+| *(helper)* | `optimisation.summarise(...)` + `optimisation.nodal_prices(...)` | what to put in Gemini's context instead of the full solution |
 
 Backend routes: `POST /api/optimise {scenario_id|scenario, candidate?, events?, options?}` → `solve()`;
 `POST /api/validate {scenario_id|scenario, solution}` → `validate()`.
@@ -432,7 +448,7 @@ explanation and the developer guide (architecture, invariants, how to extend, te
 
 ```bash
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q          # 115 tests
+pytest optimisation/tests -q          # 123 tests
 python -m optimisation.demo --write   # prints the table below and refreshes optimisation/examples/
 python -m optimisation.stress         # full outage sweep, all checks must pass
 ```

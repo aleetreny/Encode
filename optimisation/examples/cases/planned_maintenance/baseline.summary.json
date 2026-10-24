@@ -1,0 +1,72 @@
+{
+  "status": "optimal",
+  "message": null,
+  "scenario_id": "chile-sen-5node-demo",
+  "candidate_id": "baseline",
+  "modifications": [],
+  "events": [
+    {
+      "type": "generator_outage",
+      "id": "gas_centro",
+      "from_hour": 18,
+      "to_hour": 22,
+      "mode": "planned"
+    }
+  ],
+  "allow_unserved": true,
+  "units": "MW power, MWh energy, USD assumed-cost proxy (not CEN costs); hours are step indices from 0",
+  "validation": {
+    "passed": true,
+    "violation_count": 0,
+    "first_violations": []
+  },
+  "metrics": {
+    "curtailment_mwh": 1368.2,
+    "unserved_mwh": 1921.9,
+    "assumed_cost_proxy_usd": 1556803.0,
+    "battery_losses_mwh": 6.0,
+    "emergency_runback_mwh": 0.0
+  },
+  "unserved_by_node": {
+    "n_centro": {
+      "mwh": 1921.9,
+      "hours": "18-22"
+    }
+  },
+  "binding_constraints": [
+    "unserved_energy n_centro: hours 18-22 (demand not served)",
+    "outage gas_centro: hours 18-21 (planned generator outage)",
+    "line_limit L2: hours 9-16 (flow n_norte_chico -> n_centro at 400 MW limit)",
+    "ramp_limit gas_ng: hours 9, 17 (output changing at the 150 MW/h ramp limit)",
+    "ramp_limit gas_centro: hours 22 (output changing at the 250 MW/h ramp limit)",
+    "battery_full b_centro: hours 17 (state of charge at 60 MWh capacity (end of hour))",
+    "renewable_curtailed solar_ng: hours 10-15 (available renewable output not used)",
+    "dispatchable_at_capacity coal_cs: hours 0-23 (output at 350 MW capacity)",
+    "... 4 more in the full solution"
+  ],
+  "batteries": {
+    "b_centro": {
+      "charged_mwh": 61.6,
+      "discharged_mwh": 55.6,
+      "charging_hours": "9, 17, 23",
+      "discharging_hours": "18-19"
+    }
+  },
+  "prices_usd_per_mwh": {
+    "note": "LP marginal values (cost of 1 MWh more demand at that node and hour); informational, not independently validated",
+    "median_by_node": {
+      "n_norte_grande": 95.0,
+      "n_norte_chico": 95.0,
+      "n_centro": 95.0,
+      "n_centro_sur": 95.0,
+      "n_sur": 95.0
+    },
+    "hours_with_price_separation": "9-16",
+    "largest_separation": {
+      "hour": 10,
+      "spread": 95.0,
+      "cheapest_node": "n_norte_grande",
+      "most_expensive_node": "n_centro"
+    }
+  }
+}

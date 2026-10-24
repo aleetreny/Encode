@@ -18,7 +18,8 @@
             "assumed_cost_proxy_usd": 1665362.99993,
             "battery_losses_mwh": 6.157895,
             "emergency_runback_mwh": 0.0
-          }
+          },
+          "summary": "cases/normal/baseline.summary.json"
         },
         "north_bess": {
           "description": "Battery north of the L2 bottleneck",
@@ -37,7 +38,8 @@
             "curtailment_reduction_mwh": 631.578947,
             "unserved_reduction_mwh": 0.0,
             "assumed_cost_delta_usd": -74229.83118
-          }
+          },
+          "summary": "cases/normal/north_bess.summary.json"
         },
         "south_bess": {
           "description": "Same battery, south of the bottleneck",
@@ -56,7 +58,8 @@
             "curtailment_reduction_mwh": 0.0,
             "unserved_reduction_mwh": 0.0,
             "assumed_cost_delta_usd": -18093.999915
-          }
+          },
+          "summary": "cases/normal/south_bess.summary.json"
         },
         "uprate_l2": {
           "description": "Raise the L2 limit by 50 %",
@@ -75,7 +78,8 @@
             "curtailment_reduction_mwh": 993.0,
             "unserved_reduction_mwh": 0.0,
             "assumed_cost_delta_usd": -76789.089965
-          }
+          },
+          "summary": "cases/normal/uprate_l2.summary.json"
         }
       }
     },
@@ -102,7 +106,8 @@
             "assumed_cost_proxy_usd": 1556802.999965,
             "battery_losses_mwh": 6.003947,
             "emergency_runback_mwh": 0.0
-          }
+          },
+          "summary": "cases/sudden_outage/baseline.summary.json"
         },
         "north_bess": {
           "description": "Battery north of the L2 bottleneck",
@@ -121,7 +126,8 @@
             "curtailment_reduction_mwh": 631.578947,
             "unserved_reduction_mwh": 391.875,
             "assumed_cost_delta_usd": -4357.331215
-          }
+          },
+          "summary": "cases/sudden_outage/north_bess.summary.json"
         },
         "south_bess": {
           "description": "Same battery, south of the bottleneck",
@@ -140,7 +146,8 @@
             "curtailment_reduction_mwh": 0.0,
             "unserved_reduction_mwh": 243.0575,
             "assumed_cost_delta_usd": 36835.00005
-          }
+          },
+          "summary": "cases/sudden_outage/south_bess.summary.json"
         },
         "uprate_l2": {
           "description": "Raise the L2 limit by 50 %",
@@ -159,7 +166,8 @@
             "curtailment_reduction_mwh": 993.0,
             "unserved_reduction_mwh": 0.0,
             "assumed_cost_delta_usd": -76789.089965
-          }
+          },
+          "summary": "cases/sudden_outage/uprate_l2.summary.json"
         }
       }
     },
@@ -186,7 +194,8 @@
             "assumed_cost_proxy_usd": 1556802.999965,
             "battery_losses_mwh": 6.003947,
             "emergency_runback_mwh": 0.0
-          }
+          },
+          "summary": "cases/planned_maintenance/baseline.summary.json"
         },
         "north_bess": {
           "description": "Battery north of the L2 bottleneck",
@@ -205,7 +214,8 @@
             "curtailment_reduction_mwh": 631.578947,
             "unserved_reduction_mwh": 420.375,
             "assumed_cost_delta_usd": -1575.0
-          }
+          },
+          "summary": "cases/planned_maintenance/north_bess.summary.json"
         },
         "south_bess": {
           "description": "Same battery, south of the bottleneck",
@@ -224,7 +234,8 @@
             "curtailment_reduction_mwh": 0.0,
             "unserved_reduction_mwh": 420.375,
             "assumed_cost_delta_usd": 55500.00003
-          }
+          },
+          "summary": "cases/planned_maintenance/south_bess.summary.json"
         },
         "uprate_l2": {
           "description": "Raise the L2 limit by 50 %",
@@ -243,7 +254,8 @@
             "curtailment_reduction_mwh": 993.0,
             "unserved_reduction_mwh": 0.0,
             "assumed_cost_delta_usd": -76807.31574
-          }
+          },
+          "summary": "cases/planned_maintenance/uprate_l2.summary.json"
         }
       }
     }

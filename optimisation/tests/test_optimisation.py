@@ -522,7 +522,10 @@ def test_validate_rejects_solution_solved_with_other_options():
 # equally cheap (a degenerate optimum), HiGHS on macOS ARM and on Linux may pick different ones.
 # These keys depend on that choice; everything else (status, inputs, metrics, objective,
 # comparisons, validation verdict) must match, and every stored solution must still validate.
-PLATFORM_DEPENDENT = {"timeseries", "binding_constraints", "line_hours_at_limit", "max_residual_mw"}
+# Summaries (*.summary.json) also carry hour lists and LP prices, which follow the same choice
+# (LP duals can be degenerate too).
+PLATFORM_DEPENDENT = {"timeseries", "binding_constraints", "line_hours_at_limit", "max_residual_mw",
+                      "batteries", "prices_usd_per_mwh", "hours"}
 
 
 def _same_result(stored, fresh, path="") -> list[str]:
@@ -638,3 +641,91 @@ def test_example_check_tolerates_a_different_equally_good_schedule(scen):
     assert _same_result(other, sol) == []
     other["metrics"]["unserved_mwh"] += 1.0
     assert _same_result(other, sol) != []
+
+
+# ------------------------------------------------------------------ nodal prices and summary
+
+
+def test_solve_output_format_is_unchanged_by_prices(base):
+    """Prices are not added to solve() output: consumers compare stored results field by field."""
+    assert "price_usd_per_mwh" not in base["timeseries"]
+
+
+def test_nodal_prices_show_the_bottleneck(scen, base):
+    from optimisation import nodal_prices
+
+    p = nodal_prices(scen, base)["price_usd_per_mwh"]
+    assert set(p) == {n["id"] for n in scen["nodes"]} and all(len(v) == 24 for v in p.values())
+    # midday, L2 full: surplus solar north is worth ~0, the centre pays for gas
+    assert p["n_norte_grande"][13] < 1.0 and p["n_centro"][13] == pytest.approx(95.0, abs=0.1)
+    # evening: the diesel peaker sets the price everywhere
+    assert p["n_centro"][19] == pytest.approx(220.0, abs=0.1)
+
+
+def test_nodal_price_is_the_penalty_where_demand_is_shed(scen):
+    from optimisation import nodal_prices
+
+    sol = solve(scen, events=[GAS_TRIP])
+    assert nodal_prices(scen, sol)["price_usd_per_mwh"]["n_centro"][19] == pytest.approx(10000.0, abs=0.1)
+
+
+def test_prices_before_a_sudden_event_come_from_the_plan(scen, base):
+    from optimisation import nodal_prices
+
+    plan = nodal_prices(scen, base)["price_usd_per_mwh"]
+    sol = solve(scen, events=[GAS_TRIP])
+    for node, series in nodal_prices(scen, sol)["price_usd_per_mwh"].items():
+        assert series[:18] == plan[node][:18]
+
+
+def test_prices_available_after_milp_fallback():
+    s = tiny_scenario(objective={"curtailment_penalty_usd_per_mwh": 5, "battery_throughput_cost_usd_per_mwh": 0})
+    s["batteries"][0].update(node_id="a", initial_soc_mwh=40, final_soc_mwh=40)
+    sol = solve(s)
+    ok(s, sol)
+    from optimisation import nodal_prices
+
+    assert sol["solver"]["method"].startswith("MILP")
+    assert set(nodal_prices(s, sol)["price_usd_per_mwh"]) == {"a", "b"}
+
+
+def test_summary_is_small_and_copies_numbers_exactly(scen):
+    from optimisation import summarise
+
+    trip = solve(scen, events=[GAS_TRIP])
+    north = solve(scen, NORTH_BATTERY, [GAS_TRIP])
+    tv, nv = validate(scen, trip), validate(scen, north)
+    cmp = compare(trip, north, tv, nv)
+    from optimisation import nodal_prices
+
+    s = summarise(north, nv, cmp, nodal_prices(scen, north))
+    assert len(json.dumps(s)) < 4000 < len(json.dumps(north))
+    assert s["validation"]["passed"] is True
+    for k in ("curtailment_mwh", "unserved_mwh", "assumed_cost_proxy_usd"):
+        assert s["metrics"][k] == pytest.approx(north["metrics"][k], abs=0.05)
+    assert s["comparison"]["unserved_reduction_mwh"] == pytest.approx(cmp["unserved_reduction_mwh"], abs=0.05)
+    from optimisation.summary import hour_ranges
+
+    assert s["unserved_by_node"]["n_centro"]["hours"] == hour_ranges(binding(north, "unserved_energy", "n_centro"))
+    assert s["unserved_by_node"]["n_centro"]["hours"].startswith("18")
+    assert s["binding_constraints"][0].startswith("unserved_energy n_centro")
+    assert s["prices_usd_per_mwh"]["largest_separation"]["cheapest_node"] == "n_norte_grande"
+
+
+def test_summary_of_failed_solve_has_reason_and_no_metrics(scen):
+    from optimisation import summarise
+
+    strict = solve(scen, events=[GAS_TRIP], options={"allow_unserved": False})
+    s = summarise(strict, validate(scen, strict))
+    assert s["status"] == "infeasible" and "hour 18" in s["message"]
+    assert "metrics" not in s and s["validation"]["passed"] is False
+    from optimisation import nodal_prices
+
+    assert nodal_prices(scen, strict)["price_usd_per_mwh"] is None
+
+
+def test_hour_ranges():
+    from optimisation.summary import hour_ranges
+
+    assert hour_ranges([9, 10, 11, 14, 16, 17]) == "9-11, 14, 16-17"
+    assert hour_ranges([]) == ""

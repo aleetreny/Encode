@@ -13,7 +13,7 @@ from typing import Any
 
 import numpy as np
 
-from .scenario import Grid, ScenarioError, build_grid, normalise_options
+from .scenario import Grid, ScenarioError, build_grid, candidate_from_solution, normalise_options
 
 TOL_MW = 1e-4  # power / energy balance tolerance (MW or MWh)
 TOL_REL = 1e-6  # relative tolerance for reported metrics
@@ -83,17 +83,8 @@ def _close(a: float, b: float) -> bool:
 
 
 def _rebuild(scenario: dict, solution: dict) -> Grid:
-    mods = solution.get("modifications") or []
-    candidate = None
-    if solution.get("candidate_id", "baseline") != "baseline" or mods:
-        candidate = {
-            "candidate_id": solution.get("candidate_id"),
-            "modifications": [
-                {k: v for k, v in m.items() if k not in ("battery_id", "previous_capacity_mw")} for m in mods
-            ],
-        }
     return build_grid(
-        scenario, candidate, solution.get("events") or [], solution.get("options") or {},
+        scenario, candidate_from_solution(solution), solution.get("events") or [], solution.get("options") or {},
         include_scenario_events=False,
     )
 

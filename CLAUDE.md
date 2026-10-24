@@ -68,6 +68,8 @@ Public API (`from optimisation import ...`):
 - `solve(scenario, candidate=None, events=None, options=None)` → solution dict
 - `validate(scenario, solution, options=None)` → validation dict (independent of the solver code)
 - `compare(baseline, candidate, baseline_validation=None, candidate_validation=None)` → comparison dict
+- `nodal_prices(scenario, solution)` → USD/MWh per node and hour (informational, recomputed on request)
+- `summarise(solution, validation=None, comparison=None, prices=None)` → compact (~2-3 KB) view for the agent/LLM
 - `modification_menu(scenario)` → allowed candidate modifications and bounds (for the agent prompt)
 - `load_scenario(path)` → scenario dict
 
@@ -76,6 +78,7 @@ Layout:
 - `optimisation/model.py` — LP construction and HiGHS solve (incl. sudden-outage re-dispatch)
 - `optimisation/validate.py` — independent validator (must never import `model.py`)
 - `optimisation/compare.py` — deltas between two solutions
+- `optimisation/summary.py` — `summarise()`: compact LLM-friendly view of a result
 - `optimisation/stress.py` — outage sweep (planned maintenance and sudden crashes on every asset)
 - `optimisation/README.md` — plain-language explanation + developer guide (start here)
 - `optimisation/fixtures/` — synthetic demo scenario and its generator script
