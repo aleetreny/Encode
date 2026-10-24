@@ -528,10 +528,15 @@ def test_examples_match_current_code():
     with contextlib.redirect_stdout(io.StringIO()):
         results = demo.run(write=False)
     for name, data in results.items():
-        if name.startswith("solution_"):
-            data = {**data, "solver": {**data["solver"], "solve_time_s": 0.0}}
         stored = json.loads((demo.EXAMPLES / f"{name}.json").read_text())
-        assert stored == json.loads(json.dumps(data)), f"examples/{name}.json is stale: run python -m optimisation.demo --write"
+        assert stored == json.loads(json.dumps(demo.stable(data))), (
+            f"examples/{name}.json is stale: run python -m optimisation.demo --write")
+    # every exported case is a real, validated solution
+    index = results["index"]["situations"]
+    assert set(index) == {"normal", "sudden_outage", "planned_maintenance"}
+    for situation in index.values():
+        assert set(situation["options"]) == {"baseline", "c1_battery_norte_grande", "c2_battery_sur", "c3_uprate_l2"}
+        assert all(entry["valid"] for entry in situation["options"].values())
 
 
 # ------------------------------------------------------------------ outage sweep
@@ -573,3 +578,19 @@ def test_outage_stress_sweep_quick():
         summary = stress.run(quick=True, verbose=False)
     assert summary["passed"], summary["failures"][:5]
     assert summary["cases"] >= 100
+
+
+def test_validator_accepts_older_solutions_without_runback_fields(scen, base):
+    """Solutions saved before emergency runback existed omit its fields; fine when nothing was run back."""
+    old = copy.deepcopy(base)
+    del old["metrics"]["emergency_runback_mwh"]
+    del old["objective"]["terms"]["emergency_runback_penalty_usd"]
+    ok(scen, old)
+    # ...but a solution that really ran a plant back cannot hide it by omitting the fields
+    trip = {"type": "line_outage", "id": "L1", "from_hour": 6, "to_hour": 10, "mode": "sudden"}
+    hidden = copy.deepcopy(solve(scen, events=[trip]))
+    del hidden["metrics"]["emergency_runback_mwh"]
+    del hidden["objective"]["terms"]["emergency_runback_penalty_usd"]
+    bad = validate(scen, hidden)
+    assert not bad["passed"]
+    assert {"emergency_runback_mwh", "emergency_runback_penalty_usd"} <= {v["id"] for v in bad["violations"]}

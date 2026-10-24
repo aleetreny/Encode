@@ -170,7 +170,7 @@ All functions take and return plain JSON-style dicts and never raise on bad inpu
 |---|---|
 | **Person 2 (agent)** | Wrap `solve`, `validate`, `compare` as Gemini tools; put `modification_menu(scenario)` in the prompt (it also lists which plants/lines can be taken out); call `validate(scenario, solution, options)` with the same options given to `solve`; never recommend a candidate whose `validate()["passed"]` is false; quote numbers only from these outputs. |
 | **Person 4 (backend)** | `POST /api/optimise` → `solve()`, `POST /api/validate` → `validate()`; scenarios use the format in `DESIGN.md` §4. Pass `final_soc_mwh` through (do not strip it). |
-| **Person 1 (frontend)** | Build charts from `examples/solution_*.json`: `timeseries` (hourly values), `metrics` (totals), `binding_constraints` (what to highlight). |
+| **Person 1 (frontend)** | Load results from `examples/index.json`: every option (baseline, `c1`, `c2`, `c3`) in every situation (`normal`, `sudden_outage`, `planned_maintenance`) is a real, validated solution under `examples/cases/<situation>/<option>.solution.json`, with its validation and comparison next to it. Build charts from `timeseries` (hourly values), `metrics` (totals) and `binding_constraints` (what to highlight). **Never edit a solution or type a metric by hand** — if a case is missing, add it to `SITUATIONS`/`CANDIDATES` in `demo.py` and regenerate. |
 
 ## 7. Reading the output
 
@@ -207,7 +207,7 @@ Hours are step indices 0–23; `timestamps_utc[i]` gives the UTC start time of h
 ```bash
 python -m venv .venv && . .venv/bin/activate
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q            # 113 tests, ~5 s (includes a reduced outage sweep)
+pytest optimisation/tests -q            # 114 tests, ~5 s (includes a reduced outage sweep)
 python -m optimisation.demo             # the story in section 5
 python -m optimisation.demo --write     # also regenerate examples/*.json
 python -m optimisation.stress           # full outage sweep: 532 cases, ~2 000 solves, ~20 s
@@ -233,7 +233,7 @@ For anyone who changes this code after the hackathon.
 | `demo.py` | The end-to-end demo story; `--write` regenerates `examples/` | |
 | `stress.py` | Outage sweep over every asset, mode and time window | Exit code 1 if any check fails |
 | `fixtures/build_demo_scenario.py` | Generates `fixtures/demo_scenario.json` | Edit the script, never the JSON by hand |
-| `examples/*.json` | Saved outputs teammates code against | Regenerate, never edit by hand |
+| `examples/` | Saved outputs teammates code against; `index.json` lists every case; `cases/<situation>/<option>.{solution,validation,comparison}.json` | Regenerate, never edit by hand |
 | `tests/test_optimisation.py` | All tests | |
 | `DESIGN.md` | Specification: contract, formulation, outputs | Keep in sync with the code |
 
@@ -350,5 +350,9 @@ git log --format='%b' origin/main..HEAD | grep -iE 'co-authored-by|claude-sessio
   instantly); recovery afterwards ramps up from 0; hour 0 is unconstrained.
 - **Timestamps** must be timezone-aware ISO 8601, exactly `time_step_hours` apart.
 - **Solar/wind without a profile** is rejected on purpose: otherwise it would run at night.
+- **New output fields must stay backward compatible.** The backend replays solutions saved by older
+  versions. If you add a metric or objective term, add its name to `ADDED_LATER` in `validate.py`
+  (missing → read as 0) and add a test like `test_validator_accepts_older_solutions_without_runback_fields`.
+  Run the backend's test suite against your change before pushing (see `optimisation/DESIGN.md` §14).
 - **Scenario ids**: this module's demo is `chile-sen-5node-demo`; the backend's own small fixtures
   use `chile-demo-001` — they are different scenarios.

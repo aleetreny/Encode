@@ -1,0 +1,261 @@
+{
+  "scenario_id": "chile-sen-5node-demo",
+  "generated_by": "python -m optimisation.demo --write",
+  "note": "Every number here is computed by optimisation.solve and checked by optimisation.validate. Do not edit these files or build solutions by hand; regenerate them instead.",
+  "situations": {
+    "normal": {
+      "description": "Normal day, no outage",
+      "events": [],
+      "options": {
+        "baseline": {
+          "description": "Grid as it is today",
+          "solution": "cases/normal/baseline.solution.json",
+          "validation": "cases/normal/baseline.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 1368.2,
+            "unserved_mwh": 0.0,
+            "assumed_cost_proxy_usd": 1665362.99993,
+            "battery_losses_mwh": 6.157895,
+            "emergency_runback_mwh": 0.0
+          }
+        },
+        "c1_battery_norte_grande": {
+          "description": "Battery north of the L2 bottleneck",
+          "solution": "cases/normal/c1_battery_norte_grande.solution.json",
+          "validation": "cases/normal/c1_battery_norte_grande.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 736.621053,
+            "unserved_mwh": 0.0,
+            "assumed_cost_proxy_usd": 1591133.16875,
+            "battery_losses_mwh": 63.870197,
+            "emergency_runback_mwh": 0.0
+          },
+          "comparison": "cases/normal/c1_battery_norte_grande.comparison.json",
+          "vs_baseline": {
+            "curtailment_reduction_mwh": 631.578947,
+            "unserved_reduction_mwh": 0.0,
+            "assumed_cost_delta_usd": -74229.83118
+          }
+        },
+        "c2_battery_sur": {
+          "description": "Same battery, south of the bottleneck",
+          "solution": "cases/normal/c2_battery_sur.solution.json",
+          "validation": "cases/normal/c2_battery_sur.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 1368.2,
+            "unserved_mwh": 0.0,
+            "assumed_cost_proxy_usd": 1647269.000015,
+            "battery_losses_mwh": 23.194737,
+            "emergency_runback_mwh": 0.0
+          },
+          "comparison": "cases/normal/c2_battery_sur.comparison.json",
+          "vs_baseline": {
+            "curtailment_reduction_mwh": 0.0,
+            "unserved_reduction_mwh": 0.0,
+            "assumed_cost_delta_usd": -18093.999915
+          }
+        },
+        "c3_uprate_l2": {
+          "description": "Raise the L2 limit by 50 %",
+          "solution": "cases/normal/c3_uprate_l2.solution.json",
+          "validation": "cases/normal/c3_uprate_l2.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 375.2,
+            "unserved_mwh": 0.0,
+            "assumed_cost_proxy_usd": 1588573.909965,
+            "battery_losses_mwh": 11.327447,
+            "emergency_runback_mwh": 0.0
+          },
+          "comparison": "cases/normal/c3_uprate_l2.comparison.json",
+          "vs_baseline": {
+            "curtailment_reduction_mwh": 993.0,
+            "unserved_reduction_mwh": 0.0,
+            "assumed_cost_delta_usd": -76789.089965
+          }
+        }
+      }
+    },
+    "sudden_outage": {
+      "description": "gas_centro trips suddenly at 18:00, back at 22:00 (ramp-limited)",
+      "events": [
+        {
+          "type": "generator_outage",
+          "id": "gas_centro",
+          "from_hour": 18,
+          "to_hour": 22,
+          "mode": "sudden"
+        }
+      ],
+      "options": {
+        "baseline": {
+          "description": "Grid as it is today",
+          "solution": "cases/sudden_outage/baseline.solution.json",
+          "validation": "cases/sudden_outage/baseline.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 1368.2,
+            "unserved_mwh": 1921.925,
+            "assumed_cost_proxy_usd": 1556802.999965,
+            "battery_losses_mwh": 6.003947,
+            "emergency_runback_mwh": 0.0
+          }
+        },
+        "c1_battery_norte_grande": {
+          "description": "Battery north of the L2 bottleneck",
+          "solution": "cases/sudden_outage/c1_battery_norte_grande.solution.json",
+          "validation": "cases/sudden_outage/c1_battery_norte_grande.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 736.621053,
+            "unserved_mwh": 1530.05,
+            "assumed_cost_proxy_usd": 1552445.66875,
+            "battery_losses_mwh": 81.420197,
+            "emergency_runback_mwh": 0.0
+          },
+          "comparison": "cases/sudden_outage/c1_battery_norte_grande.comparison.json",
+          "vs_baseline": {
+            "curtailment_reduction_mwh": 631.578947,
+            "unserved_reduction_mwh": 391.875,
+            "assumed_cost_delta_usd": -4357.331215
+          }
+        },
+        "c2_battery_sur": {
+          "description": "Same battery, south of the bottleneck",
+          "solution": "cases/sudden_outage/c2_battery_sur.solution.json",
+          "validation": "cases/sudden_outage/c2_battery_sur.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 1368.2,
+            "unserved_mwh": 1678.8675,
+            "assumed_cost_proxy_usd": 1593638.000015,
+            "battery_losses_mwh": 32.262237,
+            "emergency_runback_mwh": 0.0
+          },
+          "comparison": "cases/sudden_outage/c2_battery_sur.comparison.json",
+          "vs_baseline": {
+            "curtailment_reduction_mwh": 0.0,
+            "unserved_reduction_mwh": 243.0575,
+            "assumed_cost_delta_usd": 36835.00005
+          }
+        },
+        "c3_uprate_l2": {
+          "description": "Raise the L2 limit by 50 %",
+          "solution": "cases/sudden_outage/c3_uprate_l2.solution.json",
+          "validation": "cases/sudden_outage/c3_uprate_l2.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 375.2,
+            "unserved_mwh": 1921.925,
+            "assumed_cost_proxy_usd": 1480013.91,
+            "battery_losses_mwh": 11.1735,
+            "emergency_runback_mwh": 0.0
+          },
+          "comparison": "cases/sudden_outage/c3_uprate_l2.comparison.json",
+          "vs_baseline": {
+            "curtailment_reduction_mwh": 993.0,
+            "unserved_reduction_mwh": 0.0,
+            "assumed_cost_delta_usd": -76789.089965
+          }
+        }
+      }
+    },
+    "planned_maintenance": {
+      "description": "Same gas_centro outage, known from the start of the day",
+      "events": [
+        {
+          "type": "generator_outage",
+          "id": "gas_centro",
+          "from_hour": 18,
+          "to_hour": 22,
+          "mode": "planned"
+        }
+      ],
+      "options": {
+        "baseline": {
+          "description": "Grid as it is today",
+          "solution": "cases/planned_maintenance/baseline.solution.json",
+          "validation": "cases/planned_maintenance/baseline.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 1368.2,
+            "unserved_mwh": 1921.925,
+            "assumed_cost_proxy_usd": 1556802.999965,
+            "battery_losses_mwh": 6.003947,
+            "emergency_runback_mwh": 0.0
+          }
+        },
+        "c1_battery_norte_grande": {
+          "description": "Battery north of the L2 bottleneck",
+          "solution": "cases/planned_maintenance/c1_battery_norte_grande.solution.json",
+          "validation": "cases/planned_maintenance/c1_battery_norte_grande.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 736.621053,
+            "unserved_mwh": 1501.55,
+            "assumed_cost_proxy_usd": 1555227.999965,
+            "battery_losses_mwh": 82.207895,
+            "emergency_runback_mwh": 0.0
+          },
+          "comparison": "cases/planned_maintenance/c1_battery_norte_grande.comparison.json",
+          "vs_baseline": {
+            "curtailment_reduction_mwh": 631.578947,
+            "unserved_reduction_mwh": 420.375,
+            "assumed_cost_delta_usd": -1575.0
+          }
+        },
+        "c2_battery_sur": {
+          "description": "Same battery, south of the bottleneck",
+          "solution": "cases/planned_maintenance/c2_battery_sur.solution.json",
+          "validation": "cases/planned_maintenance/c2_battery_sur.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 1368.2,
+            "unserved_mwh": 1501.55,
+            "assumed_cost_proxy_usd": 1612302.999995,
+            "battery_losses_mwh": 51.418421,
+            "emergency_runback_mwh": 0.0
+          },
+          "comparison": "cases/planned_maintenance/c2_battery_sur.comparison.json",
+          "vs_baseline": {
+            "curtailment_reduction_mwh": 0.0,
+            "unserved_reduction_mwh": 420.375,
+            "assumed_cost_delta_usd": 55500.00003
+          }
+        },
+        "c3_uprate_l2": {
+          "description": "Raise the L2 limit by 50 %",
+          "solution": "cases/planned_maintenance/c3_uprate_l2.solution.json",
+          "validation": "cases/planned_maintenance/c3_uprate_l2.validation.json",
+          "valid": true,
+          "metrics": {
+            "curtailment_mwh": 375.2,
+            "unserved_mwh": 1921.925,
+            "assumed_cost_proxy_usd": 1479995.684225,
+            "battery_losses_mwh": 9.082895,
+            "emergency_runback_mwh": 0.0
+          },
+          "comparison": "cases/planned_maintenance/c3_uprate_l2.comparison.json",
+          "vs_baseline": {
+            "curtailment_reduction_mwh": 993.0,
+            "unserved_reduction_mwh": 0.0,
+            "assumed_cost_delta_usd": -76807.31574
+          }
+        }
+      }
+    }
+  },
+  "special_cases": {
+    "sudden_line_trip": {
+      "description": "L1 opens at 06:00 for 4 h, islanding Norte Grande (emergency runback)",
+      "solution": "solution_sudden_line_trip.json"
+    },
+    "strict_infeasible": {
+      "description": "Gas crash with no unserved demand allowed: infeasible, with the reason",
+      "solution": "solution_infeasible.json"
+    }
+  }
+}

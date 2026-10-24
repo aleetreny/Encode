@@ -5,7 +5,7 @@ several candidates -> validate -> compare -> stress-test with a sudden plant tri
 the same outage as planned maintenance, and a sudden line trip that islands a node.
 
     python -m optimisation.demo            # print results
-    python -m optimisation.demo --write    # also refresh optimisation/examples/*.json
+    python -m optimisation.demo --write    # also refresh optimisation/examples/ (see examples/index.json)
 """
 
 from __future__ import annotations
@@ -31,6 +31,52 @@ CANDIDATES = [
 SUDDEN_TRIP = {"type": "generator_outage", "id": "gas_centro", "from_hour": 18, "to_hour": 22, "mode": "sudden"}
 PLANNED_MAINTENANCE = {**SUDDEN_TRIP, "mode": "planned"}
 SUDDEN_LINE_TRIP = {"type": "line_outage", "id": "L1", "from_hour": 6, "to_hour": 10, "mode": "sudden"}
+
+# Every option in every situation is exported under examples/cases/<situation>/ so that no consumer
+# (e.g. the frontend) ever has to build or edit a solution by hand.
+SITUATIONS = {
+    "normal": ("Normal day, no outage", []),
+    "sudden_outage": ("gas_centro trips suddenly at 18:00, back at 22:00 (ramp-limited)", [SUDDEN_TRIP]),
+    "planned_maintenance": ("Same gas_centro outage, known from the start of the day", [PLANNED_MAINTENANCE]),
+}
+
+
+def stable(data: dict) -> dict:
+    """Example files must not change between runs: drop the wall-clock solve time."""
+    if isinstance(data, dict) and isinstance(data.get("solver"), dict):
+        return {**data, "solver": {**data["solver"], "solve_time_s": 0.0}}
+    return data
+
+
+def _cases(scen: dict) -> tuple[dict, dict]:
+    """Solve, validate and compare every option in every situation."""
+    files: dict[str, dict] = {}
+    index: dict[str, dict] = {}
+    for situation, (description, events) in SITUATIONS.items():
+        base = solve(scen, events=events)
+        base_v = validate(scen, base)
+        entries = {}
+        for cand in [None] + CANDIDATES:
+            cid = cand["candidate_id"] if cand else "baseline"
+            sol = base if cand is None else solve(scen, cand, events)
+            val = base_v if cand is None else validate(scen, sol)
+            stem = f"cases/{situation}/{cid}"
+            files[f"{stem}.solution"] = sol
+            files[f"{stem}.validation"] = val
+            entry = {"description": cand["description"] if cand else "Grid as it is today",
+                     "solution": f"{stem}.solution.json", "validation": f"{stem}.validation.json",
+                     "valid": val["passed"], "metrics": {k: sol["metrics"][k] for k in (
+                         "curtailment_mwh", "unserved_mwh", "assumed_cost_proxy_usd",
+                         "battery_losses_mwh", "emergency_runback_mwh")}}
+            if cand is not None:
+                cmp = compare(base, sol, base_v, val)
+                files[f"{stem}.comparison"] = cmp
+                entry["comparison"] = f"{stem}.comparison.json"
+                entry["vs_baseline"] = {k: cmp[k] for k in (
+                    "curtailment_reduction_mwh", "unserved_reduction_mwh", "assumed_cost_delta_usd")}
+            entries[cid] = entry
+        index[situation] = {"description": description, "events": events, "options": entries}
+    return files, index
 
 
 def _row(name: str, sol: dict, val: dict) -> str:
@@ -104,13 +150,28 @@ def run(write: bool = False) -> dict:
         print(f"\nLargest verified curtailment reduction: {best[0]['candidate_id']} "
               f"({best[1]['curtailment_reduction_mwh']:.1f} MWh; investment cost not modelled)")
 
+    case_files, case_index = _cases(scen)
+    results.update(case_files)
+    results["index"] = {
+        "scenario_id": scen["scenario_id"],
+        "generated_by": "python -m optimisation.demo --write",
+        "note": "Every number here is computed by optimisation.solve and checked by optimisation.validate. "
+                "Do not edit these files or build solutions by hand; regenerate them instead.",
+        "situations": case_index,
+        "special_cases": {
+            "sudden_line_trip": {"description": "L1 opens at 06:00 for 4 h, islanding Norte Grande (emergency runback)",
+                                 "solution": "solution_sudden_line_trip.json"},
+            "strict_infeasible": {"description": "Gas crash with no unserved demand allowed: infeasible, with the reason",
+                                  "solution": "solution_infeasible.json"},
+        },
+    }
+
     if write:
-        EXAMPLES.mkdir(exist_ok=True)
         for name, data in results.items():
-            if name.startswith("solution_"):
-                data = {**data, "solver": {**data["solver"], "solve_time_s": 0.0}}  # stable files
-            (EXAMPLES / f"{name}.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-        print(f"\nWrote {len(results)} example files to {EXAMPLES}")
+            path = EXAMPLES / f"{name}.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(stable(data), indent=2) + "\n", encoding="utf-8")
+        print(f"\nWrote {len(results)} example files to {EXAMPLES} (index: examples/index.json)")
     return results
 
 
