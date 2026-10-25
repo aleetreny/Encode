@@ -15,3 +15,6 @@ All changes after the initial contract freeze are documented here. Only optional
 ## 2026-10-25 — Jury Impact Preview Endpoint (Etapa 2)
 - Added additive REST response definitions `ImpactPreviewAsset` and `ImpactPreviewResponse` in `contracts/live.schema.json` and `frontend/src/live/types.ts` for `GET /api/live/sessions/{id}/impact_preview`, plus `fetchImpactPreview` in `frontend/src/live/client.ts`.
 
+
+## 2026-10-25 — Display text is now English (`feature/real-day`)
+- No schema change. Fields whose names end in `_es` (`text_es`, `thought_es`, `diagnosis_es`, `title_es`, `rationale_es`, `args_summary_es`, `label_es`, `description_es`, `message_es`…) keep their names for compatibility but now carry **English** text, because the jury and audience are English-speaking. Gemini (decider) and Jimmy (monitor) are prompted to answer in English, still with zero digits in prose.
