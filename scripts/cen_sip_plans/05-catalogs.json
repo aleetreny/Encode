@@ -1,0 +1,4 @@
+[
+  {"name": "centrales", "endpoint": "/centrales/v4/findByDate", "params": {}},
+  {"name": "lineas-transmision", "endpoint": "/lineas-transmision/v4/findByDate", "params": {}}
+]

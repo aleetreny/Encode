@@ -70,3 +70,8 @@
 
 ## Etapa 0 · Biblioteca y Grabación con Gemini Real, Etiquetas Honestas y Latencia (`high` vs `medium`)
 - **Qué entró**: Regeneración completa con `gemini-4-argon` real (`GEMINI_API_KEY` desde `.env.local` ignorado en git) de `frontend/src/live/fixtures/demo-stream.jsonl` y los 111 archivos de `frontend/public/incidents/*.jsonl` + `index.json`; etiquetas honestas (`model: "deterministic-planner"`, `status: "error" | "timeout"` cuando `response_id` empieza con `det-`); ritmo de eventos separado (`+0.02 h` por evento y cuenta regresiva a 1 tick/s en `offline.ts`); opciones distintas para la falla de `L3`; y medición de latencia real `high` vs `medium` en `docs/live-latency.md` (`DEFAULT_DECIDER_THINKING = "medium"`, `p50 = 7359.90 ms < 8 s`).
+
+## Etapa 1 — Integración de `feature/ui-live` (Diseño Andes)
+- **Estado**: COMPLETADO
+- **Qué entró**: Merge de `feature/ui-live` desde `/Users/alonso/.t3/worktrees/Encode/t3-7744b100` preservando intacto `frontend/src/ui/` y las conductas de `store.ts` (`requestedMode`, reconexión por `?s=` sin reiniciar sesión, hora inicial `17:30`, `onError` post-apertura sin caída a offline, `last_incident`) y `client.ts` (`session_id` aditivo en `createLiveSession`), con `npm run build` y `pytest -q` (236 tests) en verde.
+

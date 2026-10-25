@@ -1,0 +1,82 @@
+[
+ {
+  "name": "generacion-real/2025-02-25",
+  "endpoint": "/generacion-real/v3/findByDate",
+  "params": {
+   "startDate": "2025-02-25",
+   "endDate": "2025-02-25"
+  }
+ },
+ {
+  "name": "demanda-neta/2025-02-25",
+  "endpoint": "/demanda-neta/v4/findByDate",
+  "params": {
+   "startDate": "2025-02-25",
+   "endDate": "2025-02-25"
+  }
+ },
+ {
+  "name": "instrucciones-sscc/2025-02-25",
+  "endpoint": "/instrucciones-operacionales-sscc/v4/findByDate",
+  "params": {
+   "startDate": "2025-02-25",
+   "endDate": "2025-02-25"
+  }
+ },
+ {
+  "name": "limitaciones-transmision/2025-02-25",
+  "endpoint": "/limitaciones-transmision/v4/findByDate",
+  "params": {
+   "startDate": "2025-02-25",
+   "endDate": "2025-02-25"
+  }
+ },
+ {
+  "name": "generacion-real/2025-02-24",
+  "endpoint": "/generacion-real/v3/findByDate",
+  "params": {
+   "startDate": "2025-02-24",
+   "endDate": "2025-02-24"
+  }
+ },
+ {
+  "name": "demanda-neta/2025-02-24",
+  "endpoint": "/demanda-neta/v4/findByDate",
+  "params": {
+   "startDate": "2025-02-24",
+   "endDate": "2025-02-24"
+  }
+ },
+ {
+  "name": "generacion-real/2026-10-14",
+  "endpoint": "/generacion-real/v3/findByDate",
+  "params": {
+   "startDate": "2026-10-14",
+   "endDate": "2026-10-14"
+  }
+ },
+ {
+  "name": "demanda-neta/2026-10-14",
+  "endpoint": "/demanda-neta/v4/findByDate",
+  "params": {
+   "startDate": "2026-10-14",
+   "endDate": "2026-10-14"
+  }
+ },
+ {
+  "name": "limitaciones-transmision/2026-10-14",
+  "endpoint": "/limitaciones-transmision/v4/findByDate",
+  "params": {
+   "startDate": "2026-10-14",
+   "endDate": "2026-10-14"
+  }
+ },
+ {
+  "name": "instrucciones-sscc/2026-10-14",
+  "endpoint": "/instrucciones-operacionales-sscc/v4/findByDate",
+  "params": {
+   "startDate": "2026-10-14",
+   "endDate": "2026-10-14"
+  }
+ }
+]
