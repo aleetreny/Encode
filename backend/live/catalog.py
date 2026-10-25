@@ -24,8 +24,8 @@ SYNTHETIC_DAY_PROFILE: dict[str, str] = {
 
 
 def scenario_path() -> Path:
-    """Scenario fixture selected by env ``GRIDPILOT_SCENARIO`` (``synthetic`` default, ``real-day``)."""
-    choice = os.getenv("GRIDPILOT_SCENARIO", "synthetic").strip().lower() or "synthetic"
+    """Scenario fixture selected by env ``GRIDPILOT_SCENARIO`` (``real-day`` default, ``synthetic``)."""
+    choice = os.getenv("GRIDPILOT_SCENARIO", "real-day").strip().lower() or "real-day"
     if choice == "synthetic":
         return FIXTURE_PATH
     if choice == "real-day":

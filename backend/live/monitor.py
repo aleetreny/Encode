@@ -11,14 +11,22 @@ Every simulated hour the live engine asks this module for one short digit-free S
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 import time
 from typing import Any, Iterable, NamedTuple
 
 from backend.live import agent_loop
-from backend.live.agent_loop import ASSET_NAMES_ES, get_fast_model, sanitize_no_digits
+from backend.live.agent_loop import ASSET_NAMES_ES, sanitize_no_digits
 
 MONITOR_TIMEOUT_S = 3.0
+# One sentence per simulated hour must land inside the 3 s budget: gemini-3.8-flash measured 5-10 s,
+# gemini-3.5-flash-lite about 1 s (25 Oct). The decider stays on GRIDPILOT_MODEL_DECIDER.
+DEFAULT_MONITOR_MODEL = "gemini-3.5-flash-lite"
+
+
+def get_monitor_model() -> str:
+    return (os.getenv("GRIDPILOT_MODEL_MONITOR") or "").strip() or DEFAULT_MONITOR_MODEL
 DETERMINISTIC_MODEL = "deterministic-monitor"
 
 SEVERITY_RANK = {"info": 0, "watch": 1, "alert": 2}
@@ -434,7 +442,7 @@ async def generate_monitor_note(
         return deterministic_note(assessment, grid_state=grid_state, status="no_key")
 
     timeout = MONITOR_TIMEOUT_S if timeout_s is None else timeout_s
-    model = get_fast_model()
+    model = get_monitor_model()
     started = time.perf_counter()
 
     def elapsed_ms() -> int:

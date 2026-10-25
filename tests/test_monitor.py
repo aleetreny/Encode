@@ -282,7 +282,7 @@ def test_no_key_gives_labelled_deterministic_note(no_key):
 
 
 def test_ok_path_uses_the_fast_model_and_strips_digits(fake_key, monkeypatch):
-    monkeypatch.setenv("GRIDPILOT_MODEL_FAST", "fake-fast-model")
+    monkeypatch.setenv("GRIDPILOT_MODEL_MONITOR", "fake-fast-model")
     seen: dict = {}
 
     def fake(**kwargs):

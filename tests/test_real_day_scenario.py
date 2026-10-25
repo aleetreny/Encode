@@ -169,8 +169,14 @@ def test_low_bus_coverage_falls_back_to_assumption(tmp_path):
 # --------------------------------------------------------------------- switch
 
 
-def test_switch_defaults_to_synthetic(monkeypatch):
+def test_switch_defaults_to_real_day(monkeypatch):
     monkeypatch.delenv("GRIDPILOT_SCENARIO", raising=False)
+    assert scenario_path() == REAL_DAY_FIXTURE_PATH
+    assert build_catalog()["day_profile"]["method"] == "scaled-observed-shape"
+
+
+def test_switch_selects_synthetic(monkeypatch):
+    monkeypatch.setenv("GRIDPILOT_SCENARIO", "synthetic")
     assert scenario_path() == FIXTURE_PATH
     assert catalog_mod.FIXTURE_PATH == FIXTURE_PATH
     cat = build_catalog()

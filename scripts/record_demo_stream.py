@@ -31,12 +31,25 @@ from backend.live.agent_loop import (
     has_digits,
     is_tag_truthful,
     option_has_positive_improvement,
-    sanitize_no_digits,
 )
 from backend.live.engine import LiveSession
 
 OUT_PATH = ROOT / "frontend" / "src" / "live" / "fixtures" / "demo-stream.jsonl"
 SCHEMA_PATH = ROOT / "contracts" / "live.schema.json"
+
+
+async def _drain_monitor(session: LiveSession) -> None:
+    """Wait for Jimmy's in-flight note so the recording keeps a deterministic order."""
+    while session._monitor_task is not None and not session._monitor_task.done():
+        await session._monitor_task
+
+
+async def _monitor_hour(session: LiveSession, hour: float) -> None:
+    """Advance the simulated clock to `hour` and record Jimmy's note for it, as the 1 Hz loop would."""
+    session.hour = hour
+    session._emit({"type": "clock.tick", "running": True})
+    session._maybe_emit_monitor_note()
+    await _drain_monitor(session)
 
 
 async def record_live_session_stream() -> list[dict[str, Any]]:
@@ -51,15 +64,10 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
     session.running = True
     session.event_history[0]["clock"]["running"] = True
 
-    # 12:15 -> clock.tick
-    session.hour = 12.25
-    session._emit({"type": "clock.tick", "running": True})
-
-    # 12:30 -> periodic operator note (midday solar congestion)
-    session.hour = 12.50
-    session.emit_note(
-        "Corredor Norte Chico hacia la Zona Central opera a plena capacidad con recorte solar preventivo en el norte bajo despacho económico."
-    )
+    # 12:00 -> 17:00: Jimmy reads the real-day grid every simulated hour (midday congestion, evening ramp)
+    session._monitor_bucket = -1
+    for h in range(12, 18):
+        await _monitor_hour(session, float(h))
 
     # 18:00 -> Incident 1: Jury triggers sudden outage of gas_centro [18, 22)
     session.hour = 18.0
@@ -71,6 +79,7 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
         from_hour_override=18,
         wait_for_options=True,
     )
+    await _drain_monitor(session)
 
     # 18:21 -> Operator applies recommended option
     session.hour = 18.35
@@ -81,8 +90,9 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
         by="operator",
     )
 
-    # 19:00 -> Incident 2: Jury triggers L3 corridor outage [19, 22) with autonomous mode enabled
-    session.hour = 19.0
+    # 19:00 -> Jimmy's hourly reading with the plan applied, then Incident 2: Jury triggers L3 corridor
+    # outage [19, 22) with autonomous mode enabled
+    await _monitor_hour(session, 19.0)
     session.autonomy = True
     await session.disrupt(
         "L3",
@@ -97,17 +107,16 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
     cd_task = session._countdown_task
     if cd_task is not None:
         await cd_task
+    await _drain_monitor(session)
 
-    # 22:00 -> Both disruptions reach to_hour=22 and expire; grid returns to normal
+    # Next whole hours until 22:00 -> Jimmy keeps reading the grid while the plan holds. The countdown has
+    # already advanced the clock, so start after it: the stream's hour never goes backwards.
+    for h in range(int(session.hour) + 1, 22):
+        await _monitor_hour(session, float(h))
+
+    # 22:00 -> Both disruptions reach to_hour=22 and expire; grid returns to normal and Jimmy says so
     await session.set_clock("seek", hour=22.0)
-
-    # 22:06 -> Final operator note confirming normal restoration
-    session.hour = 22.1
-    session.emit_note(
-        sanitize_no_digits(
-            "Activos restituidos y demanda residencial abastecida; el Sistema Eléctrico Nacional retorna a estado normal bajo supervisión continua."
-        )
-    )
+    await _drain_monitor(session)
 
     return list(session.event_history)
 
@@ -195,6 +204,24 @@ def verify_stream(events: list[dict[str, Any]]) -> None:
     )
 
     from datetime import datetime
+
+    # Jimmy: an hourly reading with code-computed metrics; a fallback must say so, never pass for the model.
+    monitor_notes = [e for e in events if e.get("type") == "agent.note" and e.get("kind") == "monitor"]
+    assert len(monitor_notes) >= 9, f"Expected >= 9 monitor notes (12:00-22:00), got {len(monitor_notes)}"
+    hours = [e["hour"] for e in events]
+    assert hours == sorted(hours), "Simulated hour goes backwards in the stream"
+    for n in monitor_notes:
+        me = n.get("model_execution") or {}
+        assert n.get("metrics") and n.get("severity") in {"info", "watch", "alert"}, f"Monitor note without reading: {n}"
+        assert me.get("role") == "monitor", f"Monitor note without model_execution: {n}"
+        if me.get("status") != "ok":
+            assert me.get("model") == "deterministic-monitor", f"Failed monitor call labelled as a model: {me}"
+    live_notes = [n for n in monitor_notes if n["model_execution"]["status"] == "ok"]
+    assert len(live_notes) * 2 >= len(monitor_notes), (
+        f"Only {len(live_notes)} of {len(monitor_notes)} monitor notes came from the fast model"
+    )
+    assert any(n["severity"] == "alert" for n in monitor_notes), "No monitor alert during the incidents"
+    assert monitor_notes[-1]["severity"] != "alert", f"Grid did not read as recovered at the end: {monitor_notes[-1]}"
 
     incident_events = [e for e in events if e.get("type") == "incident.detected"]
     assert len(incident_events) == 2, f"Expected 2 incident.detected events, got {len(incident_events)}"
