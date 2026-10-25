@@ -364,7 +364,7 @@
 .gp-zoom { position: absolute; right: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 4px; z-index: 3; }
 .gp-zoom button { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--line); background: #fff; font: 700 15px ui-sans-serif, system-ui; color: var(--ink); cursor: pointer; box-shadow: 0 4px 12px -8px rgba(0,0,0,.4); }
 .gp-zoom button:disabled { opacity: .35; cursor: default; }
-.gp-scene { position: absolute; }
+.gp-scene { position: absolute; overflow: hidden; } /* zooming in never slides the maquette under the legend, banner or Gemini panel */
 
 /* decisions live in Gemini's panel on wide screens, so the maquette is never covered */
 @media (min-width: 901px) {

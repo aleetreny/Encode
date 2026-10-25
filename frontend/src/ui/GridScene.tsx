@@ -121,13 +121,18 @@ function PowerWire({ from, to, mw, cap, state, lift = 14, label }: {
   );
 }
 
+const EDGE = 10; // keeps pills clear of the stage edge, where the legend and side panel sit
+
 // An event on the map announces itself large and glowing, then settles into a small tag on the
 // object so the maquette stays readable. Hovering the tag brings the full message back.
-function Callout({ x, y, mx = x, my = y, text, what, mini, tone, onClick }: {
+function Callout({ x: x0, y, mx: mx0 = x0, my = y, text, what, mini, tone, onClick }: {
   x: number; y: number; mx?: number; my?: number; text: string; what?: string; mini: string; tone: 'bad' | 'good'; onClick?: (e: React.MouseEvent) => void;
 }) {
-  const w = (text.length + (what ? what.length + 1 : 0)) * 10.4 + 34;
+  // Name and detail share one pill with a clear gap between them, and the pill never leaves the stage.
+  const w = (text.length + (what ? what.length + 3 : 0)) * 10.6 + 34;
   const mw = mini.length * 7.9 + 18;
+  const keep = (c: number, width: number) => Math.min(W - EDGE - width / 2, Math.max(EDGE + width / 2, c));
+  const x = keep(x0, w), mx = keep(mx0, mw);
   return (
     <g className={`gp-callout is-${tone}`} onClick={onClick}>
       <g className="gp-callout-full">
