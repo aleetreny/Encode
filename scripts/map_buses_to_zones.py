@@ -162,7 +162,6 @@ KEYWORD_ZONE = {
     "ALONSODECORDOVA": "n_centro",
     "SANTARAQUEL": "n_centro",
     "SANTAELENA": "n_centro",
-    "CHENA": "n_centro",
     "PAJARITOS": "n_centro",
     "LOSDOMINICOS": "n_centro",
     "CLUBHIPICO": "n_centro",
@@ -247,8 +246,8 @@ KEYWORD_ZONE = {
     "PUERTOAYSEN": "n_sur",
     "COYHAIQUE": "n_sur",
     "AYSEN": "n_sur",
-    "CHACABUCO": "n_centro",
 }
+
 
 def strip_accents(text: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c))
@@ -304,7 +303,7 @@ def build_catalog_index(catalog: list[dict]) -> dict[tuple[str, ...], Counter]:
         tokens = normalise_tokens(point)
         for size in range(1, min(len(tokens), 6) + 1):
             for start in range(len(tokens) - size + 1):
-                key = tuple(tokens[start:start + size])
+                key = tuple(tokens[start : start + size])
                 index[key].update(regions)
     return index
 

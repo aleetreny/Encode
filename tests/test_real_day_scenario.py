@@ -45,7 +45,13 @@ def baseline(scenario):
 
 def _outage(scenario: dict, kind: str, asset: str, from_hour: int) -> tuple[float, dict]:
     disruptions = [
-        {"type": kind, "asset_id": asset, "from_hour": from_hour, "to_hour": from_hour + 4, "source": "jury"}
+        {
+            "type": kind,
+            "asset_id": asset,
+            "from_hour": from_hour,
+            "to_hour": from_hour + 4,
+            "source": "jury",
+        }
     ]
     scen, events = prepare_scenario_and_events(scenario, disruptions)
     raw = solve(scen, events=events, options={"allow_unserved": True})
@@ -69,7 +75,14 @@ def _outage(scenario: dict, kind: str, asset: str, from_hour: int) -> tuple[floa
 
 def test_same_network_as_synthetic_demo(scenario):
     demo = load_scenario(FIXTURE_PATH)
-    for key in ("nodes", "lines", "generators", "batteries", "objective", "emission_factors_t_per_mwh"):
+    for key in (
+        "nodes",
+        "lines",
+        "generators",
+        "batteries",
+        "objective",
+        "emission_factors_t_per_mwh",
+    ):
         assert scenario[key] == demo[key], key
     assert scenario["scenario_id"] == "chile-sen-5node-real-2026-08-14"
     assert scenario["provenance"]["historical_event_date"] == "2026-08-14"
@@ -95,19 +108,25 @@ def test_committed_fixture_is_reproducible(scenario):
 def test_gate1_baseline_feasible_no_unserved(baseline):
     assert baseline["status"] == "optimal"
     assert baseline["metrics"]["unserved_mwh"] == 0.0
-    assert all(v == 0.0 for per_node in baseline["timeseries"]["unserved_mw"].values() for v in per_node)
+    assert all(
+        v == 0.0 for per_node in baseline["timeseries"]["unserved_mw"].values() for v in per_node
+    )
 
 
 def test_gate2_corridor_saturates_with_curtailment_at_midday(baseline):
     flows = baseline["timeseries"]["line_flow_mw"]
-    hours = [h for h in range(10, 17) if any(abs(flows[k][h]) / 400.0 >= 0.95 for k in ("L1", "L2"))]
+    hours = [
+        h for h in range(10, 17) if any(abs(flows[k][h]) / 400.0 >= 0.95 for k in ("L1", "L2"))
+    ]
     assert len(hours) >= 2, hours
     ts = baseline["timeseries"]
     solar = [g for g in ts["available_mw"] if g.startswith("solar")]
     midday_solar_curtailment = sum(
         ts["available_mw"][g][h] - ts["generation_mw"][g][h] for g in solar for h in range(10, 17)
     )
-    assert midday_solar_curtailment > 1.0, midday_solar_curtailment  # the midday solar-curtailment story
+    assert midday_solar_curtailment > 1.0, (
+        midday_solar_curtailment
+    )  # the midday solar-curtailment story
 
 
 def test_gate3_centro_peaks_in_the_evening(scenario):

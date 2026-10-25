@@ -58,7 +58,10 @@ def small_scenario() -> dict:
             {"id": "wind_b", "technology": "wind", "capacity_mw": 50},
             {"id": "gas_a", "technology": "gas", "capacity_mw": 200},
         ],
-        "renewable_availability_mw_by_generator": {"solar_a": [0, 100, 100], "wind_b": [10, 40, 20]},
+        "renewable_availability_mw_by_generator": {
+            "solar_a": [0, 100, 100],
+            "wind_b": [10, 40, 20],
+        },
         "batteries": [
             {"id": "b1", "power_capacity_mw": 20, "energy_capacity_mwh": 40},
             {"id": "b_res", "power_capacity_mw": 50, "energy_capacity_mwh": 100, "standby": True},
@@ -110,7 +113,11 @@ def test_metrics_formulas_on_hand_built_solution():
     assert m["net_load_ramp_mw_per_h"] == 20.0
     # only b1 counts: 10 / 40
     assert m["storage_soc_pct"] == 25.0
-    assert all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in m.values() if v != m["max_line_id"])
+    assert all(
+        isinstance(v, (int, float)) and not isinstance(v, bool)
+        for v in m.values()
+        if v != m["max_line_id"]
+    )
 
 
 def test_metrics_use_the_hour_index_and_report_unserved_households():
@@ -121,7 +128,10 @@ def test_metrics_use_the_hour_index_and_report_unserved_households():
     # last hour of the horizon has no next hour to compare with
     assert m["net_load_ramp_mw_per_h"] == 0.0
     # hour index is clamped into the horizon
-    assert monitor.compute_monitor_metrics(small_scenario(), small_solution(), 23.5)["demand_mw"] == 200.0
+    assert (
+        monitor.compute_monitor_metrics(small_scenario(), small_solution(), 23.5)["demand_mw"]
+        == 200.0
+    )
 
 
 def test_metrics_round_to_one_decimal():
@@ -146,7 +156,9 @@ def test_standby_battery_counts_once_a_plan_activates_it():
 
 def test_battery_outage_removes_discharge_capacity():
     base = monitor.compute_monitor_metrics(small_scenario(), small_solution(), 1)
-    out = monitor.compute_monitor_metrics(small_scenario(), small_solution(), 1, outaged_battery_ids=["b1"])
+    out = monitor.compute_monitor_metrics(
+        small_scenario(), small_solution(), 1, outaged_battery_ids=["b1"]
+    )
     assert out["reserve_margin_pct"] == round((340 - 180) / 180 * 100, 1)
     assert out["reserve_margin_pct"] < base["reserve_margin_pct"]
 
@@ -188,7 +200,12 @@ CALM = {
         ({"unserved_mw": 0.1}, "alert", ["unserved"]),
         ({"households_off": 1.0}, "alert", ["unserved"]),
         (
-            {"unserved_mw": 5.0, "max_line_loading_pct": 95.0, "reserve_margin_pct": 2.0, "storage_soc_pct": 1.0},
+            {
+                "unserved_mw": 5.0,
+                "max_line_loading_pct": 95.0,
+                "reserve_margin_pct": 2.0,
+                "storage_soc_pct": 1.0,
+            },
             "alert",
             ["unserved", "L1", "reserve_margin", "storage_soc"],
         ),
@@ -220,22 +237,39 @@ def test_assess_is_alert_when_the_solution_is_not_optimal():
 
 def test_deterministic_text_is_specific_and_digit_free():
     full = {**CALM, "max_line_loading_pct": 100.0, "max_line_id": "L2", "demand_mw": 1000.0}
-    hot = monitor.deterministic_text_es({**full, "curtailment_mw": 120.0}, "alert", ["L2"], "alerta")
+    hot = monitor.deterministic_text_es(
+        {**full, "curtailment_mw": 120.0}, "alert", ["L2"], "alerta"
+    )
     assert "corredor troncal del Norte Chico a la Zona Central" in hot
     assert "límite" in hot and "recorta" in hot and "una parte considerable" in hot
-    assert "una parte pequeña" in monitor.deterministic_text_es({**full, "curtailment_mw": 10.0}, "alert", ["L2"])
-    assert "una parte muy grande" in monitor.deterministic_text_es({**full, "curtailment_mw": 300.0}, "alert", ["L2"])
+    assert "una parte pequeña" in monitor.deterministic_text_es(
+        {**full, "curtailment_mw": 10.0}, "alert", ["L2"]
+    )
+    assert "una parte muy grande" in monitor.deterministic_text_es(
+        {**full, "curtailment_mw": 300.0}, "alert", ["L2"]
+    )
 
-    ramp = monitor.deterministic_text_es({**CALM, "demand_mw": 1000.0, "net_load_ramp_mw_per_h": 200.0}, "info", [])
+    ramp = monitor.deterministic_text_es(
+        {**CALM, "demand_mw": 1000.0, "net_load_ramp_mw_per_h": 200.0}, "info", []
+    )
     assert "rampa" in ramp
 
-    storage = monitor.deterministic_text_es({**CALM, "storage_soc_pct": 5.0}, "watch", ["storage_soc"])
+    storage = monitor.deterministic_text_es(
+        {**CALM, "storage_soc_pct": 5.0}, "watch", ["storage_soc"]
+    )
     assert "almacenamiento" in storage
 
-    reserve = monitor.deterministic_text_es({**CALM, "reserve_margin_pct": 3.0}, "watch", ["reserve_margin"])
+    reserve = monitor.deterministic_text_es(
+        {**CALM, "reserve_margin_pct": 3.0}, "watch", ["reserve_margin"]
+    )
     assert "reserva" in reserve
 
-    unserved = monitor.deterministic_text_es({**CALM, "unserved_mw": 12.0, "households_off": 12000.0}, "alert", ["unserved"], "emergencia")
+    unserved = monitor.deterministic_text_es(
+        {**CALM, "unserved_mw": 12.0, "households_off": 12000.0},
+        "alert",
+        ["unserved"],
+        "emergencia",
+    )
     assert "sin suministro" in unserved
 
     recovery = monitor.deterministic_text_es(CALM, "info", [], "recuperacion")
@@ -287,7 +321,9 @@ def test_ok_path_uses_the_fast_model_and_strips_digits(fake_key, monkeypatch):
 
     def fake(**kwargs):
         seen.update(kwargs)
-        return gemini_reply("El corredor L1 está al 92% de su capacidad.\nVigilar el recorte solar de la tarde.")
+        return gemini_reply(
+            "El corredor L1 está al 92% de su capacidad.\nVigilar el recorte solar de la tarde."
+        )
 
     monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", fake)
     note = run(
@@ -317,7 +353,9 @@ def test_ok_path_uses_the_fast_model_and_strips_digits(fake_key, monkeypatch):
     assert seen["system_instruction"] == monitor.MONITOR_SYSTEM_PROMPT_ES
     prompt = seen["contents"][0]["parts"][0]["text"]
     assert "corredor troncal del Norte Grande al Norte Chico" in prompt  # most loaded line, named
-    assert "corte de un corredor: corredor troncal del Norte Chico a la Zona Central" in prompt  # active fault, named
+    assert (
+        "corte de un corredor: corredor troncal del Norte Chico a la Zona Central" in prompt
+    )  # active fault, named
     assert "Nota previa de prueba." in prompt
     assert "max_line_loading_pct=92.3" in prompt
 
@@ -334,10 +372,14 @@ def test_ok_path_uses_the_fast_model_and_strips_digits(fake_key, monkeypatch):
 )
 def test_unusable_model_reply_falls_back_with_error_status(fake_key, monkeypatch, reply):
     monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", lambda **kw: reply)
-    note = run(monitor.generate_monitor_note(assessment_for_small_grid(), hour=1.0, grid_state="normal"))
+    note = run(
+        monitor.generate_monitor_note(assessment_for_small_grid(), hour=1.0, grid_state="normal")
+    )
     assert note["model_execution"]["status"] == "error"
     assert note["model_execution"]["model"] == "deterministic-monitor"
-    assert note["text_es"] == monitor.deterministic_text_es(note["metrics"], note["severity"], note["watch"], "normal")
+    assert note["text_es"] == monitor.deterministic_text_es(
+        note["metrics"], note["severity"], note["watch"], "normal"
+    )
 
 
 def test_http_error_falls_back_with_error_status(fake_key, monkeypatch):
@@ -345,7 +387,9 @@ def test_http_error_falls_back_with_error_status(fake_key, monkeypatch):
         raise httpx.ConnectError("no route")
 
     monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", broken)
-    note = run(monitor.generate_monitor_note(assessment_for_small_grid(), hour=1.0, grid_state="normal"))
+    note = run(
+        monitor.generate_monitor_note(assessment_for_small_grid(), hour=1.0, grid_state="normal")
+    )
     assert note["model_execution"]["status"] == "error"
     assert note["model_execution"]["model"] == "deterministic-monitor"
     assert not has_digits(note["text_es"])
@@ -373,7 +417,12 @@ def test_slow_model_times_out_with_labelled_deterministic_note(fake_key, monkeyp
     note, waited = run(scenario())
     assert waited < 2.0  # the caller was released at the timeout, not when the thread finished
     ex = note["model_execution"]
-    assert (ex["model"], ex["role"], ex["status"], ex["cached"]) == ("deterministic-monitor", "monitor", "timeout", False)
+    assert (ex["model"], ex["role"], ex["status"], ex["cached"]) == (
+        "deterministic-monitor",
+        "monitor",
+        "timeout",
+        False,
+    )
     assert ex["latency_ms"] >= 250
     assert "tardía" not in note["text_es"]
 
@@ -382,7 +431,9 @@ def test_slow_model_times_out_with_labelled_deterministic_note(fake_key, monkeyp
 
 
 def monitor_notes(session: LiveSession) -> list[dict]:
-    return [e for e in session.event_history if e["type"] == "agent.note" and e.get("kind") == "monitor"]
+    return [
+        e for e in session.event_history if e["type"] == "agent.note" and e.get("kind") == "monitor"
+    ]
 
 
 def test_one_monitor_note_per_simulated_hour(no_key):
@@ -392,7 +443,9 @@ def test_one_monitor_note_per_simulated_hour(no_key):
     assert monitor_notes(session) == []  # same hour as the start: nothing is due
 
     hour = 6.9
-    while hour + 0.25 < 12.0:  # quarter-hour steps, like clock ticks at 4 simulated hours per minute
+    while (
+        hour + 0.25 < 12.0
+    ):  # quarter-hour steps, like clock ticks at 4 simulated hours per minute
         hour = round(hour + 0.25, 2)
         session.hour = hour
         session._maybe_emit_monitor_note()
@@ -401,7 +454,12 @@ def test_one_monitor_note_per_simulated_hour(no_key):
     assert [int(n["hour"]) for n in notes] == [7, 8, 9, 10, 11]
     for n in notes:
         assert n["model_execution"]["status"] == "no_key"
-        assert set(n["metrics"]) >= {"demand_mw", "reserve_margin_pct", "max_line_loading_pct", "curtailment_mw"}
+        assert set(n["metrics"]) >= {
+            "demand_mw",
+            "reserve_margin_pct",
+            "max_line_loading_pct",
+            "curtailment_mw",
+        }
         assert not has_digits(n["text_es"])
 
 
@@ -418,7 +476,9 @@ def test_severity_rise_emits_an_immediate_note_in_the_same_hour(no_key):
     async def scenario():
         session = LiveSession("monitor-escalation", start_hour=18.0, allow_live_gemini=False)
         assert monitor_notes(session) == []
-        await session.disrupt("gas_centro", duration_h=4, from_hour_override=18, wait_for_options=True)
+        await session.disrupt(
+            "gas_centro", duration_h=4, from_hour_override=18, wait_for_options=True
+        )
         return session
 
     session = run(scenario())
@@ -430,7 +490,9 @@ def test_severity_rise_emits_an_immediate_note_in_the_same_hour(no_key):
     assert "unserved" in note["watch"]
     assert int(note["hour"]) == 18
     types = [e["type"] for e in session.event_history]
-    assert types.index("solution.updated") < types.index("agent.note") < types.index("options.ready")
+    assert (
+        types.index("solution.updated") < types.index("agent.note") < types.index("options.ready")
+    )
 
     # same hour, same severity: nothing more is due
     session._maybe_emit_monitor_note()
@@ -466,12 +528,18 @@ def test_clock_keeps_ticking_while_a_slow_model_is_pending(fake_key, monkeypatch
     monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", slow)
 
     async def scenario():
-        session = LiveSession("monitor-slow", start_hour=7.0, speed_s_per_hour=0.5, allow_live_gemini=True)
+        session = LiveSession(
+            "monitor-slow", start_hour=7.0, speed_s_per_hour=0.5, allow_live_gemini=True
+        )
         t0 = time.monotonic()
         await session.set_clock("play")
         start_hour = session.hour
-        await asyncio.sleep(2.4)  # two ticks; the first one made the monitor call, which is still blocked
-        ticks_while_pending = [e for e in session.event_history if e["type"] == "clock.tick" and e["seq"] > 0]
+        await asyncio.sleep(
+            2.4
+        )  # two ticks; the first one made the monitor call, which is still blocked
+        ticks_while_pending = [
+            e for e in session.event_history if e["type"] == "clock.tick" and e["seq"] > 0
+        ]
         hour_while_pending = session.hour
         notes_while_pending = monitor_notes(session)
         calls_while_pending = len(calls)
@@ -496,7 +564,9 @@ def test_clock_keeps_ticking_while_a_slow_model_is_pending(fake_key, monkeypatch
             len(ticks_at_note),
         )
 
-    start_hour, hour_pending, n_ticks, notes_pending, n_calls, notes, elapsed, ticks_at_note = run(scenario())
+    start_hour, hour_pending, n_ticks, notes_pending, n_calls, notes, elapsed, ticks_at_note = run(
+        scenario()
+    )
     assert hour_pending > start_hour + 1  # simulated time advanced while the model call was blocked
     assert n_ticks >= 2
     assert notes_pending == []  # the clock did not wait for the model
@@ -504,11 +574,17 @@ def test_clock_keeps_ticking_while_a_slow_model_is_pending(fake_key, monkeypatch
     assert ticks_at_note >= 3
     assert 2.5 < elapsed < 5.0  # 3 s timeout after the first tick
     ex = notes[0]["model_execution"]
-    assert (ex["status"], ex["model"], ex["role"]) == ("timeout", "deterministic-monitor", "monitor")
+    assert (ex["status"], ex["model"], ex["role"]) == (
+        "timeout",
+        "deterministic-monitor",
+        "monitor",
+    )
     assert not has_digits(notes[0]["text_es"])
 
 
-def test_a_late_answer_is_replaced_by_a_fresh_reading_and_the_grid_is_read_again(fake_key, monkeypatch):
+def test_a_late_answer_is_replaced_by_a_fresh_reading_and_the_grid_is_read_again(
+    fake_key, monkeypatch
+):
     release = threading.Event()
     calls: list[str] = []
 
@@ -577,7 +653,9 @@ def test_live_gemini_disabled_sessions_never_call_the_model(fake_key):
     session._maybe_emit_monitor_note()
     notes = monitor_notes(session)
     assert len(notes) == 1
-    assert notes[0]["model_execution"]["status"] == "no_key"  # the autouse fixture proves no HTTP call happened
+    assert (
+        notes[0]["model_execution"]["status"] == "no_key"
+    )  # the autouse fixture proves no HTTP call happened
 
 
 def test_assessment_does_not_mutate_the_solution(no_key):

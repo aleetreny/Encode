@@ -31,9 +31,13 @@ sys.path.insert(0, str(ROOT))
 DEMO = ROOT / "optimisation" / "fixtures" / "demo_scenario.json"
 OUT = ROOT / "optimisation" / "fixtures" / "real_day_scenario.json"
 DAY_JSON = ROOT / "data" / "processed" / "cen-sip" / "day-2026-08-14.json"
-DEMANDA_NETA = ROOT / "data" / "raw" / "cen-sip" / "demanda-neta" / "2026-08-14" / "page-0001.json.gz"
+DEMANDA_NETA = (
+    ROOT / "data" / "raw" / "cen-sip" / "demanda-neta" / "2026-08-14" / "page-0001.json.gz"
+)
 CENTRALES = ROOT / "data" / "raw" / "cen-sip" / "centrales" / "page-0001.json.gz"
-DEMANDA_REAL_GLOB = str(ROOT / "data" / "raw" / "cen-sip" / "demanda-real-estimada" / "2026-08-14" / "page-*.json.gz")
+DEMANDA_REAL_GLOB = str(
+    ROOT / "data" / "raw" / "cen-sip" / "demanda-real-estimada" / "2026-08-14" / "page-*.json.gz"
+)
 
 DATE = "2026-08-14"
 LOCAL = ZoneInfo("America/Santiago")
@@ -117,7 +121,9 @@ def _system_demand_gen_bruta() -> list[float]:
     return [float(r["gen_bruta_mwh"]) - float(r["cons_propio_mwh"]) for r in rows]
 
 
-def zone_shares_from_bus(bus_zone_csv: Path, nodes: list[str]) -> tuple[dict[str, list[float]] | None, float]:
+def zone_shares_from_bus(
+    bus_zone_csv: Path, nodes: list[str]
+) -> tuple[dict[str, list[float]] | None, float]:
     """Per-hour zone demand shares from demanda-real-estimada by bus. Returns (shares, coverage)."""
     table: dict[str, str] = {}
     with open(bus_zone_csv, encoding="utf-8", newline="") as fh:
@@ -153,7 +159,9 @@ def zone_shares_from_demo(demo: dict) -> dict[str, list[float]]:
     return {n: [dm[n][h] / totals[h] for h in range(HOURS)] for n in dm}
 
 
-def capacity_factors(demo: dict, amplitude: str = "peak-normalised") -> tuple[dict[str, list[float]], list[str], dict[str, Any]]:
+def capacity_factors(
+    demo: dict, amplitude: str = "peak-normalised"
+) -> tuple[dict[str, list[float]], list[str], dict[str, Any]]:
     """Real CF per renewable generator from plants mapped to the generator's zone."""
     day = json.loads(DAY_JSON.read_text(encoding="utf-8"))
     region_by_id = {r["id_central"]: r.get("region") or "" for r in _rows(_read_gz(CENTRALES))}
@@ -213,7 +221,9 @@ def build(
     nodes = [n["id"] for n in demo["nodes"]]
 
     stamps = [
-        (datetime(2026, 8, 14, tzinfo=LOCAL) + timedelta(hours=h)).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        (datetime(2026, 8, 14, tzinfo=LOCAL) + timedelta(hours=h))
+        .astimezone(timezone.utc)
+        .strftime("%Y-%m-%dT%H:%M:%SZ")
         for h in range(HOURS)
     ]
     sys_dem = system_demand_mw(demand_source)
@@ -232,8 +242,11 @@ def build(
         share_label = "assumption"
         share_note = (
             "Zone demand shares per hour are the synthetic scenario's shares (assumption)"
-            + (f"; bus table rejected, coverage {coverage:.4f} < {BUS_COVERAGE_MIN}." if coverage is not None else
-               "; no bus->zone table supplied.")
+            + (
+                f"; bus table rejected, coverage {coverage:.4f} < {BUS_COVERAGE_MIN}."
+                if coverage is not None
+                else "; no bus->zone table supplied."
+            )
         )
 
     scen["demand_mw_by_node"] = {
@@ -243,7 +256,9 @@ def build(
     scen["renewable_availability_mw_by_generator"] = avail
 
     scen["scenario_id"] = "chile-sen-5node-real-2026-08-14"
-    scen["mode"] = "synthetic"  # the loader does not constrain it; provenance carries the derived-from-observed truth
+    scen["mode"] = (
+        "synthetic"  # the loader does not constrain it; provenance carries the derived-from-observed truth
+    )
     scen["timestamps_utc"] = stamps
 
     day_profile = {
@@ -259,8 +274,13 @@ def build(
         "observed_fields": [],
         "derived_fields": ["demand_mw_by_node", "renewable_availability_mw_by_generator"],
         "synthetic_fields": [
-            "network_topology", "line_limits", "generators", "batteries", "objective",
-            "emission_factors_t_per_mwh", "households_per_mw",
+            "network_topology",
+            "line_limits",
+            "generators",
+            "batteries",
+            "objective",
+            "emission_factors_t_per_mwh",
+            "households_per_mw",
         ],
         "historical_event_date": DATE,
         "demand_zone_share_provenance": share_label,
@@ -272,19 +292,20 @@ def build(
                 "incomplete in the source and is rebuilt from hour 01 using the gen_bruta - cons_propio ratio). "
                 "DEVIATION from the contract: gen_bruta - cons_propio is inflated at midday by storage charging, "
                 "so n_centro would peak at 11:00 instead of the evening. "
-                if demand_source == "bus-withdrawals" else
-                "System demand = gen_bruta - cons_propio (demanda_neta is not used: it nets variable renewables). "
+                if demand_source == "bus-withdrawals"
+                else "System demand = gen_bruta - cons_propio (demanda_neta is not used: it nets variable renewables). "
             )
             + (
                 "Solar/wind availability = the hourly shape of the real capacity factor of the plants mapped to "
                 "the generator's zone (catalogue region -> zone), normalised so its daily peak equals the scenario "
                 "capacity_mw. DEVIATION from the contract: the raw capacity factor (about 0.6 for solar) leaves "
                 "less north solar than the corridor can carry, so no curtailment appears. "
-                if renewable_amplitude == "peak-normalised" else
-                "Solar/wind availability = real capacity factor of the plants mapped to the generator's zone "
+                if renewable_amplitude == "peak-normalised"
+                else "Solar/wind availability = real capacity factor of the plants mapped to the generator's zone "
                 "(catalogue region -> zone) x scenario capacity_mw. "
             )
-            + share_note + " "
+            + share_note
+            + " "
             + " ".join(cf_notes)
             + f" Unmapped real plants (pmax MW, excluded from zone factors): {cf_meta['unmapped_pmax_mw']}. "
             "Topology, line limits, capacities, costs, batteries and households_per_mw remain synthetic."
@@ -297,13 +318,21 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--scale-factor", type=float, default=SCALE_FACTOR)
     ap.add_argument("--bus-zone", type=Path, default=None)
-    ap.add_argument("--demand-source", choices=("bus-withdrawals", "gen-bruta"), default="bus-withdrawals")
-    ap.add_argument("--renewable-amplitude", choices=("peak-normalised", "capacity-factor"), default="peak-normalised")
+    ap.add_argument(
+        "--demand-source", choices=("bus-withdrawals", "gen-bruta"), default="bus-withdrawals"
+    )
+    ap.add_argument(
+        "--renewable-amplitude",
+        choices=("peak-normalised", "capacity-factor"),
+        default="peak-normalised",
+    )
     ap.add_argument("--out", type=Path, default=OUT)
     args = ap.parse_args()
     scen = build(args.scale_factor, args.bus_zone, args.demand_source, args.renewable_amplitude)
     args.out.write_text(json.dumps(scen, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"wrote {args.out} (scale_factor={args.scale_factor}, shares={scen['provenance']['demand_zone_share_provenance']})")
+    print(
+        f"wrote {args.out} (scale_factor={args.scale_factor}, shares={scen['provenance']['demand_zone_share_provenance']})"
+    )
 
 
 if __name__ == "__main__":
