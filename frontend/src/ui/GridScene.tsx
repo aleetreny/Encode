@@ -46,6 +46,8 @@ export const at = (series: number[] | undefined, hour: number) => {
   return series[h0] * (1 - f) + series[h1] * f;
 };
 
+export const HOMES_PER_HOUSE = 200_000;
+
 const active = (d: Disruption, hour: number) => hour >= d.from_hour && hour < d.to_hour;
 
 interface Props {
@@ -208,9 +210,10 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
   for (const n of catalog.nodes) {
     const z = ZONES[n.id];
     if (!z) continue;
-    const off = at(solution.households_off[n.id], hour);
-    const count = n.households_total > 2_000_000 ? 12 : n.households_total > 900_000 ? 9 : 6;
-    const dark = off > 1 ? Math.max(1, Math.round((off / n.households_total) * count)) : 0;
+    const off = at(solution.households_off[n.id], Math.floor(hour));
+    // Same scale everywhere so houses can be counted: one house = 200,000 homes.
+    const count = Math.max(1, Math.round(n.households_total / HOMES_PER_HOUSE));
+    const dark = off > 1 ? Math.min(count, Math.max(1, Math.round(off / HOMES_PER_HOUSE))) : 0;
     drawables.push({ y: screen(z.hub)[1], node: <g key={`hub-${n.id}`}>{alarmHubs.has(n.id) && <path d={k.ring(z.hub[0], z.hub[1], 26, 0.3, P, 40)} className="gp-hub-alarm" />}<Hub at={z.hub} lit={focus.includes(n.id)} /></g> });
     drawables.push({ y: screen(housesOf(n.id))[1], node: <g key={`hh-${n.id}`}><Neighbourhood at={housesOf(n.id)} count={count} dark={dark} highlight={focus.includes(n.id)} /></g> });
   }
@@ -288,7 +291,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
       <div className="gp-labels">
         {Object.entries(ZONES).map(([id, z]) => {
           const n = catalog.nodes.find((x) => x.id === id);
-          const off = at(solution.households_off[id], hour);
+          const off = at(solution.households_off[id], Math.floor(hour));
           return (
             <div key={id} className={`gp-zone-label${off > 1 ? ' is-dark' : ''}`} style={pct(uvAt(z.hub, -8, 128))}>
               <b>{z.label}</b>

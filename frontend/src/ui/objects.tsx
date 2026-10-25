@@ -226,22 +226,23 @@ export function Hub({ at, lit }: { at: k.Point3; lit?: boolean }) {
 
 // A block of houses; `dark` of them have their lights out.
 export function Neighbourhood({ at, count, dark, highlight }: { at: k.Point3; count: number; dark: number; highlight?: boolean }) {
-  const cols = count > 8 ? 4 : 3;
+  // Houses stand apart so each one reads as a unit that can be counted.
+  const cols = count > 8 ? 4 : count > 3 ? 3 : count;
   const houses: React.ReactNode[] = [];
   for (let i = 0; i < count; i++) {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const x = at[0] - cols * 7 + col * 15 + (row % 2) * 4;
-    const y = at[1] + row * 15;
+    const x = at[0] - cols * 9.5 + col * 19;
+    const y = at[1] + row * 19;
     houses.push(<House key={i} x={x} y={y} powered={i >= dark} lit={highlight} />);
   }
   const rows = Math.ceil(count / cols);
-  const [cx, cy] = [at[0] + 2, at[1] + rows * 7];
+  const [cx, cy] = [at[0] - 3, at[1] + rows * 9];
   // draw back rows first; a red pulse on the ground while any house is dark
   return (
     <g>
-      {dark > 0 && <path d={k.ring(cx, cy, cols * 9 + 6, 0.3, P, 48)} className="gp-dark-ring" />}
-      {dark > 0 && <path d={k.ring(cx, cy, cols * 9 + 6, 0.3, P, 48)} className="gp-dark-ring gp-spread" />}
+      {dark > 0 && <path d={k.ring(cx, cy, cols * 11 + 8, 0.3, P, 48)} className="gp-dark-ring" />}
+      {dark > 0 && <path d={k.ring(cx, cy, cols * 11 + 8, 0.3, P, 48)} className="gp-dark-ring gp-spread" />}
       {houses.reverse()}
     </g>
   );

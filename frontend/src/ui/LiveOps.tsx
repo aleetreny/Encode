@@ -4,7 +4,7 @@ import type { Option, Solution } from '../live/types';
 import { GridScene, TECH_COLOR, TECH_LABEL, assetTitle, at, buildAssets } from './GridScene';
 import { ZONES } from './layout';
 import { AndesMark } from './brand';
-import { SystemChart } from './SystemChart';
+import { ZoneStatus } from './ZoneStatus';
 import './ui.css';
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || '/api';
@@ -72,7 +72,7 @@ function Screen() {
   }, [state.active_incidents.length]);
 
   // Big announcement of each new fault: who did it, what fell, and the damage the engine computed.
-  const [attack, setAttack] = useState<{ who: string; what: string; homes: number; mw: number; key: string } | null>(null);
+  const [attacks, setAttacks] = useState<{ who: string; what: string; homes: number; mw: number; key: string; jury: boolean }[]>([]);
   useEffect(() => {
     const ev = state.last_incident;
     if (!catalog || !ev || seenIncidents.current.has(ev.incident_id)) return;
@@ -82,13 +82,8 @@ function Screen() {
     const line = catalog.lines.find((l) => l.id === d.asset_id);
     const what = line ? `cortó la línea ${line.id} (${ZONES[line.from]?.label} → ${ZONES[line.to]?.label})` : a ? `botó ${assetTitle(a)}` : `botó ${d.asset_id}`;
     const who = d.source === 'jury' ? d.jury_name || 'Alguien del jurado' : d.source === 'operator' ? 'El operador' : 'Una falla repentina';
-    setAttack({ who, what, homes: ev.impact.households_off_peak, mw: ev.impact.unserved_mw_peak, key: ev.incident_id });
+    setAttacks((list) => [{ who, what, homes: ev.impact.households_off_peak, mw: ev.impact.unserved_mw_peak, key: ev.incident_id, jury: d.source === 'jury' }, ...list].slice(0, 4));
   }, [state.last_incident, catalog]);
-  useEffect(() => {
-    if (!attack) return;
-    const id = window.setTimeout(() => setAttack(null), 6000);
-    return () => window.clearTimeout(id);
-  }, [attack]);
   useEffect(() => {
     if (countdown?.active) wasCountingDown.current = true;
   }, [countdown?.active]);
@@ -202,25 +197,6 @@ function Screen() {
         onSelect={setSelected}
       />
 
-      {attack && (
-        <div key={attack.key} className="gp-attack">
-          <small>{attack.who === 'El operador' || attack.who === 'Una falla repentina' ? 'FALLA EN LA RED' : 'ATAQUE DEL JURADO'}</small>
-          <h2>{attack.who}</h2>
-          <p>{attack.what}</p>
-          {attack.homes > 0 ? (
-            <>
-              <span className="gp-attack-n">−{fmt(attack.homes)}</span>
-              <span className="gp-attack-u">hogares sin luz en el peor momento · {fmt(attack.mw)} MW de déficit</span>
-            </>
-          ) : (
-            <>
-              <span className="gp-attack-n" style={{ color: 'var(--green)' }}>0</span>
-              <span className="gp-attack-u">hogares afectados · la red lo absorbe</span>
-            </>
-          )}
-        </div>
-      )}
-
       <div className="gp-legend">
         <b>Producción</b>
         {['solar', 'wind', 'hydro', 'gas', 'coal', 'diesel', 'battery'].map((t) => (
@@ -233,7 +209,22 @@ function Screen() {
         <b>Hogares</b>
         <div><i className="win" />Con luz</div>
         <div><i className="win is-dark" />Sin luz</div>
+        <small className="gp-legend-note">1 casa = 200.000 hogares</small>
       </div>
+
+      {attacks.length > 0 && (
+        <aside className="gp-attacks">
+          <b className="gp-attacks-title">Ataques y fallas</b>
+          {attacks.map((a, i) => (
+            <div key={a.key} className={`gp-attack-card${i === 0 ? ' is-new' : ''}${a.jury ? ' is-jury' : ''}`}>
+              <small>{a.jury ? 'Jurado' : a.who === 'El operador' ? 'Operador' : 'Falla'}</small>
+              <p><b>{a.who}</b> {a.what}</p>
+              <span className={a.homes > 0 ? 'is-bad' : 'is-ok'}>{a.homes > 0 ? `−${fmt(a.homes)}` : 'la red lo absorbió'}</span>
+              {a.homes > 0 && <em>hogares sin luz en el peor momento · {fmt(a.mw)} MW</em>}
+            </div>
+          ))}
+        </aside>
+      )}
 
       {toast && (
         <div key={toast.key} className={`gp-toast is-${toast.kind}`}>
@@ -253,7 +244,7 @@ function Screen() {
             <span>{phase === 'analyzing' ? 'Analizando la falla' : phase === 'awaiting_operator' ? 'Propone dos caminos' : phase === 'executing' ? 'Ejecutando el plan' : phase === 'resolved' ? 'Plan aplicado' : 'Vigilando la red'}</span>
           </div>
         </div>
-        {shown && <SystemChart catalog={catalog} solution={shown} hour={hour} incidents={state.active_incidents} planFrom={applied ? Math.min(...applied.levers.map((l) => l.from_hour)) : null} />}
+        <ZoneStatus catalog={catalog} solution={shown} hour={step} incidents={state.active_incidents} />
         <div className="gp-brain-feed">
           {state.thoughts.length === 0 && state.notes.length === 0 && (
             <p className="gp-idle">Sin incidentes. Vigilo {catalog.generators.length} centrales, {catalog.batteries.length} baterías, {catalog.lines.length} líneas troncales y {catalog.nodes.length} zonas, hora a hora.</p>
