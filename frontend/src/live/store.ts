@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useReducer, useRef, useState, ReactNode } from 'react';
 import { 
-  Catalog, LiveEvent, Solution, Disruption, GridState, Option, ModelExecution,
+  Catalog, LiveEvent, Solution, Disruption, GridState, Option, ModelExecution, MonitorMetrics,
   ClockCommandRequest, DisruptCommandRequest, JuryDisruptCommandRequest, DecideCommandRequest 
 } from './types';
 import * as client from './client';
@@ -36,7 +36,11 @@ export interface LiveSessionState {
   applied_by?: 'operator' | 'gemini_autonomous' | null;
   by?: 'operator' | 'gemini_autonomous' | null;
   countdown: { candidate_id: string; seconds_left: number; active: boolean } | null;
-  notes: { text_es: string; ts_utc: string; sim_hour: number }[];
+  notes: {
+    text_es: string; ts_utc: string; sim_hour: number;
+    kind?: 'periodic' | 'monitor'; severity?: 'info' | 'watch' | 'alert';
+    metrics?: MonitorMetrics; watch?: string[]; model_execution?: ModelExecution;
+  }[];
 }
 
 export function createInitialLiveState(sessionId?: string): LiveSessionState {
@@ -185,7 +189,10 @@ export function liveReducer(state: LiveSessionState, event: LiveEvent): LiveSess
     case 'agent.note': {
       return {
         ...newState,
-        notes: keepLast(newState.notes, { text_es: event.text_es, ts_utc: event.ts_utc, sim_hour: event.hour })
+        notes: keepLast(newState.notes, {
+          text_es: event.text_es, ts_utc: event.ts_utc, sim_hour: event.hour,
+          kind: event.kind, severity: event.severity, metrics: event.metrics, watch: event.watch, model_execution: event.model_execution
+        }, 6)
       };
     }
     case 'error': {
