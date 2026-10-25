@@ -68,8 +68,9 @@ does not replace the current demo.
   severity rises. Replaces the canned `generate_periodic_note_es` texts.
 - `metrics` are computed by code from the current solution at the current hour; Gemini never
   computes numbers. `text_es` stays digit-free, as every prose field today.
-- `severity`: `alert` if unserved > 0 or any line ≥ 100 %; `watch` if any line ≥ 90 %,
-  reserve margin < 10 %, or storage < 20 %; else `info`. `watch` lists the ids being watched.
+- `severity`: `alert` if unserved > 0 or the solve is not optimal; `watch` if any line ≥ 90 %
+  (a corridor saturated by the LP reads exactly 100 % and is congestion, not an alert), reserve
+  margin < 10 %, or storage < 20 %; else `info`. `watch` lists the ids being watched.
 - Wording by the fast model (`GRIDPILOT_MODEL_FAST`) with a 3 s timeout, at most one call in flight.
   The 1 Hz clock never waits for it. On timeout/error/no key the deterministic text is used and
   `model_execution` says so (`model: "deterministic-monitor"`, `status: "timeout" | "error" | "no_key"`).

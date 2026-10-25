@@ -184,7 +184,7 @@ CALM = {
         ({"max_line_loading_pct": 99.9}, "watch", ["L1"]),
         ({"reserve_margin_pct": 9.9}, "watch", ["reserve_margin"]),
         ({"storage_soc_pct": 19.9}, "watch", ["storage_soc"]),
-        ({"max_line_loading_pct": 100.0}, "alert", ["L1"]),
+        ({"max_line_loading_pct": 100.0}, "watch", ["L1"]),
         ({"unserved_mw": 0.1}, "alert", ["unserved"]),
         ({"households_off": 1.0}, "alert", ["unserved"]),
         (

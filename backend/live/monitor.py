@@ -24,7 +24,9 @@ DETERMINISTIC_MODEL = "deterministic-monitor"
 SEVERITY_RANK = {"info": 0, "watch": 1, "alert": 2}
 
 # Contract thresholds (docs/real-day-contract.md section 2). Applied to the 1-decimal metrics shown in the UI.
-LINE_ALERT_PCT = 100.0
+# The LP caps flow at the limit, so a saturated corridor reads exactly 100 %: that is congestion to watch,
+# not an alert. Only unserved load (or a non-optimal solve) is an alert.
+LINE_SATURATED_PCT = 100.0
 LINE_WATCH_PCT = 90.0
 RESERVE_WATCH_PCT = 10.0
 STORAGE_WATCH_PCT = 20.0
@@ -188,7 +190,7 @@ def classify(
 ) -> tuple[str, list[str]]:
     """(severity, watch ids) from the contract thresholds.
 
-    alert: unserved energy > 0 or a line at/over its limit. watch: a line >= 90 %, reserve margin < 10 %
+    alert: unserved energy > 0. watch: a line >= 90 % (saturated included), reserve margin < 10 %
     or storage < 20 %. Watch ids are `unserved`, line ids (all lines >= 90 % when `line_loading_pct` is given,
     otherwise only the most loaded one), `reserve_margin` and `storage_soc`.
     """
@@ -213,7 +215,7 @@ def classify(
     if storage is not None and float(storage) < STORAGE_WATCH_PCT:
         watch.append("storage_soc")
 
-    if unserved or max_loading >= LINE_ALERT_PCT:
+    if unserved:
         return "alert", watch
     if watch:
         return "watch", watch
@@ -271,7 +273,7 @@ def deterministic_text_es(
         clauses.append("la solución del despacho no es óptima y sus resultados no son confiables hasta resolverla de nuevo")
     if float(metrics.get("unserved_mw", 0.0)) > 0 or float(metrics.get("households_off", 0.0)) > 0:
         clauses.append("hay hogares sin suministro y la prioridad es reconectarlos con las maniobras disponibles")
-    if loading >= LINE_ALERT_PCT:
+    if loading >= LINE_SATURATED_PCT:
         scale = _curtailment_scale_es(curtailment, demand)
         tail = f", por eso se recorta en origen {scale} del excedente renovable" if curtailment > 0 else ""
         clauses.append(f"el {corridor} opera en su límite de transferencia{tail}")
@@ -283,7 +285,7 @@ def deterministic_text_es(
         clauses.append("el almacenamiento operativo queda casi descargado y limita el respaldo inmediato")
     if ramp_notable and ramp > 0:
         clauses.append("la carga neta sube con fuerza y la generación firme debe acompañar la rampa")
-    if curtailment > 0 and loading < LINE_ALERT_PCT:
+    if curtailment > 0 and loading < LINE_SATURATED_PCT:
         scale = _curtailment_scale_es(curtailment, demand)
         clauses.append(f"se recorta {scale} de la generación renovable por falta de capacidad para evacuarla")
     if ramp_notable and ramp < 0:
