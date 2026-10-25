@@ -729,3 +729,18 @@ def test_hour_ranges():
 
     assert hour_ranges([9, 10, 11, 14, 16, 17]) == "9-11, 14, 16-17"
     assert hour_ranges([]) == ""
+
+
+def test_tour_is_built_from_the_current_examples():
+    """optimisation/tour/andes-tour.html embeds the validated example results (python -m optimisation.tour.build_tour)."""
+    from optimisation.tour import build_tour
+
+    html = build_tour.OUT.read_text()
+    start = html.index("const D=") + len("const D=")
+    data = json.loads(html[start:html.index(";\nconst fmt")])
+    index = json.loads((build_tour.EXAMPLES / "index.json").read_text())
+    for sit, v in index["situations"].items():
+        for opt, entry in v["options"].items():
+            assert data["cases"][sit][opt]["valid"] is True
+            for k in ("curtailment_mwh", "unserved_mwh", "assumed_cost_proxy_usd"):
+                assert data["cases"][sit][opt]["metrics"][k] == entry["metrics"][k], "tour is stale: rebuild it"

@@ -448,7 +448,7 @@ explanation and the developer guide (architecture, invariants, how to extend, te
 
 ```bash
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q          # 123 tests
+pytest optimisation/tests -q          # 124 tests
 python -m optimisation.demo --write   # prints the table below and refreshes optimisation/examples/
 python -m optimisation.stress         # full outage sweep, all checks must pass
 ```

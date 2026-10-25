@@ -223,10 +223,20 @@ smaller than the full solution. Every number is copied from the inputs, not esti
 ```bash
 python -m venv .venv && . .venv/bin/activate
 pip install -r optimisation/requirements.txt
-pytest optimisation/tests -q            # 123 tests, ~5 s (includes a reduced outage sweep)
+pytest optimisation/tests -q            # 124 tests, ~5 s (includes a reduced outage sweep)
 python -m optimisation.demo             # the story in section 5
 python -m optimisation.demo --write     # also regenerate examples/*.json
 python -m optimisation.stress           # full outage sweep: 532 cases, ~2 000 solves, ~20 s
+python -m optimisation.tour.build_tour  # rebuild optimisation/tour/andes-tour.html (after demo --write)
+```
+
+**Live tour:** `optimisation/tour/andes-tour.html` is one self-contained page (open it directly or
+host it on GitHub Pages): a guided 9-step tour on top of a clickable demo (situation × option × hour).
+Every view is in the URL (`?step=4`, or `?sit=sudden_outage&opt=north_bess&h=19&tour=0`) so any view
+can be shared as a link. Keys: → / Space next, ← back, H hide card, Esc explore freely, T resume.
+Numbers are the validated example results embedded at build time; the text pulls them from the data.
+
+```bash
 ```
 
 Run commands from the repository root (the folder containing `optimisation/`).
