@@ -7,11 +7,31 @@ canonical Catalog matching `contracts/live.schema.json`.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_PATH = ROOT / "optimisation" / "fixtures" / "demo_scenario.json"
+REAL_DAY_FIXTURE_PATH = ROOT / "optimisation" / "fixtures" / "real_day_scenario.json"
+
+SYNTHETIC_DAY_PROFILE: dict[str, str] = {
+    "source": "synthetic",
+    "date": "2026-10-01",
+    "method": "synthetic",
+    "label_es": "Día sintético con forma chilena",
+}
+
+
+def scenario_path() -> Path:
+    """Scenario fixture selected by env ``GRIDPILOT_SCENARIO`` (``real-day`` default, ``synthetic``)."""
+    choice = os.getenv("GRIDPILOT_SCENARIO", "real-day").strip().lower() or "real-day"
+    if choice == "synthetic":
+        return FIXTURE_PATH
+    if choice == "real-day":
+        return REAL_DAY_FIXTURE_PATH
+    raise ValueError(f"GRIDPILOT_SCENARIO must be 'synthetic' or 'real-day', got {choice!r}")
+
 
 GEN_NAMES = {
     "solar_ng": "Solar Crucero Norte Grande",
@@ -185,12 +205,16 @@ ASSUMPTIONS: dict[str, Any] = {
 def build_catalog(scenario: dict | None = None) -> dict[str, Any]:
     """Build and return a canonical Live Ops Catalog dict matching contracts/live.schema.json."""
     if scenario is None:
-        if FIXTURE_PATH.is_file():
-            with open(FIXTURE_PATH, encoding="utf-8") as f:
+        path = scenario_path()
+        if path.is_file():
+            with open(path, encoding="utf-8") as f:
                 scen = json.load(f)
-        else:
+        elif path == FIXTURE_PATH:
             from optimisation.fixtures.build_demo_scenario import build
             scen = build()
+        else:
+            # An explicitly selected day that is missing must fail, not quietly become the synthetic one.
+            raise FileNotFoundError(f"Selected scenario fixture is missing: {path}")
     else:
         scen = scenario
 
@@ -275,6 +299,7 @@ def build_catalog(scenario: dict | None = None) -> dict[str, Any]:
             }
         )
 
+    observed_shape = (scen.get("day_profile") or {}).get("method") == "scaled-observed-shape"
     catalog: dict[str, Any] = {
         "scenario_id": scenario_id,
         "nodes": nodes,
@@ -285,6 +310,7 @@ def build_catalog(scenario: dict | None = None) -> dict[str, Any]:
         "stress_recipes": STRESS_RECIPES,
         "jury_cards": JURY_CARDS,
         "assumptions": dict(ASSUMPTIONS),
+        "day_profile": dict(scen.get("day_profile") or SYNTHETIC_DAY_PROFILE),
         "provenance": {
             "nodes_coordinates": "derived",
             "households_per_mw": "assumption",
@@ -292,7 +318,8 @@ def build_catalog(scenario: dict | None = None) -> dict[str, Any]:
             "generators": "synthetic",
             "batteries": "synthetic",
             "lines": "synthetic",
-            "demand_mw": "synthetic",
+            "demand_mw": "derived" if observed_shape else "synthetic",
+            "renewable_availability_mw": "derived" if observed_shape else "synthetic",
             "emission_factors": "assumption",
         },
     }

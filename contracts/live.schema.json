@@ -124,6 +124,18 @@
         "stress_recipes": { "type": "array" },
         "jury_cards": { "type": "array" },
         "assumptions": { "type": "object" },
+        "day_profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "date", "method", "label_es"],
+          "properties": {
+            "source": { "type": "string" },
+            "date": { "type": "string" },
+            "method": { "enum": ["synthetic", "scaled-observed-shape"] },
+            "scale_factor": { "type": "number" },
+            "label_es": { "type": "string" }
+          }
+        },
         "provenance": {
           "type": "object",
           "additionalProperties": { "$ref": "#/$defs/Provenance" }
@@ -538,7 +550,28 @@
           "required": ["type", "text_es"],
           "properties": {
             "type": { "const": "agent.note" },
-            "text_es": { "type": "string" }
+            "text_es": { "type": "string" },
+            "kind": { "enum": ["periodic", "monitor"] },
+            "severity": { "enum": ["info", "watch", "alert"] },
+            "metrics": {
+              "type": "object",
+              "properties": {
+                "demand_mw": { "type": "number" },
+                "reserve_margin_pct": { "type": "number" },
+                "max_line_loading_pct": { "type": "number" },
+                "max_line_id": { "type": "string" },
+                "curtailment_mw": { "type": "number" },
+                "unserved_mw": { "type": "number" },
+                "households_off": { "type": "number" },
+                "net_load_ramp_mw_per_h": { "type": "number" },
+                "storage_soc_pct": { "type": "number" }
+              }
+            },
+            "watch": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "model_execution": { "type": "object" }
           }
         }
       ]

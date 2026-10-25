@@ -5,7 +5,7 @@ Implements:
 - Operational lever candidate enumeration (<= 40 single + paired levers)
 - Parallel HiGHS LP solving + independent validation (`ThreadPoolExecutor`)
 - 4D Pareto frontier computation and distinct trade-off option selection
-- Gemini 4 Argon (`GRIDPILOT_MODEL_DECIDER`) function-calling loop with
+- Gemini decider (`GRIDPILOT_MODEL_DECIDER`, default gemini-3.8-flash) function-calling loop with
   `inspect_node`, `simulate_plan` (<= 3 extra calls), and `propose_options`,
   with 12-second timeout fallback
 - Gemini 3.8 Flash (`GRIDPILOT_MODEL_FAST`) helper for periodic operator notes
@@ -45,9 +45,12 @@ if "pytest" not in sys.modules and "PYTEST_CURRENT_TEST" not in os.environ:
                 if _k and _v:
                     os.environ.setdefault(_k, _v)
 
-DEFAULT_DECIDER_MODEL = "gemini-4-argon"
+# Live decider measured on the real day (25 Oct, 2 incidents each): gemini-3.8-flash with low thinking
+# answered in about 4.3 s with valid, distinct options; gemini-4-argon took 7-20 s and often hit the 12 s
+# timeout. The recorded fallback sessions stay labelled with the model that answered them.
+DEFAULT_DECIDER_MODEL = "gemini-3.8-flash"
 DEFAULT_FAST_MODEL = "gemini-3.8-flash"
-DEFAULT_DECIDER_THINKING = "medium"
+DEFAULT_DECIDER_THINKING = "low"
 
 TRADEOFF_TAGS = ("max_hogares", "min_costo", "min_co2", "min_riesgo_red")
 OPERATIONAL_LEVER_TYPES = (
@@ -1905,41 +1908,6 @@ def run_incident_evaluation(
         "candidates_passed": len(passed_candidates),
         "model_execution": model_execution,
     }
-
-
-def generate_periodic_note_es(
-    hour: float,
-    grid_state: str,
-    solution: dict[str, Any],
-) -> str:
-    """Generate a brief digit-free Spanish operator note (`agent.note`) using the fast model or deterministic synthesis."""
-    h_int = int(hour) % 24
-    if grid_state == "normal" and 10 <= h_int <= 16:
-        default_note = (
-            "Excedente solar en el Norte Grande satura el corredor hacia la Zona Central; "
-            "el despacho económico aplica recorte renovable preventivo conforme al decreto de coordinación."
-        )
-    elif grid_state == "normal" and (18 <= h_int <= 22):
-        default_note = (
-            "Rampa vespertina metropolitana en curso con despacho térmico e hidroeléctrico "
-            "operando dentro de límites de seguridad."
-        )
-    elif grid_state == "recuperacion":
-        default_note = (
-            "Plan operativo de mitigación activo; los flujos troncales y el suministro residencial "
-            "se mantienen estabilizados bajo supervisión del coordinador."
-        )
-    elif grid_state == "emergencia":
-        default_note = (
-            "Estado de emergencia activo en el sistema; evaluando maniobras de reserva y "
-            "respuesta de demanda para restituir hogares afectados."
-        )
-    else:
-        default_note = (
-            "Sistema Eléctrico Nacional operando en equilibrio nodal con monitoreo continuo "
-            "de corredores troncales y reservas en baterías."
-        )
-    return sanitize_no_digits(default_note)
 
 
 OFFENSIVE_PATTERNS = re.compile(

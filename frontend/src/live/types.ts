@@ -50,6 +50,14 @@ export interface CatalogLever {
   description_es: string;
 }
 
+export interface CatalogDayProfile {
+  source: string;
+  date: string;
+  method: 'synthetic' | 'scaled-observed-shape';
+  scale_factor?: number;
+  label_es: string;
+}
+
 export interface Catalog {
   nodes: CatalogNode[];
   generators: CatalogGenerator[];
@@ -57,6 +65,19 @@ export interface Catalog {
   lines: CatalogLine[];
   levers: CatalogLever[];
   provenance: Record<string, Provenance>;
+  day_profile?: CatalogDayProfile;
+}
+
+export interface MonitorMetrics {
+  demand_mw?: number;
+  reserve_margin_pct?: number;
+  max_line_loading_pct?: number;
+  max_line_id?: string;
+  curtailment_mw?: number;
+  unserved_mw?: number;
+  households_off?: number;
+  net_load_ramp_mw_per_h?: number;
+  storage_soc_pct?: number;
 }
 
 export interface ValidationSummary {
@@ -140,8 +161,8 @@ export interface Option {
 
 export interface ModelExecution {
   model: string;
-  role: 'decider';
-  status: 'ok' | 'timeout' | 'error';
+  role: 'decider' | 'monitor';
+  status: 'ok' | 'timeout' | 'error' | 'no_key' | 'stale';
   latency_ms: number;
   response_id?: string;
   cached: boolean;
@@ -235,6 +256,11 @@ export type LiveEventPayload =
   | {
       type: 'agent.note';
       text_es: string;
+      kind?: 'periodic' | 'monitor';
+      severity?: 'info' | 'watch' | 'alert';
+      metrics?: MonitorMetrics;
+      watch?: string[];
+      model_execution?: ModelExecution;
     }
   | {
       type: 'error';

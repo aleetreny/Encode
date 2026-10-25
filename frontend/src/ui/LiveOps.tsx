@@ -172,6 +172,7 @@ function Screen() {
         <div className={`gp-state is-${state.grid_state}`}>{STATE_LABEL[state.grid_state] ?? state.grid_state}</div>
         <div className="gp-clock">
           <b>{clock(hour)}</b>
+          {catalog.day_profile?.label_es && <span className="gp-dayprofile">{catalog.day_profile.label_es}</span>}
           <div className="gp-day"><i style={{ width: `${(hour / 24) * 100}%` }} /></div>
         </div>
         <div className="gp-kpis">
@@ -241,7 +242,7 @@ function Screen() {
         <div className="gp-brain-head">
           <span className={`gp-brain-dot is-${phase}`} />
           <div>
-            <b>Gemini 4 Argon</b>
+            <b>Gemini</b>
             <span>{phase === 'analyzing' ? 'Analizando la falla' : phase === 'awaiting_operator' ? 'Propone dos caminos' : phase === 'executing' ? 'Ejecutando el plan' : phase === 'resolved' ? 'Plan aplicado' : 'Vigilando la red'}</span>
           </div>
         </div>
@@ -304,9 +305,7 @@ function Screen() {
           {state.thoughts.length === 0 && state.notes.length === 0 && (
             <p className="gp-idle">Sin incidentes. Vigilo {catalog.generators.length} centrales, {catalog.batteries.length} baterías, {catalog.lines.length} líneas troncales y {catalog.nodes.length} zonas, hora a hora.</p>
           )}
-          {state.notes.slice(-1).map((n, i) => (
-            <p key={`n${i}`} className="gp-note"><em>{clock(n.sim_hour)}</em>{n.text_es}</p>
-          ))}
+          <MonitorBlock notes={state.notes} catalog={catalog} />
           {state.thoughts.slice(-3).map((th, i, arr) => (
             <Typed key={`${th.ts_utc}-${i}`} className="gp-thought" text={th.text_es} prefix={clock(th.sim_hour)} live={i === arr.length - 1} />
           ))}
@@ -437,6 +436,64 @@ function Spark({ series, cap, hour }: { series?: number[]; cap: number; hour: nu
       <line x1={(hour / 24) * w} x2={(hour / 24) * w} y1="0" y2={h} className="gp-spark-now" />
     </svg>
   );
+}
+
+type Note = ReturnType<typeof useLiveSession>['state']['notes'][number];
+const SEVERITY_LABEL = { info: 'Normal', watch: 'Vigilar', alert: 'Alerta' } as const;
+
+// Jimmy: the hourly monitor. Numbers arrive from code in `metrics`; the sentence may be model-worded.
+function MonitorBlock({ notes, catalog }: { notes: Note[]; catalog: NonNullable<ReturnType<typeof useLiveSession>['state']['catalog']> }) {
+  if (notes.length === 0) return null;
+  const last = notes[notes.length - 1];
+  const earlier = notes.slice(0, -1).reverse().slice(0, 4);
+  if (last.kind !== 'monitor' && !last.severity && !last.metrics) {
+    return <p className="gp-note"><em>{clock(last.sim_hour)}</em>{last.text_es}</p>;
+  }
+  const m = last.metrics ?? {};
+  const sev = last.severity ?? 'info';
+  const line = m.max_line_id ? catalog.lines.find((l) => l.id === m.max_line_id) : undefined;
+  const lineName = line ? `${line.id} · ${ZONES[line.from]?.label ?? line.from} → ${ZONES[line.to]?.label ?? line.to}` : m.max_line_id;
+  const stats: { k: string; v: string; hot?: boolean }[] = [];
+  if (m.reserve_margin_pct != null) stats.push({ k: 'Reserva', v: `${fmt(m.reserve_margin_pct, 1)} %`, hot: m.reserve_margin_pct < 10 });
+  if (m.max_line_loading_pct != null) stats.push({ k: lineName ? `Línea ${lineName}` : 'Línea más cargada', v: `${fmt(m.max_line_loading_pct, 0)} %`, hot: m.max_line_loading_pct >= 90 });
+  if ((m.unserved_mw ?? 0) > 0) stats.push({ k: 'Sin servir', v: `${fmt(m.unserved_mw!, 0)} MW`, hot: true });
+  else if (m.curtailment_mw != null) stats.push({ k: 'Vertimiento', v: `${fmt(m.curtailment_mw, 0)} MW` });
+  return (
+    <section className={`gp-jimmy is-${sev}`}>
+      <div className="gp-jimmy-head">
+        <b>Jimmy · monitor</b>
+        <span className={`gp-sev is-${sev}`}>{SEVERITY_LABEL[sev]}</span>
+        <em>{clock(last.sim_hour)}</em>
+      </div>
+      <p>{last.text_es}</p>
+      {stats.length > 0 && (
+        <dl className="gp-jimmy-stats">
+          {stats.slice(0, 3).map((x) => <div key={x.k} className={x.hot ? 'is-hot' : ''}><dt>{x.k}</dt><dd>{x.v}</dd></div>)}
+        </dl>
+      )}
+      <MonitorBadge m={last.model_execution} />
+      {earlier.length > 0 && (
+        <ul className="gp-jimmy-hist">
+          {earlier.map((n, i) => (
+            <li key={i} className={`is-${n.severity ?? 'info'}`}><em>{clock(n.sim_hour)}</em>{n.text_es}</li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+// The monitor's wording is deterministic unless the model really answered.
+function MonitorBadge({ m }: { m?: Note['model_execution'] }) {
+  if (!m) return null;
+  const deterministic = m.model === 'deterministic-monitor' || (m.response_id ?? '').startsWith('det-');
+  const status = m.status as string;
+  const label = deterministic ? 'Sin modelo · texto determinista'
+    : status === 'timeout' ? `${m.model} no respondió a tiempo`
+    : status === 'error' ? `${m.model} con error`
+    : status === 'no_key' ? 'Sin modelo · sin clave'
+    : `${m.model} · ${(m.latency_ms / 1000).toLocaleString('es-CL', { maximumFractionDigits: 1 })} s${m.cached ? ' · respuesta en caché' : ''}`;
+  return <em className={`gp-model gp-jimmy-model${deterministic || status !== 'ok' ? ' is-warn' : ''}`}>{label}</em>;
 }
 
 // Who actually answered. A deterministic fallback or a cached answer must never pass for a live call.

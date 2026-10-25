@@ -12,6 +12,7 @@
   - `PUBLIC_ORIGIN=https://andes-a38.pages.dev` (el QR `/api/live/sessions/{id}/qr.svg` apunta a `https://andes-a38.pages.dev/jurado?s={id}`).
   - `CORS_ORIGINS=https://andes-a38.pages.dev,http://localhost:5173,http://127.0.0.1:5173` (habilita peticiones REST y streaming SSE entre orígenes).
   - `GEMINI_API_KEY` se carga exclusivamente desde variables de entorno del servidor / secreto del dashboard (nunca en git).
+  - `GRIDPILOT_SCENARIO=real-day` (por defecto; `synthetic` para el día sintético), `GRIDPILOT_MODEL_MONITOR=gemini-3.5-flash-lite` (por defecto, para las notas de Jimmy) y `GRIDPILOT_GEMINI_TIMEOUT_S=20` (margen). El decisor por defecto es `gemini-3.8-flash` con `GRIDPILOT_DECIDER_THINKING=low` (unos 4 s); `gemini-4-argon` tardó entre 7 y 20 s el 25 oct.
 - **Ping de calentamiento antes de la demo:**
   ```bash
   curl -s -H "ngrok-skip-browser-warning: 1" -H "Origin: https://andes-a38.pages.dev" \

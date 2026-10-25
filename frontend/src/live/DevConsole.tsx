@@ -704,7 +704,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
 
       {/* Live Agent Stream Inspector */}
       <section style={{ border: '1px solid #374151', padding: '12px', borderRadius: '6px', marginBottom: '20px', backgroundColor: '#1f2937' }}>
-        <h2 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#9ca3af' }}>Supervisión del Agente Gemini 4 Argon</h2>
+        <h2 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#9ca3af' }}>Supervisión del Agente Gemini</h2>
 
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>
           <div data-testid="dev-agent-phase" style={{ fontSize: '14px' }}>

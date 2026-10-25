@@ -55,6 +55,7 @@
 @keyframes gp-blink { 50% { opacity: 0.55; } }
 .gp-clock { display: flex; flex-direction: column; gap: 4px; min-width: 96px; }
 .gp-clock b { font: 800 26px var(--mono); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.gp-dayprofile { font: 9.5px var(--mono); color: var(--ink-3); white-space: nowrap; }
 .gp-day { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .gp-day i { display: block; height: 100%; background: var(--ink); }
 .gp-kpis { display: flex; gap: 6px; margin-left: auto; }
@@ -169,6 +170,27 @@
 .gp-note, .gp-thought { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--ink); }
 .gp-note { color: var(--ink-2); }
 .gp-note em, .gp-thought em { font: 10px var(--mono); color: var(--ink-3); font-style: normal; margin-right: 6px; }
+.gp-jimmy { margin: 0 0 8px; padding: 9px 11px; border: 1px solid var(--line); border-left: 3px solid var(--green); border-radius: 10px; background: #fff; display: flex; flex-direction: column; gap: 6px; }
+.gp-jimmy.is-watch { border-left-color: var(--amber); }
+.gp-jimmy.is-alert { border-left-color: var(--red); }
+.gp-jimmy-head { display: flex; align-items: center; gap: 8px; }
+.gp-jimmy-head b { font: 800 11px var(--mono); letter-spacing: 0.06em; }
+.gp-jimmy-head em { margin-left: auto; font: 10px var(--mono); font-style: normal; color: var(--ink-3); }
+.gp-jimmy p { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--ink); }
+.gp-sev { font: 700 9.5px var(--mono); padding: 2px 7px; border-radius: 99px; color: var(--green); background: #e8f6ef; }
+.gp-sev.is-watch { color: var(--amber); background: #fcf1de; }
+.gp-sev.is-alert { color: #fff; background: var(--red); }
+.gp-jimmy-stats { display: flex; gap: 6px; margin: 0; }
+.gp-jimmy-stats div { flex: 1; min-width: 0; padding: 4px 7px; border-radius: 8px; background: #f6f6f3; }
+.gp-jimmy-stats dt { font: 9px var(--mono); color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-jimmy-stats dd { margin: 0; font: 700 13px var(--mono); font-variant-numeric: tabular-nums; }
+.gp-jimmy-stats .is-hot dd { color: var(--red); }
+.gp-jimmy-model { margin-left: 0; }
+.gp-jimmy-hist { list-style: none; margin: 0; padding: 6px 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; }
+.gp-jimmy-hist li { font-size: 11px; line-height: 1.35; color: var(--ink-2); border-left: 2px solid var(--green); padding-left: 6px; }
+.gp-jimmy-hist li.is-watch { border-left-color: var(--amber); }
+.gp-jimmy-hist li.is-alert { border-left-color: var(--red); }
+.gp-jimmy-hist em { font: 10px var(--mono); font-style: normal; color: var(--ink-3); margin-right: 6px; }
 .gp-caret { display: inline-block; width: 6px; height: 12px; margin-left: 2px; vertical-align: -1px; background: var(--gem-b); animation: gp-blink 0.8s steps(2) infinite; }
 .gp-tools { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
 .gp-tools li { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: baseline; font-size: 11px; padding: 6px 8px; border-radius: 8px; background: #f6f6f3; border-left: 2px solid var(--line); }

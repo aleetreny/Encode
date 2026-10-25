@@ -114,7 +114,7 @@ export function Jury() {
       </header>
 
       <section className="jr-hero">
-        <p>Intenta botar la red eléctrica de Chile. <b>Gemini 4 Argon</b> la está vigilando y tiene que proponer cómo recuperarla, en vivo, frente a todos.</p>
+        <p>Intenta botar la red eléctrica de Chile. <b>Gemini</b> la está vigilando y tiene que proponer cómo recuperarla, en vivo, frente a todos.</p>
         <div className="jr-kpis">
           <div className={off > 1 ? 'is-hot' : ''}><span>Sin luz</span><b>{Math.round(off).toLocaleString('es-CL')}</b></div>
           <div className={deficit > 1 ? 'is-hot' : ''}><span>Déficit</span><b>{Math.round(deficit)} MW</b></div>

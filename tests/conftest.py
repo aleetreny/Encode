@@ -32,3 +32,9 @@ def settings(tmp_path):
 def client(settings):
     with TestClient(create_app(settings)) as client:
         yield client
+
+
+@pytest.fixture(autouse=True)
+def _pin_synthetic_scenario(monkeypatch):
+    """Tests written against the synthetic day keep it; real-day tests set GRIDPILOT_SCENARIO themselves."""
+    monkeypatch.setenv("GRIDPILOT_SCENARIO", "synthetic")
