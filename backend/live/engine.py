@@ -7,7 +7,7 @@ Manages:
 - Asynchronous candidate + Gemini 4 Argon option generation (`options.ready`)
 - Autonomous countdown (`autonomy.countdown` 5->0) with operator `veto` cancellation
 - Event expiration (`event.ended` + `solution.updated` returning to `normal`)
-- Jimmy monitor `agent.note` every simulated hour and on severity rise (digit-free, `backend/live/monitor.py`)
+- Gemini monitor `agent.note` every simulated hour and on severity rise (digit-free, `backend/live/monitor.py`)
 - `SessionManager`: multi-session registry with auto-creation for `"demo"` or any session ID
 """
 
@@ -344,7 +344,7 @@ class LiveSession:
         return monitor.assess(self.scenario, self.solution, self.hour, outaged_battery_ids=down)
 
     def _maybe_emit_monitor_note(self) -> None:
-        """Jimmy: one monitor note per simulated hour (bucket `int(hour)`), plus one when severity rises.
+        """Gemini monitor: one monitor note per simulated hour (bucket `int(hour)`), plus one when severity rises.
 
         Never awaits the model: without a key the deterministic note is emitted here, otherwise the call runs
         in a background task (at most one in flight; if another note falls due meanwhile, the grid is read
@@ -402,7 +402,7 @@ class LiveSession:
                     self._emit_monitor_payload(payload)
                 else:
                     # The model failed, or answered after the clock crossed an hour: word the grid as it is
-                    # now, labelled with why. A slow model can never silence Jimmy or show an old reading.
+                    # now, labelled with why. A slow model can never silence the monitor or show an old reading.
                     self._emit_monitor_payload(
                         monitor.deterministic_note(
                             self._assess_monitor(),
@@ -435,7 +435,7 @@ class LiveSession:
         if len(self.active_events) >= 2:
             raise JuryRateLimitError(
                 code="MAX_ACTIVE_EVENTS",
-                message_es="Ya hay dos contingencias activas en la red. Espera a que se resuelva una antes de provocar otra falla.",
+                message_es="There are already two active contingencies on the grid. Wait for one to be resolved before triggering another fault.",
                 status_code=409,
             )
         now = time.monotonic()
@@ -444,7 +444,7 @@ class LiveSession:
             rem = int(math.ceil(30.0 - (now - last)))
             raise JuryRateLimitError(
                 code="JURY_COOLDOWN",
-                message_es=f"Límite por dispositivo activo: espera {rem} segundos antes de provocar otra falla.",
+                message_es=f"Per-device limit active: wait {rem} seconds before triggering another fault.",
                 status_code=429,
             )
         self.jury_cooldowns[device_key] = now
@@ -638,7 +638,7 @@ class LiveSession:
                 self._start_countdown(incident_id, rec_opt["option_id"])
             else:
                 self.emit_note(
-                    "Modo autónomo en espera: ninguna maniobra operativa disponible reduce el déficit residencial actual, por lo que no se aplica ningún plan automáticamente."
+                    "Autonomous mode on hold: no available operating move reduces the current residential shortfall, so no plan is applied automatically."
                 )
 
         return opt_event
@@ -682,7 +682,7 @@ class LiveSession:
                 rec_opt = self._find_option(rec, option_id)
                 if not option_has_positive_improvement(rec_opt):
                     self.emit_note(
-                        "Modo autónomo en espera: ninguna maniobra operativa disponible reduce el déficit residencial actual, por lo que no se aplica ningún plan automáticamente."
+                        "Autonomous mode on hold: no available operating move reduces the current residential shortfall, so no plan is applied automatically."
                     )
                     return
                 self._emit(
@@ -732,7 +732,7 @@ class LiveSession:
                         self._start_countdown(self.current_incident_id, opt["option_id"])
                     else:
                         self.emit_note(
-                            "Modo autónomo en espera: ninguna maniobra operativa disponible reduce el déficit residencial actual, por lo que no se aplica ningún plan automáticamente."
+                            "Autonomous mode on hold: no available operating move reduces the current residential shortfall, so no plan is applied automatically."
                         )
         return self.autonomy
 
@@ -752,7 +752,7 @@ class LiveSession:
             if self.incident_records:
                 target_inc_id = list(self.incident_records.keys())[-1]
             else:
-                raise ValueError("No hay ningún incidente activo para decidir.")
+                raise ValueError("There is no active incident to decide on.")
 
         rec = self.incident_records[target_inc_id]
         # If options are still computing in background, wait briefly for them
@@ -788,14 +788,14 @@ class LiveSession:
             return veto_ev
 
         if not chosen_opt:
-            raise ValueError(f"Opción {option_id!r} no encontrada en el incidente {target_inc_id}.")
+            raise ValueError(f"Option {option_id!r} not found in incident {target_inc_id}.")
 
         if not chosen_opt.get("validation", {}).get("passed", False):
             err_ev = self._emit(
                 {
                     "type": "error",
                     "code": "VALIDATION_FAILED",
-                    "message_es": "El plan seleccionado no pasó la validación física independiente y no puede aplicarse.",
+                    "message_es": "The selected plan failed the independent physical validation and cannot be applied.",
                 }
             )
             return err_ev

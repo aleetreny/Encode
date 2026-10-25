@@ -22,11 +22,11 @@ function deviceId() {
 }
 
 const PHASE: Record<string, string> = {
-  idle: 'Gemini vigila la red',
-  analyzing: 'Gemini está analizando la falla…',
-  awaiting_operator: 'Gemini propuso dos caminos al operador',
-  executing: 'Se está aplicando un plan',
-  resolved: 'Plan aplicado. La red se está recuperando',
+  idle: 'Gemini is watching the grid',
+  analyzing: 'Gemini is analysing the outage…',
+  awaiting_operator: 'Gemini gave the operator two options',
+  executing: 'A plan is being applied',
+  resolved: 'Plan applied. The grid is recovering',
 };
 
 export function Jury() {
@@ -86,10 +86,10 @@ export function Jury() {
         setSent(assetId);
       } else {
         const body = await res.json().catch(() => ({}));
-        setMessage(body.message_es || body.detail || 'La sala no aceptó la falla. Intenta de nuevo en unos segundos.');
+        setMessage(body.message_es || body.detail || 'The room did not accept the outage. Try again in a few seconds.');
       }
     } catch {
-      setMessage('Sin conexión con la sala.');
+      setMessage('No connection to the room.');
     } finally {
       setBusy(null);
     }
@@ -97,7 +97,7 @@ export function Jury() {
 
   const label = (id: string) => {
     const a = assets.find((x) => x.id === id);
-    return a ? assetTitle(a) : `Línea ${id}`;
+    return a ? assetTitle(a) : `Line ${id}`;
   };
 
   return (
@@ -107,23 +107,23 @@ export function Jury() {
           <AndesMark size={22} />
           <div>
             <b>Andes</b>
-            <span>Sala en vivo · jurado</span>
+            <span>Live room · jury</span>
           </div>
         </div>
-        <span className={`jr-state is-${state.grid_state}`}>{link === 'live' ? state.grid_state : link === 'down' ? 'sin conexión' : 'conectando'}</span>
+        <span className={`jr-state is-${state.grid_state}`}>{link === 'live' ? state.grid_state : link === 'down' ? 'offline' : 'connecting'}</span>
       </header>
 
       <section className="jr-hero">
-        <p>Intenta botar la red eléctrica de Chile. <b>Gemini</b> la está vigilando y tiene que proponer cómo recuperarla, en vivo, frente a todos.</p>
+        <p>Try to knock out Chile's power grid. <b>Gemini</b> is watching it and has to propose how to recover it, live, in front of everyone.</p>
         <div className="jr-kpis">
-          <div className={off > 1 ? 'is-hot' : ''}><span>Sin luz</span><b>{Math.round(off).toLocaleString('es-CL')}</b></div>
-          <div className={deficit > 1 ? 'is-hot' : ''}><span>Déficit</span><b>{Math.round(deficit)} MW</b></div>
-          <div><span>Hora</span><b>{String(Math.floor(hour)).padStart(2, '0')}:{String(Math.floor((hour % 1) * 60)).padStart(2, '0')}</b></div>
+          <div className={off > 1 ? 'is-hot' : ''}><span>Without power</span><b>{Math.round(off).toLocaleString('en-GB')}</b></div>
+          <div className={deficit > 1 ? 'is-hot' : ''}><span>Deficit</span><b>{Math.round(deficit)} MW</b></div>
+          <div><span>Time</span><b>{String(Math.floor(hour)).padStart(2, '0')}:{String(Math.floor((hour % 1) * 60)).padStart(2, '0')}</b></div>
         </div>
         {state.active_incidents.length > 0 && (
           <ul className="jr-live">
             {state.active_incidents.map((d) => (
-              <li key={d.event_id}><b>{d.jury_name || (d.source === 'operator' ? 'Operador' : 'Jurado')}</b> {d.type === 'line_outage' ? 'cortó' : 'botó'} {label(d.asset_id)}</li>
+              <li key={d.event_id}><b>{d.jury_name || (d.source === 'operator' ? 'Operator' : 'Juror')}</b> {d.type === 'line_outage' ? 'cut' : 'knocked out'} {label(d.asset_id)}</li>
             ))}
           </ul>
         )}
@@ -131,31 +131,31 @@ export function Jury() {
       </section>
 
       <label className={`jr-name${named ? '' : ' is-required'}`}>
-        <span>{named ? 'Tu nombre aparecerá en la pantalla grande' : 'Escribe tu nombre para poder atacar · aparecerá en la pantalla grande'}</span>
-        <input value={name} maxLength={24} placeholder="Ej.: Ana, jurado" onChange={(e) => { setName(e.target.value); localStorage.setItem('gp_jury_name', e.target.value); }} />
+        <span>{named ? 'Your name will appear on the big screen' : 'Enter your name to attack · it will appear on the big screen'}</span>
+        <input value={name} maxLength={24} placeholder="e.g. Ana, juror" onChange={(e) => { setName(e.target.value); localStorage.setItem('gp_jury_name', e.target.value); }} />
       </label>
 
-      {link === 'down' && <p className="jr-msg is-bad">No hay conexión con la sala. Revisa que el QR sea el de la pantalla y que haya internet.</p>}
+      {link === 'down' && <p className="jr-msg is-bad">Can't reach the room. Check that you scanned the QR on the screen and that you have internet.</p>}
       {message && <p className="jr-msg is-bad">{message}</p>}
       {sent && cooldown > 0 && (
         <p className="jr-msg is-ok">
-          <b>¡Listo! {label(sent)} cayó.</b> Mira la pantalla grande. Puedes volver a atacar en {cooldown} s.
+          <b>Done! {label(sent)} is down.</b> Watch the big screen. You can attack again in {cooldown} s.
         </p>
       )}
-      {full && <p className="jr-msg">Ya hay dos fallas en curso. Espera a que Gemini resuelva una.</p>}
+      {full && <p className="jr-msg">Two outages are already under way. Wait for Gemini to resolve one.</p>}
 
-      <h2 className="jr-h">Centrales</h2>
+      <h2 className="jr-h">Plants</h2>
       <div className="jr-grid">
         {assets.map((a) => (
-          <Card key={a.id} title={assetTitle(a)} color={TECH_COLOR[a.technology]} risk={solution ? at(solution.generation_mw[a.id], hour) : 0} unit="MW que produce ahora" down={out.has(a.id)} disabled={cooldown > 0 || full || link !== 'live' || out.has(a.id) || !named} busy={busy === a.id} onTrip={() => setConfirm({ id: a.id, title: assetTitle(a), risk: solution ? at(solution.generation_mw[a.id], hour) : 0, unit: 'MW que produce ahora' })} action="Botar central">
+          <Card key={a.id} title={assetTitle(a)} color={TECH_COLOR[a.technology]} risk={solution ? at(solution.generation_mw[a.id], hour) : 0} unit="MW generating now" down={out.has(a.id)} disabled={cooldown > 0 || full || link !== 'live' || out.has(a.id) || !named} busy={busy === a.id} onTrip={() => setConfirm({ id: a.id, title: assetTitle(a), risk: solution ? at(solution.generation_mw[a.id], hour) : 0, unit: 'MW generating now' })} action="Knock out plant">
             <Mini asset={a} down={out.has(a.id)} />
           </Card>
         ))}
       </div>
-      <h2 className="jr-h">Líneas troncales</h2>
+      <h2 className="jr-h">Trunk lines</h2>
       <div className="jr-grid">
         {(catalog?.lines ?? []).filter((l) => l.disruptable).map((l) => (
-          <Card key={l.id} title={`Línea ${l.id} · ${ZONES[l.from]?.short}→${ZONES[l.to]?.short}`} color="#3e63dd" risk={solution ? Math.abs(at(solution.line_flow_mw[l.id], hour)) : 0} unit="MW que transporta ahora" down={out.has(l.id)} disabled={cooldown > 0 || full || link !== 'live' || out.has(l.id) || !named} busy={busy === l.id} onTrip={() => setConfirm({ id: l.id, title: `Línea ${l.id} (${ZONES[l.from]?.label} → ${ZONES[l.to]?.label})`, risk: solution ? Math.abs(at(solution.line_flow_mw[l.id], hour)) : 0, unit: 'MW que transporta ahora' })} action="Cortar línea">
+          <Card key={l.id} title={`Line ${l.id} · ${ZONES[l.from]?.short}→${ZONES[l.to]?.short}`} color="#3e63dd" risk={solution ? Math.abs(at(solution.line_flow_mw[l.id], hour)) : 0} unit="MW carried now" down={out.has(l.id)} disabled={cooldown > 0 || full || link !== 'live' || out.has(l.id) || !named} busy={busy === l.id} onTrip={() => setConfirm({ id: l.id, title: `Line ${l.id} (${ZONES[l.from]?.label} → ${ZONES[l.to]?.label})`, risk: solution ? Math.abs(at(solution.line_flow_mw[l.id], hour)) : 0, unit: 'MW carried now' })} action="Cut line">
             <svg viewBox="0 0 120 70" className="jr-mini"><path d="M8 52 Q60 30 112 18" className={out.has(l.id) ? 'jr-line is-down' : 'jr-line'} /><circle cx="8" cy="52" r="4" /><circle cx="112" cy="18" r="4" /></svg>
           </Card>
         ))}
@@ -163,18 +163,18 @@ export function Jury() {
       {confirm && (
         <div className="jr-sheet" onClick={() => setConfirm(null)}>
           <div className="jr-sheet-card" onClick={(e) => e.stopPropagation()}>
-            <small>Vas a atacar como <b>{name.trim()}</b></small>
+            <small>You are attacking as <b>{name.trim()}</b></small>
             <h3>{confirm.title}</h3>
-            <div className="jr-impact"><b>{Math.round(confirm.risk).toLocaleString('es-CL')}</b><span>{confirm.unit} quedarían en riesgo</span></div>
-            <p>Cuánto daño hace depende de cómo responda la red. El número exacto de hogares sin luz aparecerá en la pantalla grande, junto a tu nombre.</p>
-            <button className="jr-btn" disabled={!!busy} onClick={() => trip(confirm.id)}>{busy ? 'Enviando…' : 'Confirmar ataque'}</button>
-            <button className="jr-btn is-ghost" onClick={() => setConfirm(null)}>Cancelar</button>
+            <div className="jr-impact"><b>{Math.round(confirm.risk).toLocaleString('en-GB')}</b><span>{confirm.unit} at risk</span></div>
+            <p>How much damage this does depends on how the grid responds. The exact number of homes without power will appear on the big screen, next to your name.</p>
+            <button className="jr-btn" disabled={!!busy} onClick={() => trip(confirm.id)}>{busy ? 'Sending…' : 'Confirm attack'}</button>
+            <button className="jr-btn is-ghost" onClick={() => setConfirm(null)}>Cancel</button>
           </div>
         </div>
       )}
 
       <footer className="jr-foot">
-        Sesión {sessionId} · Simulación con física real (solver HiGHS) sobre una red de Chile simplificada. Nada de esto afecta la red real.
+        Session {sessionId} · Simulation with real physics (HiGHS solver) on a simplified Chilean grid. None of this affects the real grid.
       </footer>
     </div>
   );
@@ -187,10 +187,10 @@ function Card({ title, color, risk, unit, down, disabled, busy, onTrip, action, 
     <article className={`jr-card${down ? ' is-down' : ''}`} style={{ ['--c' as string]: color }}>
       {children}
       <h3>{title}</h3>
-      {down ? <p className="jr-out">Fuera de servicio</p> : (
-        <div className="jr-risk"><b>{Math.round(risk).toLocaleString('es-CL')}</b><span>{unit}</span></div>
+      {down ? <p className="jr-out">Out of service</p> : (
+        <div className="jr-risk"><b>{Math.round(risk).toLocaleString('en-GB')}</b><span>{unit}</span></div>
       )}
-      <button className="jr-btn" disabled={disabled} onClick={onTrip}>{busy ? 'Enviando…' : down ? 'Ya cayó' : action}</button>
+      <button className="jr-btn" disabled={disabled} onClick={onTrip}>{busy ? 'Sending…' : down ? 'Already down' : action}</button>
     </article>
   );
 }

@@ -243,7 +243,7 @@ export class OfflineSessionController {
                 hour: this.simHour,
                 ts_utc: new Date().toISOString(),
                 type: 'agent.note',
-                text_es: 'Modo autónomo en espera: ninguna maniobra operativa disponible reduce el déficit residencial actual, por lo que no se aplica ningún plan automáticamente.',
+                text_es: 'Autonomous mode on hold: no available operational manoeuvre reduces the current residential deficit, so no plan is applied automatically.',
               });
             }
           } else {
@@ -261,7 +261,7 @@ export class OfflineSessionController {
         ts_utc: new Date().toISOString(),
         type: 'error',
         code: 'INCIDENT_NOT_FOUND',
-        message_es: `No se encontró el archivo precalculado de contingencia para el activo ${assetId} en la biblioteca offline.`,
+        message_es: `The precomputed contingency file for asset ${assetId} was not found in the offline library.`,
       });
     }
   }

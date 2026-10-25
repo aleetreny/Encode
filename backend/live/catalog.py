@@ -19,7 +19,7 @@ SYNTHETIC_DAY_PROFILE: dict[str, str] = {
     "source": "synthetic",
     "date": "2026-10-01",
     "method": "synthetic",
-    "label_es": "Día sintético con forma chilena",
+    "label_es": "Synthetic day with a Chilean shape",
 }
 
 
@@ -34,21 +34,21 @@ def scenario_path() -> Path:
 
 
 GEN_NAMES = {
-    "solar_ng": "Solar Crucero Norte Grande",
-    "solar_nc": "Solar Atacama Norte Chico",
-    "wind_nc": "Eólica Punta Palmeras",
-    "gas_ng": "Ciclo Combinado Mejillones",
-    "gas_centro": "Ciclo Combinado Nehuenco Centro",
-    "coal_cs": "Termoeléctrica Santa María Coronel",
-    "hydro_sur": "Embalse Ralco Chapo Sur",
-    "wind_sur": "Parque Eólico Llanquihue",
-    "diesel_centro": "Turbina Diésel Respaldo Renca",
+    "solar_ng": "Crucero Solar Norte Grande",
+    "solar_nc": "Atacama Solar Norte Chico",
+    "wind_nc": "Punta Palmeras Wind",
+    "gas_ng": "Mejillones Combined Cycle",
+    "gas_centro": "Nehuenco Combined Cycle Centro",
+    "coal_cs": "Santa María Coronel Coal Plant",
+    "hydro_sur": "Ralco Chapo Reservoir Sur",
+    "wind_sur": "Llanquihue Wind Farm",
+    "diesel_centro": "Renca Backup Diesel Turbine",
 }
 
 BAT_NAMES = {
-    "b_centro": "BESS Polpaico Operativo",
-    "b_reserve_ng": "BESS Reserva Crucero Norte Grande",
-    "b_reserve_centro": "BESS Reserva Polpaico Centro",
+    "b_centro": "Polpaico Operating BESS",
+    "b_reserve_ng": "Crucero Reserve BESS Norte Grande",
+    "b_reserve_centro": "Polpaico Reserve BESS Centro",
 }
 
 DEFAULT_EMISSION_FACTORS: dict[str, float] = {
@@ -63,46 +63,46 @@ DEFAULT_EMISSION_FACTORS: dict[str, float] = {
 LEVERS: list[dict[str, str]] = [
     {
         "type": "emergency_rating",
-        "label_es": "Límite Térmico de Emergencia",
-        "description_es": "Incrementa temporalmente la capacidad de transporte de una línea troncal durante la ventana crítica.",
+        "label_es": "Emergency Thermal Rating",
+        "description_es": "Temporarily raises the transfer capacity of a trunk line during the critical window.",
     },
     {
         "type": "demand_response",
-        "label_es": "Respuesta de Demanda Industrial",
-        "description_es": "Recorte voluntario de carga industrial compensada sin desconectar hogares residenciales.",
+        "label_es": "Industrial Demand Response",
+        "description_es": "Compensated, voluntary cut of industrial load without disconnecting homes.",
     },
     {
         "type": "activate_reserve_bess",
-        "label_es": "Activar BESS de Reserva en Standby",
-        "description_es": "Conecta bancos de baterías estratégicos en reserva para inyectar potencia inmediata.",
+        "label_es": "Activate Standby Reserve BESS",
+        "description_es": "Brings strategic reserve battery banks online to inject power immediately.",
     },
     {
         "type": "hydro_reserve_release",
-        "label_es": "Liberación de Reserva Hídrica",
-        "description_es": "Despacha cota adicional de embalse en el sur valorizando el costo de oportunidad del agua.",
+        "label_es": "Hydro Reserve Release",
+        "description_es": "Dispatches extra reservoir head in the south, pricing in the opportunity cost of water.",
     },
     {
         "type": "start_peaker",
-        "label_es": "Arranque de Turbina Rápida (Peaker)",
-        "description_es": "Inicia unidad térmica de respaldo rápido con retraso de sincronización desde frío.",
+        "label_es": "Fast Turbine Start (Peaker)",
+        "description_es": "Starts a fast backup thermal unit, with a cold-start synchronisation delay.",
     },
     {
         "type": "add_battery",
-        "label_es": "Almacenamiento BESS (Planificación)",
-        "description_es": "Incorpora capacidad de almacenamiento para arbitraje solar y soporte de punta.",
+        "label_es": "BESS Storage (Planning)",
+        "description_es": "Adds storage capacity for solar arbitrage and peak support.",
     },
     {
         "type": "uprate_line",
-        "label_es": "Ampliación de Corredor Troncal",
-        "description_es": "Aumenta la capacidad nominal permanente de una línea de transmisión congestionada.",
+        "label_es": "Trunk Corridor Upgrade",
+        "description_es": "Permanently raises the nominal capacity of a congested transmission line.",
     },
 ]
 
 STRESS_RECIPES: list[dict[str, Any]] = [
     {
         "id": "terremoto_norte",
-        "title_es": "Terremoto Norte Grande",
-        "description_es": "Sismo severo desconecta corredor L1 y ciclo combinado del norte.",
+        "title_es": "Norte Grande Earthquake",
+        "description_es": "A severe quake disconnects corridor L1 and the northern combined-cycle plant.",
         "events": [
             {"type": "line_outage", "id": "L1", "duration_hours": 4, "mode": "sudden"},
             {"type": "generator_outage", "id": "gas_ng", "duration_hours": 4, "mode": "sudden"},
@@ -110,24 +110,24 @@ STRESS_RECIPES: list[dict[str, Any]] = [
     },
     {
         "id": "incendio_forestal_centro_sur",
-        "title_es": "Incendio Forestal Centro-Sur",
-        "description_es": "Incendio bajo corredor 500 kV dispara troncal L3 entre Polpaico y Charrúa.",
+        "title_es": "Centro-Sur Wildfire",
+        "description_es": "A fire under the 500 kV corridor trips trunk line L3 between Polpaico and Charrúa.",
         "events": [
             {"type": "line_outage", "id": "L3", "duration_hours": 4, "mode": "sudden"},
         ],
     },
     {
         "id": "sequia_hidrica_sur",
-        "title_es": "Sequía Hídrica Sur",
-        "description_es": "Indisponibilidad de embalse en el sur durante rampa vespertina.",
+        "title_es": "Southern Drought",
+        "description_es": "Southern reservoir unavailable during the evening ramp.",
         "events": [
             {"type": "generator_outage", "id": "hydro_sur", "duration_hours": 6, "mode": "sudden"},
         ],
     },
     {
         "id": "ola_calor_santiago",
-        "title_es": "Ola de Calor en Santiago",
-        "description_es": "Disparo de central térmica principal en pleno peak vespertino metropolitano.",
+        "title_es": "Santiago Heatwave",
+        "description_es": "Main thermal plant trips at the metropolitan evening peak.",
         "events": [
             {"type": "generator_outage", "id": "gas_centro", "duration_hours": 4, "mode": "sudden"},
         ],
@@ -137,8 +137,8 @@ STRESS_RECIPES: list[dict[str, Any]] = [
 JURY_CARDS: list[dict[str, Any]] = [
     {
         "id": "trip_gas_centro",
-        "title_es": "Derribar Central Gas Centro",
-        "subtitle_es": "Saca 600 MW térmicos en Polpaico por 4 horas",
+        "title_es": "Trip Centro Gas Plant",
+        "subtitle_es": "Takes 600 MW of thermal generation out at Polpaico for 4 hours",
         "action": {
             "type": "generator_outage",
             "id": "gas_centro",
@@ -147,8 +147,8 @@ JURY_CARDS: list[dict[str, Any]] = [
     },
     {
         "id": "trip_l2",
-        "title_es": "Cortar Troncal L2 Norte-Centro",
-        "subtitle_es": "Abre corredor de 400 MW entre Cardones y Polpaico",
+        "title_es": "Cut Trunk Line L2 Norte-Centro",
+        "subtitle_es": "Opens the 400 MW corridor between Cardones and Polpaico",
         "action": {
             "type": "line_outage",
             "id": "L2",
@@ -157,8 +157,8 @@ JURY_CARDS: list[dict[str, Any]] = [
     },
     {
         "id": "trip_l3",
-        "title_es": "Cortar Troncal L3 Centro-Sur",
-        "subtitle_es": "Abre línea de 350 MW entre Polpaico y Charrúa",
+        "title_es": "Cut Trunk Line L3 Centro-Sur",
+        "subtitle_es": "Opens the 350 MW line between Polpaico and Charrúa",
         "action": {
             "type": "line_outage",
             "id": "L3",
@@ -167,8 +167,8 @@ JURY_CARDS: list[dict[str, Any]] = [
     },
     {
         "id": "trip_coal_cs",
-        "title_es": "Disparar Carbonera Centro-Sur",
-        "subtitle_es": "Desconecta 350 MW base en Charrúa por 4 horas",
+        "title_es": "Trip Centro-Sur Coal Plant",
+        "subtitle_es": "Disconnects 350 MW of baseload at Charrúa for 4 hours",
         "action": {
             "type": "generator_outage",
             "id": "coal_cs",
@@ -177,8 +177,8 @@ JURY_CARDS: list[dict[str, Any]] = [
     },
     {
         "id": "stress_terremoto",
-        "title_es": "Simular Terremoto Norte",
-        "subtitle_es": "Falla simultánea de L1 y Gas Norte Grande",
+        "title_es": "Simulate Northern Earthquake",
+        "subtitle_es": "Simultaneous failure of L1 and Norte Grande Gas",
         "action": {
             "type": "stress_recipe",
             "recipe_id": "terremoto_norte",

@@ -65,41 +65,41 @@ PLANNING_LEVER_TYPES = ("add_battery", "uprate_line")
 NODE_NAMES_ES = {
     "n_norte_grande": "Norte Grande",
     "n_norte_chico": "Norte Chico",
-    "n_centro": "Zona Central Metropolitana",
+    "n_centro": "Central Metropolitan Zone",
     "n_centro_sur": "Centro-Sur",
-    "n_sur": "Zona Sur",
+    "n_sur": "Southern Zone",
 }
 
 ASSET_NAMES_ES = {
-    "solar_ng": "planta solar de Crucero",
-    "solar_nc": "planta solar de Atacama",
-    "wind_nc": "parque eólico de Punta Palmeras",
-    "gas_ng": "ciclo combinado de Mejillones",
-    "gas_centro": "central térmica de ciclo combinado en Polpaico",
-    "coal_cs": "central térmica de Coronel",
-    "hydro_sur": "central hidroeléctrica de embalse del Sur",
-    "wind_sur": "parque eólico de Llanquihue",
-    "diesel_centro": "turbina diésel de respaldo en Renca",
-    "b_centro": "batería operativa de Polpaico",
-    "b_reserve_ng": "batería en reserva de Crucero",
-    "b_reserve_centro": "batería en reserva de Polpaico",
-    "L1": "corredor troncal del Norte Grande al Norte Chico",
-    "L2": "corredor troncal del Norte Chico a la Zona Central",
-    "L3": "corredor troncal de la Zona Central al Centro-Sur",
-    "L4": "corredor troncal del Centro-Sur a la Zona Sur",
+    "solar_ng": "Crucero solar plant",
+    "solar_nc": "Atacama solar plant",
+    "wind_nc": "Punta Palmeras wind farm",
+    "gas_ng": "Mejillones combined-cycle plant",
+    "gas_centro": "combined-cycle thermal plant at Polpaico",
+    "coal_cs": "Coronel thermal plant",
+    "hydro_sur": "southern reservoir hydro plant",
+    "wind_sur": "Llanquihue wind farm",
+    "diesel_centro": "backup diesel turbine at Renca",
+    "b_centro": "operating battery at Polpaico",
+    "b_reserve_ng": "reserve battery at Crucero",
+    "b_reserve_centro": "reserve battery at Polpaico",
+    "L1": "trunk corridor from Norte Grande to Norte Chico",
+    "L2": "trunk corridor from Norte Chico to the Central Zone",
+    "L3": "trunk corridor from the Central Zone to Centro-Sur",
+    "L4": "trunk corridor from Centro-Sur to the Southern Zone",
 }
 
 TOKEN_REPLACEMENTS = (
-    (re.compile(r"\bL1\b", re.IGNORECASE), "corredor Norte Grande"),
-    (re.compile(r"\bL2\b", re.IGNORECASE), "corredor Norte-Centro"),
-    (re.compile(r"\bL3\b", re.IGNORECASE), "corredor Centro-Sur"),
-    (re.compile(r"\bL4\b", re.IGNORECASE), "corredor Sur"),
-    (re.compile(r"\bN-1\b", re.IGNORECASE), "contingencia simple"),
-    (re.compile(r"\bCO[2₂]\b", re.IGNORECASE), "carbono"),
-    (re.compile(r"\bDS\s*32\s*/\s*2026\b", re.IGNORECASE), "decreto supremo de coordinación"),
-    (re.compile(r"\bLey\s*21\.?505\b", re.IGNORECASE), "ley de almacenamiento eléctrico"),
-    (re.compile(r"\bArt\.?\s*72[°º]?-?1\b", re.IGNORECASE), "artículo de coordinación segura"),
-    (re.compile(r"\bArt\.?\s*117\s*bis\b", re.IGNORECASE), "artículo de despacho económico"),
+    (re.compile(r"\bL1\b", re.IGNORECASE), "Norte Grande corridor"),
+    (re.compile(r"\bL2\b", re.IGNORECASE), "Norte-Centro corridor"),
+    (re.compile(r"\bL3\b", re.IGNORECASE), "Centro-Sur corridor"),
+    (re.compile(r"\bL4\b", re.IGNORECASE), "Southern corridor"),
+    (re.compile(r"\bN-1\b", re.IGNORECASE), "single contingency"),
+    (re.compile(r"\bCO[2₂]\b", re.IGNORECASE), "carbon"),
+    (re.compile(r"\bDS\s*32\s*/\s*2026\b", re.IGNORECASE), "coordination decree"),
+    (re.compile(r"\bLey\s*21\.?505\b", re.IGNORECASE), "electricity storage law"),
+    (re.compile(r"\bArt\.?\s*72[°º]?-?1\b", re.IGNORECASE), "secure coordination article"),
+    (re.compile(r"\bArt\.?\s*117\s*bis\b", re.IGNORECASE), "economic dispatch article"),
 )
 
 
@@ -108,7 +108,7 @@ def has_digits(text: str) -> bool:
     return bool(re.search(r"[\d₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹]", text or ""))
 
 
-def sanitize_no_digits(text: str | None, fallback: str = "Análisis operativo verificado por el coordinador.") -> str:
+def sanitize_no_digits(text: str | None, fallback: str = "Operational analysis verified by the coordinator.") -> str:
     """Guarantee zero digits in Gemini/agent prose fields per Section 3 Rule 1."""
     if not text or not isinstance(text, str):
         cleaned = fallback
@@ -129,7 +129,7 @@ def sanitize_no_digits(text: str | None, fallback: str = "Análisis operativo ve
     if has_digits(cleaned):
         cleaned = re.sub(r"[\d₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹]", "", cleaned).strip()
     if not cleaned:
-        cleaned = "Operación verificada en red."
+        cleaned = "Grid operation verified."
     return cleaned
 
 
@@ -614,30 +614,30 @@ def compute_option_metrics(
 
 
 def summarize_levers_es(levers: list[dict[str, Any]]) -> str:
-    """Build a digit-free Spanish summary of a list of contract Levers."""
+    """Build a digit-free English summary of a list of contract Levers."""
     parts: list[str] = []
     for lv in levers:
         ltype = lv.get("type")
         tid = str(lv.get("target_id", ""))
-        asset_es = ASSET_NAMES_ES.get(tid, NODE_NAMES_ES.get(tid, "activo de red"))
+        asset_es = ASSET_NAMES_ES.get(tid, NODE_NAMES_ES.get(tid, "grid asset"))
         if ltype == "activate_reserve_bess":
-            parts.append(f"activar {asset_es}")
+            parts.append(f"activate {asset_es}")
         elif ltype == "emergency_rating":
-            parts.append(f"límite térmico de emergencia en {asset_es}")
+            parts.append(f"emergency thermal rating on {asset_es}")
         elif ltype == "demand_response":
-            parts.append(f"respuesta de demanda industrial en {asset_es}")
+            parts.append(f"industrial demand response at {asset_es}")
         elif ltype == "hydro_reserve_release":
-            parts.append(f"liberación de reserva hídrica en {asset_es}")
+            parts.append(f"hydro reserve release at {asset_es}")
         elif ltype == "start_peaker":
-            parts.append(f"arranque de turbina rápida en {asset_es}")
+            parts.append(f"fast turbine start at {asset_es}")
         elif ltype == "add_battery":
-            parts.append(f"almacenamiento de soporte en {asset_es}")
+            parts.append(f"support storage at {asset_es}")
         elif ltype == "uprate_line":
-            parts.append(f"refuerzo de transmisión en {asset_es}")
+            parts.append(f"transmission reinforcement on {asset_es}")
         else:
-            parts.append(f"maniobra operativa en {asset_es}")
-    text = " más ".join(parts) if parts else "maniobra operativa de red"
-    return sanitize_no_digits(text, fallback="maniobra operativa en la red troncal")
+            parts.append(f"operating move at {asset_es}")
+    text = " plus ".join(parts) if parts else "grid operating move"
+    return sanitize_no_digits(text, fallback="operating move on the trunk grid")
 
 
 def generate_operational_candidates(
@@ -1085,7 +1085,7 @@ def select_distinct_pair_and_tags(
 
 
 NO_IMPROVEMENT_DIAGNOSIS_ES = (
-    "Ninguna maniobra operativa disponible mejora el déficit residencial bajo las restricciones actuales de la red."
+    "No available operating move improves the residential shortfall under the current grid constraints."
 )
 
 
@@ -1141,72 +1141,72 @@ def enforce_option_pair_guardrails(
     # 3. If neither option reconnects any households, explicitly state in diagnosis_es (digit-free)
     clean_diag = sanitize_no_digits(diagnosis_es)
     if max(hh_a, hh_b) <= 0:
-        if "ninguna maniobra" not in clean_diag.lower():
+        if "no available operating move" not in clean_diag.lower():
             clean_diag = sanitize_no_digits(f"{clean_diag} {NO_IMPROVEMENT_DIAGNOSIS_ES}")
 
     return [opt_a, opt_b], recommended_id, clean_diag
 
 
 def build_default_title_es(cand: dict[str, Any], tag: str) -> str:
-    """Build a crisp, digit-free Spanish title for an Option."""
+    """Build a crisp, digit-free English title for an Option."""
     types = [lv["type"] for lv in cand["levers"]]
     if "activate_reserve_bess" in types and "emergency_rating" in types:
-        title = "Reserva BESS y Límite Térmico Troncal"
+        title = "Reserve BESS and Trunk Thermal Rating"
     elif "activate_reserve_bess" in types and "hydro_reserve_release" in types:
-        title = "Batería en Reserva y Despacho Hídrico Sur"
+        title = "Reserve Battery and Southern Hydro Dispatch"
     elif "activate_reserve_bess" in types and "demand_response" in types:
-        title = "Reserva BESS y Respuesta Industrial"
+        title = "Reserve BESS and Industrial Response"
     elif "activate_reserve_bess" in types:
-        title = "Activación de Baterías en Reserva Estratégica"
+        title = "Strategic Reserve Battery Activation"
     elif "hydro_reserve_release" in types and "emergency_rating" in types:
-        title = "Cota Hídrica de Emergencia y Sobrecarga Controlada"
+        title = "Emergency Hydro Head and Controlled Overload"
     elif "hydro_reserve_release" in types:
-        title = "Liberación de Reserva Hídrica del Sur"
+        title = "Southern Hydro Reserve Release"
     elif "start_peaker" in types and "demand_response" in types:
-        title = "Turbina Rápida y Recorte Industrial Voluntario"
+        title = "Fast Turbine and Voluntary Industrial Cut"
     elif "start_peaker" in types:
-        title = "Arranque de Turbina Rápida de Respaldo"
+        title = "Backup Fast Turbine Start"
     elif "emergency_rating" in types:
-        title = "Capacidad Térmica de Emergencia en Corredor"
+        title = "Emergency Thermal Capacity on Corridor"
     elif "demand_response" in types:
-        title = "Gestión de Demanda Industrial Compensada"
+        title = "Compensated Industrial Demand Management"
     else:
-        title = "Redespacho Operativo de Emergencia"
+        title = "Emergency Operating Redispatch"
 
-    if tag == "max_hogares" and "Hogares" not in title:
-        title = f"{title} Priorizando Reconexión"
+    if tag == "max_hogares" and "Homes" not in title:
+        title = f"{title}, Prioritising Reconnection"
     elif tag == "min_costo":
-        title = f"{title} de Mínimo Costo"
+        title = f"{title} at Minimum Cost"
     elif tag == "min_co2":
-        title = f"{title} Libre de Emisiones"
+        title = f"{title}, Emission-Free"
     elif tag == "min_riesgo_red":
-        title = f"{title} con Alivio de Corredor"
+        title = f"{title} with Corridor Relief"
 
-    return sanitize_no_digits(title, fallback="Maniobra Operativa de Emergencia")
+    return sanitize_no_digits(title, fallback="Emergency Operating Move")
 
 
 def build_default_rationale_es(cand: dict[str, Any], tag: str) -> str:
-    """Build a digit-free 1-2 sentence Spanish rationale for an Option."""
+    """Build a digit-free 1-2 sentence English rationale for an Option."""
     summary = summarize_levers_es(cand["levers"])
     if tag == "max_hogares":
         text = (
-            f"Combina {summary} para maximizar la restitución inmediata del suministro residencial "
-            f"en las zonas afectadas bajo criterio de seguridad operativa."
+            f"Combines {summary} to restore residential supply as fast as possible "
+            f"in the affected zones while keeping to operating-security criteria."
         )
     elif tag == "min_costo":
         text = (
-            f"Ejecuta {summary} conteniendo el costo sistémico de redespacho mediante recursos "
-            f"existentes de menor costo marginal."
+            f"Runs {summary}, containing the system redispatch cost by using "
+            f"existing resources with the lowest marginal cost."
         )
     elif tag == "min_co2":
         text = (
-            f"Despliega {summary} priorizando inyección limpia sin recurrir a generación térmica "
-            f"fósil adicional durante la contingencia."
+            f"Deploys {summary}, favouring clean injection without calling on extra "
+            f"fossil thermal generation during the contingency."
         )
     else:
         text = (
-            f"Aplica {summary} aliviando la congestión en los corredores troncales y manteniendo "
-            f"holgura térmica de seguridad en la red."
+            f"Applies {summary}, easing congestion on the trunk corridors and keeping "
+            f"a thermal safety margin on the grid."
         )
     return sanitize_no_digits(text)
 
@@ -1215,26 +1215,26 @@ def build_default_diagnosis_es(
     active_disruptions: list[dict[str, Any]],
     impact: dict[str, Any],
 ) -> str:
-    """Build a digit-free Spanish diagnosis of the active crisis."""
+    """Build a digit-free English diagnosis of the active crisis."""
     assets = [
-        ASSET_NAMES_ES.get(str(d.get("asset_id")), "activo principal")
+        ASSET_NAMES_ES.get(str(d.get("asset_id")), "main asset")
         for d in active_disruptions
     ]
     nodes = [
-        NODE_NAMES_ES.get(nid, "zona del sistema")
+        NODE_NAMES_ES.get(nid, "system zone")
         for nid in impact.get("nodes_affected", [])
     ]
-    asset_phrase = " y ".join(assets) if assets else "un elemento troncal"
+    asset_phrase = " and ".join(assets) if assets else "a trunk element"
     if nodes:
         node_phrase = ", ".join(nodes)
         text = (
-            f"La salida intempestiva de {asset_phrase} provoca déficit de suministro residencial "
-            f"en {node_phrase} y exige redespacho inmediato validado por flujo de potencia."
+            f"The sudden loss of {asset_phrase} causes a residential supply shortfall "
+            f"in {node_phrase} and calls for immediate redispatch validated by power flow."
         )
     else:
         text = (
-            f"La contingencia en {asset_phrase} reduce el margen de reserva del corredor troncal "
-            f"sin desconexión residencial inmediata pero requiere maniobra preventiva."
+            f"The contingency at {asset_phrase} reduces the reserve margin of the trunk corridor "
+            f"with no immediate residential disconnection but calls for a preventive move."
         )
     return sanitize_no_digits(text)
 
@@ -1245,23 +1245,23 @@ def build_default_thought_es(
     cand_a: dict[str, Any],
     cand_b: dict[str, Any],
 ) -> str:
-    """Build a concrete, asset-specific, digit-free Spanish thought."""
+    """Build a concrete, asset-specific, digit-free English thought."""
     assets = [
-        ASSET_NAMES_ES.get(str(d.get("asset_id")), "activo del sistema")
+        ASSET_NAMES_ES.get(str(d.get("asset_id")), "system asset")
         for d in active_disruptions
     ]
     nodes = [
-        NODE_NAMES_ES.get(nid, "zona afectada")
+        NODE_NAMES_ES.get(nid, "affected zone")
         for nid in impact.get("nodes_affected", [])
     ]
-    asset_phrase = " y ".join(assets) if assets else "el activo afectado"
-    zone_phrase = ", ".join(nodes) if nodes else "el corredor troncal"
+    asset_phrase = " and ".join(assets) if assets else "the affected asset"
+    zone_phrase = ", ".join(nodes) if nodes else "the trunk corridor"
     sum_a = summarize_levers_es(cand_a["levers"])
     sum_b = summarize_levers_es(cand_b["levers"])
     text = (
-        f"Ante la contingencia en {asset_phrase} con impacto sobre {zone_phrase}, "
-        f"se contrasta en el frente de Pareto la maniobra de {sum_a} frente a la alternativa de {sum_b} "
-        f"para equilibrar restitución residencial, holgura térmica y costo operativo."
+        f"Facing the contingency at {asset_phrase} with impact on {zone_phrase}, "
+        f"the Pareto front weighs {sum_a} against the alternative of {sum_b} "
+        f"to balance residential restoration, thermal margin and operating cost."
     )
     return sanitize_no_digits(text)
 
@@ -1269,13 +1269,13 @@ def build_default_thought_es(
 LIVE_DECIDER_TOOLS: list[dict[str, Any]] = [
     {
         "name": "inspect_node",
-        "description": "Inspecciona el estado operativo de un nodo del SEN (demanda, generadores, baterías y líneas conectadas).",
+        "description": "Inspects the operating state of an SEN node (demand, generators, batteries and connected lines).",
         "parameters": {
             "type": "OBJECT",
             "properties": {
                 "node_id": {
                     "type": "STRING",
-                    "description": "Identificador del nodo (n_norte_grande, n_norte_chico, n_centro, n_centro_sur, n_sur).",
+                    "description": "Node identifier (n_norte_grande, n_norte_chico, n_centro, n_centro_sur, n_sur).",
                 }
             },
             "required": ["node_id"],
@@ -1283,24 +1283,24 @@ LIVE_DECIDER_TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "simulate_plan",
-        "description": "Simula y valida en HiGHS una combinación propia de hasta dos palancas operativas.",
+        "description": "Simulates and validates in HiGHS your own combination of up to two operating levers.",
         "parameters": {
             "type": "OBJECT",
             "properties": {
                 "levers": {
                     "type": "ARRAY",
-                    "description": "Lista de una o dos palancas operativas a evaluar.",
+                    "description": "List of one or two operating levers to evaluate.",
                     "items": {
                         "type": "OBJECT",
                         "properties": {
                             "type": {
                                 "type": "STRING",
                                 "enum": list(OPERATIONAL_LEVER_TYPES),
-                                "description": "Tipo (solo palancas operativas en crisis): emergency_rating, demand_response, activate_reserve_bess, hydro_reserve_release, start_peaker.",
+                                "description": "Type (operating levers only, in a crisis): emergency_rating, demand_response, activate_reserve_bess, hydro_reserve_release, start_peaker.",
                             },
                             "target_id": {
                                 "type": "STRING",
-                                "description": "ID del activo o nodo objetivo.",
+                                "description": "ID of the target asset or node.",
                             },
                         },
                         "required": ["type", "target_id"],
@@ -1312,42 +1312,42 @@ LIVE_DECIDER_TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "propose_options",
-        "description": "Propone las dos opciones finales verificadas al operador humano con razonamiento técnico, diagnóstico y justificaciones en español SIN dígitos.",
+        "description": "Proposes the final two verified options to the human operator with technical reasoning, a diagnosis and justifications in English with NO digits.",
         "parameters": {
             "type": "OBJECT",
             "properties": {
                 "option_ids": {
                     "type": "ARRAY",
                     "items": {"type": "STRING"},
-                    "description": "Dos candidate_id distintos del frente de Pareto verificado.",
+                    "description": "Two distinct candidate_id values from the verified Pareto front.",
                 },
                 "recommended_id": {
                     "type": "STRING",
-                    "description": "El candidate_id recomendado entre los dos elegidos.",
+                    "description": "The recommended candidate_id among the two chosen.",
                 },
                 "thought_es": {
                     "type": "STRING",
-                    "description": "Razonamiento técnico sobre la falla concreta en el activo o corredor afectado y el contraste entre las dos maniobras elegidas, en español y SIN ningún dígito.",
+                    "description": "Technical reasoning on the concrete failure of the affected asset or corridor and the contrast between the two chosen moves, in English and with NO digits.",
                 },
                 "diagnosis_es": {
                     "type": "STRING",
-                    "description": "Diagnóstico breve en español SIN ningún dígito ni número.",
+                    "description": "Brief diagnosis in English with NO digits or numbers.",
                 },
                 "title_a_es": {
                     "type": "STRING",
-                    "description": "Título corto para la primera opción de option_ids en español SIN dígitos.",
+                    "description": "Short title for the first option in option_ids, in English with NO digits.",
                 },
                 "title_b_es": {
                     "type": "STRING",
-                    "description": "Título corto para la segunda opción de option_ids en español SIN dígitos.",
+                    "description": "Short title for the second option in option_ids, in English with NO digits.",
                 },
                 "rationale_a_es": {
                     "type": "STRING",
-                    "description": "Justificación de una o dos frases para la primera opción de option_ids en español SIN dígitos.",
+                    "description": "One- or two-sentence justification for the first option in option_ids, in English with NO digits.",
                 },
                 "rationale_b_es": {
                     "type": "STRING",
-                    "description": "Justificación de una o dos frases para la segunda opción de option_ids en español SIN dígitos.",
+                    "description": "One- or two-sentence justification for the second option in option_ids, in English with NO digits.",
                 },
             },
             "required": [
@@ -1364,13 +1364,14 @@ LIVE_DECIDER_TOOLS: list[dict[str, Any]] = [
     },
 ]
 
-LIVE_DECIDER_SYSTEM_PROMPT = """Eres Gemini (Andes · Operación de la red eléctrica con IA), el copiloto autónomo del Coordinador Eléctrico Nacional de Chile (SEN).
-REGLA ABSOLUTA E INQUEBRANTABLE:
-- PROHIBIDO escribir dígitos (0, 1, 2, 3, 4, 5, 6, 7, 8, 9) en cualquiera de tus textos (`thought_es`, `diagnosis_es`, `title_a_es`, `title_b_es`, `rationale_a_es`, `rationale_b_es` o tus pensamientos).
-- No escribas números ni en cifras ni en nombres de líneas como L1/L2/L3 (escribe "corredor Norte Grande", "corredor Norte-Centro", "corredor Centro-Sur", "corredor Sur"). Las cifras las muestra la interfaz directamente desde el solver HiGHS.
-- En `thought_es`, razona específicamente sobre la falla concreta del activo o corredor afectado, las zonas impactadas y el dilema operativo entre las dos opciones seleccionadas, sin usar plantillas genéricas.
-- Sé conciso y directo para respuesta en tiempo real: títulos de cuatro a siete palabras, y una sola oración precisa en `thought_es`, `diagnosis_es`, `rationale_a_es` y `rationale_b_es`.
-- Elige dos opciones del frente de Pareto con un dilema real (por ejemplo, máxima reconexión de hogares o mínimas emisiones frente a mínimo costo o menor carga de red) y llama a `propose_options`."""
+LIVE_DECIDER_SYSTEM_PROMPT = """You are Gemini (Andes · AI-assisted power grid operation), the autonomous copilot of Chile's National Electric Coordinator (SEN).
+Write everything in clear, natural ENGLISH, for an English-speaking audience.
+ABSOLUTE, UNBREAKABLE RULE:
+- NEVER write digits (0, 1, 2, 3, 4, 5, 6, 7, 8, 9) in any of your text (`thought_es`, `diagnosis_es`, `title_a_es`, `title_b_es`, `rationale_a_es`, `rationale_b_es` or your thoughts). Write numbers in words or not at all.
+- Do not write numbers as figures, nor line names such as L1/L2/L3 (write "Norte Grande corridor", "Norte-Centro corridor", "Centro-Sur corridor", "Southern corridor"). The interface shows the figures directly from the HiGHS solver.
+- In `thought_es`, reason specifically about the concrete failure of the affected asset or corridor, the zones impacted and the operating dilemma between the two selected options, without generic templates.
+- Be concise and direct for a real-time answer: titles of four to seven words, and a single precise sentence in `thought_es`, `diagnosis_es`, `rationale_a_es` and `rationale_b_es`.
+- Pick two options from the Pareto front with a real dilemma (for example, maximum household reconnection or minimum emissions versus minimum cost or lowest grid load) and call `propose_options`."""
 
 
 def _call_gemini_generate_content(
@@ -1487,7 +1488,7 @@ def run_incident_evaluation(
             "call_id": batch_call_id,
             "tool": "evaluate_candidate_batch",
             "args_summary_es": sanitize_no_digits(
-                "Barrido paralelo de palancas operativas de reserva, respuesta de demanda y límite térmico"
+                "Parallel sweep of reserve, demand-response and thermal-rating operating levers"
             ),
             "status": "running",
         }
@@ -1521,7 +1522,7 @@ def run_incident_evaluation(
             "call_id": batch_call_id,
             "tool": "evaluate_candidate_batch",
             "args_summary_es": sanitize_no_digits(
-                "Barrido paralelo de palancas operativas de reserva, respuesta de demanda y límite térmico"
+                "Parallel sweep of reserve, demand-response and thermal-rating operating levers"
             ),
             "status": "pass" if passed_candidates else "fail",
             "duration_ms": batch_ms,
@@ -1630,11 +1631,11 @@ def run_incident_evaluation(
                 "parts": [
                     {
                         "text": (
-                            "Hechos verificados de la contingencia y frente de Pareto del solver HiGHS:\n"
+                            "Verified contingency facts and the Pareto front from the HiGHS solver:\n"
                             + str(compact_facts)
-                            + "\nAnaliza específicamente la falla en los activos indicados y selecciona dos opciones "
-                            "del listado `pareto_candidates` con trade-off distinto llamando a `propose_options`. "
-                            "Recuerda: CERO dígitos en todos los textos en español (`thought_es`, `diagnosis_es`, títulos y justificaciones)."
+                            + "\nAnalyse the failure of the listed assets specifically and select two options "
+                            "from `pareto_candidates` with a different trade-off by calling `propose_options`. "
+                            "Remember: write everything in English with ZERO digits in all texts (`thought_es`, `diagnosis_es`, titles and justifications); write numbers in words or not at all."
                         )
                     }
                 ],
@@ -1699,7 +1700,7 @@ def run_incident_evaluation(
                                     "call_id": call_id,
                                     "tool": "inspect_node",
                                     "args_summary_es": sanitize_no_digits(
-                                        f"Inspección nodal en {NODE_NAMES_ES.get(nid, 'zona de red')}"
+                                        f"Node inspection in {NODE_NAMES_ES.get(nid, 'grid zone')}"
                                     ),
                                     "status": "pass",
                                     "duration_ms": 1.2,
@@ -1924,5 +1925,5 @@ def moderate_jury_name(raw_name: str | None) -> str | None:
     if not cleaned:
         return None
     if OFFENSIVE_PATTERNS.search(cleaned):
-        return "Jurado Anónimo"
+        return "Anonymous juror"
     return cleaned

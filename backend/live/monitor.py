@@ -1,6 +1,6 @@
-"""Jimmy, the grid monitor (`agent.note` with `kind: "monitor"`).
+"""The Gemini grid monitor (`agent.note` with `kind: "monitor"`).
 
-Every simulated hour the live engine asks this module for one short digit-free Spanish note:
+Every simulated hour the live engine asks this module for one short digit-free English note:
 
 - the numbers (`metrics`) are computed here from the current solution, never by a model;
 - `classify` turns them into `severity` (`info` | `watch` | `alert`) and a `watch` list;
@@ -50,23 +50,23 @@ _EMPTY_MODEL_TEXT = (
     "\x00"  # sanitize_no_digits fallback sentinel: lets us tell "model said nothing usable" apart
 )
 
-MONITOR_SYSTEM_PROMPT_ES = """Eres Jimmy, el agente que vigila en tiempo real la red eléctrica simulada del Sistema Eléctrico Nacional de Chile.
-Cada hora simulada escribes UNA sola oración en español, de quince a treinta palabras, dirigida al operador de la sala de control.
-Usa únicamente los datos entregados: qué corredor troncal está más exigido, si la carga neta sube o baja, si hay recorte renovable, cómo están las reservas y el almacenamiento, y las fallas activas si las hay. Si hay algo que vigilar, di qué es y por qué importa.
-REGLA ABSOLUTA: no escribas ningún dígito ni número en cifras, ni siquiera en nombres como L1 o L2; usa palabras («alto», «la mitad», «dos corredores») y los nombres de corredor que recibes. Las cifras las muestra la interfaz.
-No inventes datos, no calcules cifras y no propongas acciones sobre el mundo real: todo es una simulación.
-Responde solo con la oración, enteramente en español (nada en inglés), sin comillas, listas ni encabezados, y no repitas la redacción de la nota anterior."""
+MONITOR_SYSTEM_PROMPT_ES = """You are Gemini, the agent that watches, in real time, the simulated grid of Chile's National Electric System.
+Every simulated hour you write ONE single sentence in English, fifteen to thirty words, addressed to the control-room operator.
+Use only the data provided: which trunk corridor is under the most strain, whether net load is rising or falling, whether renewable output is being curtailed, how reserves and storage are doing, and any active faults. If something needs watching, say what it is and why it matters.
+ABSOLUTE RULE: write no digits and no numbers in figures, not even in names like L1 or L2; write numbers in words or not at all ("high", "half", "two corridors") and use the corridor names you are given. The interface shows the figures.
+Do not invent data, do not compute figures and do not propose actions in the real world: everything is a simulation.
+Reply with the sentence only, entirely in English, with no quotes, lists or headings, and do not repeat the wording of the previous note."""
 
 _EVENT_LABELS_ES = {
-    "generator_outage": "salida de una central",
-    "line_outage": "corte de un corredor",
-    "battery_outage": "falla de una batería",
+    "generator_outage": "generator outage",
+    "line_outage": "corridor outage",
+    "battery_outage": "battery failure",
 }
 _WATCH_LABELS_ES = {
-    "unserved": "demanda sin abastecer",
-    "reserve_margin": "margen de reserva",
-    "storage_soc": "carga del almacenamiento",
-    "solver_status": "estado de la solución del despacho",
+    "unserved": "unserved demand",
+    "reserve_margin": "reserve margin",
+    "storage_soc": "storage charge",
+    "solver_status": "status of the dispatch solution",
 }
 
 
@@ -271,18 +271,18 @@ def assess(
 
 def _curtailment_scale_es(curtailment: float, demand: float) -> str:
     if demand <= 0:
-        return "una parte"
+        return "a part"
     share = curtailment / demand
     if share < 0.05:
-        return "una parte pequeña"
+        return "a small part"
     if share < 0.15:
-        return "una parte considerable"
-    return "una parte muy grande"
+        return "a considerable part"
+    return "a very large part"
 
 
 def _corridor_es(line_id: Any) -> str:
     name = ASSET_NAMES_ES.get(str(line_id)) if line_id else None
-    return name or "corredor troncal más cargado"
+    return name or "most heavily loaded trunk corridor"
 
 
 def deterministic_text_es(
@@ -291,7 +291,7 @@ def deterministic_text_es(
     watch: list[str],
     grid_state: str = "normal",
 ) -> str:
-    """One digit-free Spanish sentence built from the metrics (corridor, ramp, reserve, storage, curtailment)."""
+    """One digit-free English sentence built from the metrics (corridor, ramp, reserve, storage, curtailment)."""
     corridor = _corridor_es(metrics.get("max_line_id"))
     loading = float(metrics.get("max_line_loading_pct", 0.0))
     demand = float(metrics.get("demand_mw", 0.0))
@@ -302,71 +302,65 @@ def deterministic_text_es(
     clauses: list[str] = []
     if "solver_status" in watch:
         clauses.append(
-            "la solución del despacho no es óptima y sus resultados no son confiables hasta resolverla de nuevo"
+            "the dispatch solution is not optimal and its results cannot be trusted until it is solved again"
         )
     if float(metrics.get("unserved_mw", 0.0)) > 0 or float(metrics.get("households_off", 0.0)) > 0:
         clauses.append(
-            "hay hogares sin suministro y la prioridad es reconectarlos con las maniobras disponibles"
+            "households are without power and the priority is to restore them with the available switching actions"
         )
     if loading >= LINE_SATURATED_PCT:
         scale = _curtailment_scale_es(curtailment, demand)
         tail = (
-            f", por eso se recorta en origen {scale} del excedente renovable"
+            f", so {scale} of the renewable surplus is curtailed at source"
             if curtailment > 0
             else ""
         )
-        clauses.append(f"el {corridor} opera en su límite de transferencia{tail}")
+        clauses.append(f"the {corridor} is running at its transfer limit{tail}")
     elif loading >= LINE_WATCH_PCT:
-        clauses.append(f"el {corridor} se acerca a su límite de transferencia")
+        clauses.append(f"the {corridor} is approaching its transfer limit")
     if "reserve_margin" in watch:
-        clauses.append(
-            "el margen de reserva es estrecho, con oferta disponible apenas por encima de la demanda"
-        )
+        clauses.append("the reserve margin is thin, with available supply barely above demand")
     if "storage_soc" in watch:
-        clauses.append(
-            "el almacenamiento operativo queda casi descargado y limita el respaldo inmediato"
-        )
+        clauses.append("operating storage is almost empty and limits immediate backup")
     if ramp_notable and ramp > 0:
-        clauses.append(
-            "la carga neta sube con fuerza y la generación firme debe acompañar la rampa"
-        )
+        clauses.append("net load is rising sharply and firm generation has to follow the ramp")
     if curtailment > 0 and loading < LINE_SATURATED_PCT:
         scale = _curtailment_scale_es(curtailment, demand)
         clauses.append(
-            f"se recorta {scale} de la generación renovable por falta de capacidad para evacuarla"
+            f"{scale} of renewable generation is curtailed because there is no capacity to carry it away"
         )
     if ramp_notable and ramp < 0:
-        clauses.append("la carga neta cae y libera holgura en los corredores")
+        clauses.append("net load is falling and frees up headroom on the corridors")
     if not clauses:
         clauses.append(
-            f"el sistema está en equilibrio, con el {corridor} como tramo más exigido y holgura en reservas"
+            f"the system is in balance, with the {corridor} as the most heavily used section and reserves to spare"
             if metrics.get("max_line_id")
-            else "el sistema está en equilibrio, con holgura en reservas"
+            else "the system is in balance, with reserves to spare"
         )
     elif len(clauses) == 1 and metrics.get("max_line_id") and loading < LINE_WATCH_PCT:
-        clauses.append(f"el {corridor} sigue siendo el tramo más cargado, aún con holgura")
+        clauses.append(f"the {corridor} remains the most loaded section, still with headroom")
 
     lead = clauses[0]
     text = lead[0].upper() + lead[1:]
     if len(clauses) > 1:
-        text += "; además, " + clauses[1]
+        text += "; in addition, " + clauses[1]
     if grid_state == "recuperacion":
-        text += ", bajo un plan de mitigación en curso"
+        text += ", with a mitigation plan under way"
     return sanitize_no_digits(text + ".")
 
 
 def _daypart_es(hour_index: int) -> str:
     if hour_index < 6:
-        return "madrugada"
+        return "early morning"
     if hour_index < 12:
-        return "mañana"
+        return "morning"
     if hour_index < 15:
-        return "mediodía"
+        return "midday"
     if hour_index < 18:
-        return "tarde"
+        return "afternoon"
     if hour_index < 23:
-        return "punta vespertina"
-    return "noche"
+        return "evening peak"
+    return "night"
 
 
 def build_monitor_prompt(
@@ -381,28 +375,28 @@ def build_monitor_prompt(
     metrics = assessment.metrics
     named_metrics = {k: v for k, v in metrics.items() if k != "max_line_id"}
     lines = [
-        f"Franja horaria simulada: {_daypart_es(int(hour) % 24)} (hora local de Chile).",
-        f"Estado de la red: {grid_state}. Severidad calculada por código: {assessment.severity}.",
-        f"Corredor más cargado: {_corridor_es(metrics.get('max_line_id'))}.",
-        "Métricas del solver (no las escribas en cifras): "
+        f"Simulated time of day: {_daypart_es(int(hour) % 24)} (Chile local time).",
+        f"Grid state: {grid_state}. Severity computed by code: {assessment.severity}.",
+        f"Most loaded corridor: {_corridor_es(metrics.get('max_line_id'))}.",
+        "Solver metrics (do not write them as figures): "
         + ", ".join(f"{k}={v}" for k, v in named_metrics.items()),
     ]
     watched = [ASSET_NAMES_ES.get(w) or _WATCH_LABELS_ES.get(w, w) for w in assessment.watch]
     lines.append(
-        "A vigilar: " + ("; ".join(watched) if watched else "nada fuera de lo normal") + "."
+        "To watch: " + ("; ".join(watched) if watched else "nothing out of the ordinary") + "."
     )
     if active_events:
         faults = "; ".join(
-            f"{_EVENT_LABELS_ES.get(str(ev.get('type')), 'falla')}: "
-            f"{ASSET_NAMES_ES.get(str(ev.get('asset_id')), 'un activo de la red')}"
+            f"{_EVENT_LABELS_ES.get(str(ev.get('type')), 'fault')}: "
+            f"{ASSET_NAMES_ES.get(str(ev.get('asset_id')), 'a grid asset')}"
             for ev in active_events
         )
-        lines.append("Fallas activas: " + faults + ".")
+        lines.append("Active faults: " + faults + ".")
     else:
-        lines.append("Fallas activas: ninguna.")
+        lines.append("Active faults: none.")
     if previous_text:
-        lines.append("Nota anterior (no repitas su redacción): " + previous_text)
-    lines.append("Escribe ahora la nota de esta hora.")
+        lines.append("Previous note (do not repeat its wording): " + previous_text)
+    lines.append("Now write this hour's note.")
     return "\n".join(lines)
 
 

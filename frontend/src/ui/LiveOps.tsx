@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { LiveSessionProvider, useLiveSession } from '../live/store';
-import type { Option, Solution } from '../live/types';
+import type { Disruption, Option, Solution } from '../live/types';
 import { GridScene, TECH_COLOR, TECH_LABEL, assetTitle, at, buildAssets } from './GridScene';
 import { ZONES } from './layout';
 import { AndesMark } from './brand';
@@ -10,28 +10,43 @@ import './ui.css';
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || '/api';
 
 const STATE_LABEL: Record<string, string> = {
-  normal: 'Normal', alerta: 'Alerta', emergencia: 'Emergencia', recuperacion: 'Recuperación',
+  normal: 'Normal', alerta: 'Alert', emergencia: 'Emergency', recuperacion: 'Recovery',
 };
 const TAG_LABEL: Record<string, string> = {
-  max_hogares: 'Más hogares', min_costo: 'Menor costo', min_co2: 'Menos CO₂', min_riesgo_red: 'Menor riesgo de red',
+  max_hogares: 'Most homes', min_costo: 'Lowest cost', min_co2: 'Lowest CO₂', min_riesgo_red: 'Lowest grid risk',
 };
 const LEVER_LABEL: Record<string, string> = {
-  emergency_rating: 'Límite de emergencia en línea',
-  demand_response: 'Respuesta de la demanda',
-  activate_reserve_bess: 'Batería de reserva',
-  hydro_reserve_release: 'Reserva hidro',
-  start_peaker: 'Arranque de diésel',
-  add_battery: 'Batería nueva (planificación)',
-  uprate_line: 'Ampliación de línea (planificación)',
+  emergency_rating: 'Emergency line rating',
+  demand_response: 'Demand response',
+  activate_reserve_bess: 'Reserve battery',
+  hydro_reserve_release: 'Hydro reserve',
+  start_peaker: 'Diesel start-up',
+  add_battery: 'New battery (planning)',
+  uprate_line: 'Line upgrade (planning)',
 };
 
-const fmt = (n: number, d = 0) => n.toLocaleString('es-CL', { maximumFractionDigits: d, minimumFractionDigits: d });
+const fmt = (n: number, d = 0) => n.toLocaleString('en-GB', { maximumFractionDigits: d, minimumFractionDigits: d });
 const clock = (h: number) => {
   const hh = Math.floor(h) % 24;
   const mm = Math.floor((h - Math.floor(h)) * 60);
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
 };
 const sum = (rec: Record<string, number[]>, h: number) => Object.values(rec).reduce((s, v) => s + at(v, h), 0);
+
+type Attack = { who: string; target: string; headline: string; jury: boolean; at: number; homes: number; mw: number; key: string };
+type Catalog = NonNullable<ReturnType<typeof useLiveSession>['state']['catalog']>;
+
+// "Juror Ana knocked out Gas · Centro": who did it and what fell, from the disruption itself.
+function describeFault(d: Disruption, catalog: Catalog) {
+  const a = buildAssets(catalog).find((x) => x.id === d.asset_id);
+  const line = catalog.lines.find((l) => l.id === d.asset_id);
+  const target = line ? `line ${line.id} (${ZONES[line.from]?.label} → ${ZONES[line.to]?.label})` : a ? assetTitle(a) : d.asset_id;
+  const jury = d.source === 'jury';
+  const who = jury ? (d.jury_name ? `Juror ${d.jury_name}` : 'A juror') : d.source === 'operator' ? 'The operator' : '';
+  return { who, target, jury, headline: who ? `${who} knocked out ${target}` : `Sudden outage: ${target}` };
+}
+
+const STEPS = ['Attack', 'Impact', 'Gemini analysing', 'Two options', 'Plan applied', 'Recovering'] as const;
 
 export function LiveOps() {
   return (
@@ -52,7 +67,6 @@ function Screen() {
   const [hovered, setHovered] = useState<Option | null>(null);
   const [applied, setApplied] = useState<Option | null>(null);
   const lastCandidate = useRef<string | null>(null);
-  const [toast, setToast] = useState<{ kind: 'fault' | 'plan'; title: string; sub: string; key: number } | null>(null);
   const seenIncidents = useRef(new Set<string>());
   const wasCountingDown = useRef(false);
 
@@ -71,18 +85,15 @@ function Screen() {
     if (state.active_incidents.length === 0) setApplied(null);
   }, [state.active_incidents.length]);
 
-  // Big announcement of each new fault: who did it, what fell, and the damage the engine computed.
-  const [attacks, setAttacks] = useState<{ who: string; what: string; homes: number; mw: number; key: string; jury: boolean }[]>([]);
+  // The latest fault, worded once: who did it, what fell, and the damage the engine computed.
+  const [attacks, setAttacks] = useState<Attack[]>([]);
   useEffect(() => {
     const ev = state.last_incident;
     if (!catalog || !ev || seenIncidents.current.has(ev.incident_id)) return;
     seenIncidents.current.add(ev.incident_id);
     const d = ev.disruption;
-    const a = buildAssets(catalog).find((x) => x.id === d.asset_id);
-    const line = catalog.lines.find((l) => l.id === d.asset_id);
-    const what = line ? `cortó la línea ${line.id} (${ZONES[line.from]?.label} → ${ZONES[line.to]?.label})` : a ? `botó ${assetTitle(a)}` : `botó ${d.asset_id}`;
-    const who = d.source === 'jury' ? d.jury_name || 'Alguien del jurado' : d.source === 'operator' ? 'El operador' : 'Una falla repentina';
-    setAttacks((list) => [{ who, what, homes: ev.impact.households_off_peak, mw: ev.impact.unserved_mw_peak, key: ev.incident_id, jury: d.source === 'jury' }, ...list].slice(0, 4));
+    const w = describeFault(d, catalog);
+    setAttacks((list) => [{ ...w, at: d.from_hour, homes: ev.impact.households_off_peak, mw: ev.impact.unserved_mw_peak, key: ev.incident_id }, ...list].slice(0, 4));
   }, [state.last_incident, catalog]);
   useEffect(() => {
     if (countdown?.active) wasCountingDown.current = true;
@@ -91,13 +102,34 @@ function Screen() {
     if (phase !== 'executing') return;
     const byGemini = state.applied_by ? state.applied_by === 'gemini_autonomous' : wasCountingDown.current;
     wasCountingDown.current = false;
-    setToast({ kind: 'plan', title: byGemini ? 'Gemini aplicó el plan por su cuenta' : 'Plan aplicado por el operador', sub: byGemini ? 'Modo autónomo · validado por el solver antes de ejecutarse' : 'Validado por el solver antes de ejecutarse', key: Date.now() });
+    setPlanBy(byGemini ? 'Gemini applied the plan on its own' : 'Plan applied by the operator');
   }, [phase]);
+
+  // A preview must not outlive the options it belongs to (the panel unmounts without a mouseleave).
   useEffect(() => {
-    if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 4200);
+    if (phase !== 'awaiting_operator' && !countdown?.active) setHovered(null);
+  }, [phase, countdown?.active]);
+
+  // Once every outage has ended, confirm the recovery for a few seconds, then go back to calm.
+  const [planBy, setPlanBy] = useState<string | null>(null);
+  const [restored, setRestored] = useState<{ homes: number | null; key: number } | null>(null);
+  const appliedHomes = useRef(new Map<string, number>());
+  const prevActive = useRef(0);
+  useEffect(() => {
+    if (applied) appliedHomes.current.set(applied.option_id, applied.metrics.households_reconnected);
+  }, [applied]);
+  useEffect(() => {
+    const n = state.active_incidents.length;
+    if (n > 0 && prevActive.current === 0) { appliedHomes.current.clear(); setPlanBy(null); }
+    if (n > 0) setRestored(null);
+    if (n === 0 && prevActive.current > 0) setRestored({ homes: appliedHomes.current.size ? [...appliedHomes.current.values()].reduce((a, b) => a + b, 0) : null, key: Date.now() });
+    prevActive.current = n;
+  }, [state.active_incidents.length]);
+  useEffect(() => {
+    if (!restored) return;
+    const id = window.setTimeout(() => setRestored(null), 9000);
     return () => window.clearTimeout(id);
-  }, [toast]);
+  }, [restored]);
 
   // `?hora=18.3` jumps the session to that hour on load (handy to rehearse a moment of the demo).
   const jumped = useRef(false);
@@ -133,7 +165,7 @@ function Screen() {
     return (
       <div className="gp gp-loading iso" data-theme="light">
         <div className="gp-spinner" />
-        <p>Conectando con la red…</p>
+        <p>Connecting to the grid…</p>
       </div>
     );
   }
@@ -147,6 +179,24 @@ function Screen() {
   const co2 = at(shown.co2_t, step);
   const sel = selected ? assets.find((a) => a.id === selected) ?? null : null;
   const selLine = selected ? catalog.lines.find((l) => l.id === selected) ?? null : null;
+
+  // Incident lifecycle, read straight from the store: grid state, agent phase, options, countdown.
+  const incidentOn = state.active_incidents.length > 0;
+  const showBanner = incidentOn || !!restored;
+  const incidentId = state.last_incident?.incident_id;
+  let stepIdx = 0;
+  if (restored) stepIdx = STEPS.length;
+  else if (phase === 'executing' || phase === 'resolved') stepIdx = phase === 'executing' ? 4 : 5;
+  else if (phase === 'awaiting_operator' || countdown?.active) stepIdx = 3;
+  else if (phase === 'analyzing') stepIdx = state.tool_calls.some((c) => c.incident_id === incidentId) ? 2 : 1;
+  else if (state.grid_state === 'recuperacion') stepIdx = 5;
+  const attack: Attack | undefined = attacks[0] ?? (incidentOn ? (() => {
+    const d = state.active_incidents[state.active_incidents.length - 1];
+    return { ...describeFault(d, catalog), at: d.from_hour, homes: off, mw: deficit, key: d.event_id };
+  })() : undefined);
+  const planned = stepIdx >= 4 && !restored;
+  const bannerHomes = planned ? off : attack?.homes ?? off;
+  const bannerMw = planned ? deficit : attack?.mw ?? deficit;
 
   const decide = (o: Option, decision: 'apply' | 'veto') => {
     const incident = state.tool_calls[state.tool_calls.length - 1]?.incident_id ?? state.active_incidents[state.active_incidents.length - 1]?.event_id ?? '';
@@ -162,30 +212,65 @@ function Screen() {
   };
 
   return (
-    <div className={`gp iso is-${state.grid_state}${deciding ? ' has-options' : ''}`} data-theme="light">
+    <div className={`gp iso is-${state.grid_state}${deciding ? ' has-options' : ''}${showBanner ? ' has-incident' : ''}`} data-theme="light">
       <header className="gp-top">
         <div className="gp-brand">
           <AndesMark size={26} />
           <span className="gp-logo">Andes</span>
-          <span className="gp-sub">Coordinador · SEN Chile · gemelo digital</span>
+          <span className="gp-sub">Coordinator · Chile SEN · digital twin</span>
         </div>
         <div className={`gp-state is-${state.grid_state}`}>{STATE_LABEL[state.grid_state] ?? state.grid_state}</div>
         <div className="gp-clock">
-          <b>{clock(hour)}</b>
+          <b>{clock(hour)}<small className="gp-tz">Chile time</small></b>
           {catalog.day_profile?.label_es && <span className="gp-dayprofile">{catalog.day_profile.label_es}</span>}
           <div className="gp-day"><i style={{ width: `${(hour / 24) * 100}%` }} /></div>
         </div>
         <div className="gp-kpis">
-          <Kpi label="Hogares sin luz" value={fmt(off)} hot={off > 1} />
-          <Kpi label="Déficit" value={`${fmt(deficit)} MW`} hot={deficit > 1} />
-          <Kpi label="Demanda" value={`${fmt(demand)} MW`} />
-          <Kpi label="Costo" value={`US$ ${fmt(cost / 1000, 1)} mil/h`} />
+          <Kpi label="Homes without power" value={fmt(off)} hot={off > 1} dup />
+          <Kpi label="Shortfall" value={`${fmt(deficit)} MW`} hot={deficit > 1} dup />
+          <Kpi label="Demand" value={`${fmt(demand)} MW`} />
+          <Kpi label="Cost" value={`US$ ${fmt(cost / 1000, 1)}k/h`} />
           <Kpi label="CO₂" value={`${fmt(co2)} t/h`} />
         </div>
-        <div className={`gp-conn is-${connectionMode}`} title={connectionMode === 'offline' ? 'Sin backend: reproduce una sesión grabada con el solver real' : ''}>
-          {connectionMode === 'live' ? '● En vivo' : connectionMode === 'offline' ? '● Sesión grabada' : '○ Conectando'}
+        <div className={`gp-conn is-${connectionMode}`} title={connectionMode === 'offline' ? 'No backend: replaying a recorded session from the real solver' : ''}>
+          {connectionMode === 'live' ? '● Live' : connectionMode === 'offline' ? '● Recorded session' : '○ Connecting'}
         </div>
       </header>
+
+      {showBanner && attack && (
+        <section key={restored ? `r-${restored.key}` : attack.key} className={`gp-incident ${restored ? 'is-restored' : bannerHomes > 0 || bannerMw > 0 ? (planned ? 'is-recovering' : 'is-attack') : 'is-absorbed'}`} aria-live="polite">
+          <div className="gp-inc-main">
+            <span className="gp-inc-badge">{restored ? 'Restored' : planned ? 'Recovering' : attack.jury ? 'Jury attack' : 'Outage'}</span>
+            <div className="gp-inc-text">
+              <h2>{restored ? (restored.homes != null ? `Restored: ${fmt(restored.homes)} homes reconnected` : 'Restored: the grid is back to normal') : attack.headline}</h2>
+              <p>
+                {restored ? `${attack.headline} · cleared` : `${clock(attack.at)} Chile time`}
+                {!restored && planBy && planned && ` · ${planBy}`}
+                {!restored && state.active_incidents.length > 1 && ` · ${state.active_incidents.length} outages active`}
+              </p>
+            </div>
+          </div>
+          {!restored && (
+            <div className="gp-inc-nums">
+              {bannerHomes > 0 || bannerMw > 0 ? (
+                <>
+                  <div><b>{fmt(bannerHomes)}</b><span>homes without power · {planned ? 'now' : 'at worst'}</span></div>
+                  <div><b>{fmt(bannerMw)} MW</b><span>shortfall · {planned ? 'now' : 'at worst'}</span></div>
+                </>
+              ) : (
+                <div className="is-ok"><b>Absorbed</b><span>nobody lost power</span></div>
+              )}
+            </div>
+          )}
+          <ol className="gp-steps">
+            {STEPS.map((label, i) => (
+              <li key={label} className={i < stepIdx ? 'is-done' : i === stepIdx ? 'is-now' : ''}>
+                <i>{i < stepIdx ? '✓' : i + 1}</i>{i === STEPS.length - 1 && stepIdx >= STEPS.length ? 'Restored' : label}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       <GridScene
         catalog={catalog}
@@ -200,63 +285,42 @@ function Screen() {
       />
 
       <div className="gp-legend">
-        <b>Producción</b>
+        <b>Generation</b>
         {['solar', 'wind', 'hydro', 'gas', 'coal', 'diesel', 'battery'].map((t) => (
           <div key={t}><i className="sw" style={{ background: TECH_COLOR[t] }} />{TECH_LABEL[t]}</div>
         ))}
-        <b>Transmisión</b>
+        <b>Transmission</b>
         <div><i className="ln" style={{ borderColor: 'var(--blue)' }} />Normal</div>
-        <div><i className="ln" style={{ borderColor: 'var(--amber)' }} />Saturada ≥95 %</div>
-        <div><i className="ln is-cut" style={{ borderColor: 'var(--red)' }} />Cortada</div>
-        <b>Hogares</b>
-        <div><i className="win" />Con luz</div>
-        <div><i className="win is-dark" />Sin luz</div>
-        <small className="gp-legend-note">1 casa = 200.000 hogares</small>
+        <div><i className="ln" style={{ borderColor: 'var(--amber)' }} />Saturated ≥95 %</div>
+        <div><i className="ln is-cut" style={{ borderColor: 'var(--red)' }} />Cut</div>
+        <b>Homes</b>
+        <div><i className="win" />Powered</div>
+        <div><i className="win is-dark" />Without power</div>
+        <small className="gp-legend-note">1 house = 200,000 homes</small>
       </div>
 
-      {attacks.length > 0 && (
-        <aside className="gp-attacks">
-          <b className="gp-attacks-title">Ataques y fallas</b>
-          {attacks.map((a, i) => (
-            <div key={a.key} className={`gp-attack-card${i === 0 ? ' is-new' : ''}${a.jury ? ' is-jury' : ''}`}>
-              <small>{a.jury ? 'Jurado' : a.who === 'El operador' ? 'Operador' : 'Falla'}</small>
-              <p><b>{a.who}</b> {a.what}</p>
-              <span className={a.homes > 0 ? 'is-bad' : 'is-ok'}>{a.homes > 0 ? `−${fmt(a.homes)}` : 'la red lo absorbió'}</span>
-              {a.homes > 0 && <em>hogares sin luz en el peor momento · {fmt(a.mw)} MW</em>}
-            </div>
-          ))}
-        </aside>
-      )}
-
-      {toast && (
-        <div key={toast.key} className={`gp-toast is-${toast.kind}`}>
-          <b>{toast.kind === 'fault' ? 'Falla' : 'Plan en marcha'}</b>
-          <span>{toast.title}</span>
-          <small>{toast.sub}</small>
-        </div>
-      )}
-
-      {hovered && <div className="gp-preview-banner">Vista previa · así quedaría la red con «{hovered.title_es}»</div>}
+      {hovered && <div className="gp-preview-banner">Preview · how the grid would look with “{hovered.title_es}”</div>}
 
       <aside className="gp-brain">
         <div className="gp-brain-head">
           <span className={`gp-brain-dot is-${phase}`} />
           <div>
             <b>Gemini</b>
-            <span>{phase === 'analyzing' ? 'Analizando la falla' : phase === 'awaiting_operator' ? 'Propone dos caminos' : phase === 'executing' ? 'Ejecutando el plan' : phase === 'resolved' ? 'Plan aplicado' : 'Vigilando la red'}</span>
+            <span>{phase === 'analyzing' ? 'Analysing the outage' : phase === 'awaiting_operator' ? 'Proposing two options' : phase === 'executing' ? 'Running the plan' : phase === 'resolved' ? 'Plan applied' : 'Watching the grid'}</span>
           </div>
         </div>
         <ZoneStatus catalog={catalog} solution={shown} hour={step} incidents={state.active_incidents} />
         {options && (phase === 'awaiting_operator' || countdown?.active) && (
           <section className="gp-options gp-options-panel">
             <div className="gp-options-head">
-              <b>¿Qué hacemos?</b>
-              <span>{countdown?.active ? `Modo autónomo: Gemini aplica su recomendación en ${countdown.seconds_left} s` : <><span className="gp-only-pointer">Elige un camino. Pasa el cursor para ver cómo quedaría la red.</span><span className="gp-only-touch">Elige un camino y toca «Aplicar».</span></>}</span>
+              <b>Choose a recovery plan</b>
+              <span>{countdown?.active ? `Autonomous mode: Gemini applies its pick in ${countdown.seconds_left} s` : <><span className="gp-only-pointer">Hover a plan to preview the grid, then apply it.</span><span className="gp-only-touch">Pick a plan and tap “Apply”.</span></>}</span>
               {state.model_execution && <ModelBadge m={state.model_execution} />}
             </div>
             <div className="gp-options-row">
-              {options.map((o) => {
+              {options.map((o, n) => {
                 const rec = countdown?.candidate_id === o.option_id;
+                const cd = o.metrics.cost_delta_usd;
                 return (
                   <article
                     key={o.option_id}
@@ -265,9 +329,8 @@ function Screen() {
                     onMouseLeave={() => setHovered(null)}
                   >
                     <div className="gp-option-tags">
-                      <span className="gp-tag">{TAG_LABEL[o.tradeoff_tag] ?? o.tradeoff_tag}</span>
-                      {rec && <span className="gp-tag is-rec">Recomendada por Gemini</span>}
-                      <span className={`gp-tag ${o.validation.passed ? 'is-ok' : 'is-bad'}`}>{o.validation.passed ? 'Validador ✓' : 'Validador ✗'}</span>
+                      <span className="gp-tag is-trade">{n === 0 ? 'A' : 'B'} · {TAG_LABEL[o.tradeoff_tag] ?? o.tradeoff_tag}</span>
+                      {rec && <span className="gp-tag is-rec">Recommended by Gemini</span>}
                     </div>
                     <h3>{o.title_es}</h3>
                     <p title={o.rationale_es}>{o.rationale_es}</p>
@@ -276,24 +339,25 @@ function Screen() {
                         <li key={i}>{LEVER_LABEL[l.type] ?? l.type} · <span>{leverTarget(l.target_id, assets, catalog.lines)}</span></li>
                       ))}
                     </ul>
-                    <div className="gp-option-foot">
-                    <dl>
-                      <div><dt>Reconecta</dt><dd className="is-good">+{fmt(o.metrics.households_reconnected)}</dd></div>
-                      <div><dt>Pierden luz</dt><dd className={o.metrics.households_newly_off > 0 ? 'is-bad' : ''}>{o.metrics.households_newly_off > 0 ? `−${fmt(o.metrics.households_newly_off)}` : '0'}</dd></div>
-                      <div><dt>Costo US$</dt><dd>{o.metrics.cost_delta_usd >= 0 ? '+' : '−'}{fmt(Math.abs(o.metrics.cost_delta_usd) / 1000)} mil</dd></div>
-                      <div><dt>CO₂</dt><dd>{o.metrics.co2_delta_t >= 0 ? '+' : '−'}{fmt(Math.abs(o.metrics.co2_delta_t))} t</dd></div>
-                      <div><dt>Carga máx. línea</dt><dd className={o.metrics.max_line_loading_pct >= 98 ? 'is-warn' : ''}>{fmt(o.metrics.max_line_loading_pct)} %</dd></div>
-                    </dl>
+                    <div className="gp-option-key">
+                      <div className="is-good"><b>+{fmt(o.metrics.households_reconnected)}</b><span>homes reconnected</span></div>
+                      <div><b>{cd >= 0 ? '+' : '−'}US$ {fmt(Math.abs(cd) / 1000)}k</b><span>cost (assumed)</span></div>
+                      <div className={o.validation.passed ? 'is-good' : 'is-bad'}><b>{o.validation.passed ? '✓' : '✗'}</b><span>{o.validation.passed ? 'validated' : 'failed validation'}</span></div>
+                    </div>
+                    <small className="gp-option-more">
+                      {o.metrics.households_newly_off > 0 ? <em className="is-bad">−{fmt(o.metrics.households_newly_off)} homes lose power</em> : 'No new homes lose power'}
+                      {' · '}CO₂ {o.metrics.co2_delta_t >= 0 ? '+' : '−'}{fmt(Math.abs(o.metrics.co2_delta_t))} t
+                      {' · '}<span className={o.metrics.max_line_loading_pct >= 98 ? 'is-warn' : ''}>line load {fmt(o.metrics.max_line_loading_pct)} %</span>
+                    </small>
                     <div className="gp-option-actions">
                       {rec && countdown?.active ? (
                         <>
                           <div className="gp-count" style={{ ['--p' as string]: `${(countdown.seconds_left / 5) * 100}%` }}><span>{countdown.seconds_left}</span></div>
-                          <button className="gp-btn is-ghost" onClick={() => decide(o, 'veto')}>Vetar</button>
+                          <button className="gp-btn is-ghost" onClick={() => decide(o, 'veto')}>Veto</button>
                         </>
                       ) : (
-                        <button className="gp-btn" onClick={() => decide(o, 'apply')}>Aplicar</button>
+                        <button className="gp-btn" onClick={() => decide(o, 'apply')}>Apply</button>
                       )}
-                    </div>
                     </div>
                   </article>
                 );
@@ -303,7 +367,7 @@ function Screen() {
         )}
         <div className={`gp-brain-feed${deciding ? ' is-compact' : ''}`}>
           {state.thoughts.length === 0 && state.notes.length === 0 && (
-            <p className="gp-idle">Sin incidentes. Vigilo {catalog.generators.length} centrales, {catalog.batteries.length} baterías, {catalog.lines.length} líneas troncales y {catalog.nodes.length} zonas, hora a hora.</p>
+            <p className="gp-idle">All quiet. Watching {catalog.generators.length} plants, {catalog.batteries.length} batteries, {catalog.lines.length} trunk lines and {catalog.nodes.length} zones, hour by hour.</p>
           )}
           <MonitorBlock notes={state.notes} catalog={catalog} />
           {state.thoughts.slice(-3).map((th, i, arr) => (
@@ -315,43 +379,43 @@ function Screen() {
                 <li key={`${c.call_id}-${i}`} className={`is-${c.status}`}>
                   <code>{c.tool}</code>
                   <span>{c.args_summary_es}</span>
-                  <b>{c.status === 'pass' ? 'PASS' : c.status === 'fail' ? 'FAIL' : c.status === 'infeasible' ? 'INFACTIBLE' : '…'}</b>
+                  <b>{c.status === 'pass' ? 'PASS' : c.status === 'fail' ? 'FAIL' : c.status === 'infeasible' ? 'INFEASIBLE' : '…'}</b>
                 </li>
               ))}
             </ul>
           )}
         </div>
-        <p className="gp-brain-foot">Gemini razona y propone. Cada número lo calcula el solver HiGHS y lo revisa un validador independiente.</p>
+        <p className="gp-brain-foot">Gemini reasons and proposes. Every number is computed by the HiGHS solver and checked by an independent validator.</p>
       </aside>
 
 
 
       {(sel || selLine) && (
         <div className="gp-sheet" onClick={(e) => e.stopPropagation()}>
-          <button className="gp-sheet-x" onClick={() => setSelected(null)} aria-label="Cerrar">×</button>
+          <button className="gp-sheet-x" onClick={() => setSelected(null)} aria-label="Close">×</button>
           {sel && (
             <>
-              <small>{sel.kind === 'battery' ? 'Batería' : 'Central'} del modelo · {ZONES[sel.nodeId]?.label}</small>
+              <small>{sel.kind === 'battery' ? 'Battery' : 'Plant'} in the model · {ZONES[sel.nodeId]?.label}</small>
               <h3>{assetTitle(sel)}</h3>
               <Spark series={sel.kind === 'battery' ? shown.battery_flow_mw[sel.id] : shown.generation_mw[sel.id]} cap={sel.capacity} hour={hour} />
               <dl>
-                <div><dt>Ahora</dt><dd>{fmt(Math.abs(sel.kind === 'battery' ? at(shown.battery_flow_mw[sel.id], hour) : at(shown.generation_mw[sel.id], hour)))} MW</dd></div>
-                <div><dt>Capacidad</dt><dd>{fmt(sel.capacity)} MW</dd></div>
+                <div><dt>Now</dt><dd>{fmt(Math.abs(sel.kind === 'battery' ? at(shown.battery_flow_mw[sel.id], hour) : at(shown.generation_mw[sel.id], hour)))} MW</dd></div>
+                <div><dt>Capacity</dt><dd>{fmt(sel.capacity)} MW</dd></div>
               </dl>
-              <p className="gp-prov">Activo agregado del escenario de 5 zonas (sintético, con forma chilena). Representa a las centrales reales de esta tecnología en la zona.</p>
-              <button className="gp-btn is-danger" onClick={() => { actions.injectEvent({ asset_id: sel.id, duration_h: 4, source: 'operator' }); setSelected(null); }}>Provocar falla repentina (4 h)</button>
+              <p className="gp-prov">Aggregate asset of the 5-zone scenario (synthetic, Chile-shaped). Stands for the real plants of this technology in the zone.</p>
+              <button className="gp-btn is-danger" onClick={() => { actions.injectEvent({ asset_id: sel.id, duration_h: 4, source: 'operator' }); setSelected(null); }}>Trigger a sudden outage (4 h)</button>
             </>
           )}
           {selLine && (
             <>
-              <small>Línea troncal · {ZONES[selLine.from]?.label} → {ZONES[selLine.to]?.label}</small>
-              <h3>Línea {selLine.id}</h3>
+              <small>Trunk line · {ZONES[selLine.from]?.label} → {ZONES[selLine.to]?.label}</small>
+              <h3>Line {selLine.id}</h3>
               <Spark series={shown.line_flow_mw[selLine.id]} cap={selLine.capacity_mw} hour={hour} />
               <dl>
-                <div><dt>Flujo ahora</dt><dd>{fmt(Math.abs(at(shown.line_flow_mw[selLine.id], hour)))} MW</dd></div>
-                <div><dt>Capacidad</dt><dd>{fmt(at(shown.line_capacity_mw[selLine.id], hour) || selLine.capacity_mw)} MW</dd></div>
+                <div><dt>Flow now</dt><dd>{fmt(Math.abs(at(shown.line_flow_mw[selLine.id], hour)))} MW</dd></div>
+                <div><dt>Capacity</dt><dd>{fmt(at(shown.line_capacity_mw[selLine.id], hour) || selLine.capacity_mw)} MW</dd></div>
               </dl>
-              <button className="gp-btn is-danger" onClick={() => { actions.injectEvent({ asset_id: selLine.id, duration_h: 4, source: 'operator' }); setSelected(null); }}>Cortar línea (4 h)</button>
+              <button className="gp-btn is-danger" onClick={() => { actions.injectEvent({ asset_id: selLine.id, duration_h: 4, source: 'operator' }); setSelected(null); }}>Cut line (4 h)</button>
             </>
           )}
         </div>
@@ -360,30 +424,30 @@ function Screen() {
       {invite && (
         <div className="gp-invite" onClick={() => setInvite(false)}>
           <div className="gp-invite-card" onClick={(e) => e.stopPropagation()}>
-            <small>Jurado · escanea con tu celular</small>
-            <h2>Intenta botar la red</h2>
+            <small>Jury · scan with your phone</small>
+            <h2>Try to knock out the grid</h2>
             {connectionMode === 'live' && state.sessionId ? (
               <>
-                <img src={`${API_BASE}/live/sessions/${encodeURIComponent(state.sessionId)}/qr.svg`} alt="Código QR de la página del jurado" />
+                <img src={`${API_BASE}/live/sessions/${encodeURIComponent(state.sessionId)}/qr.svg`} alt="QR code for the jury page" />
                 <code>{`${window.location.origin}/jurado?s=${state.sessionId}`}</code>
               </>
             ) : (
-              <p>El jurado necesita el backend en vivo. Ahora mismo se está reproduciendo una sesión grabada.</p>
+              <p>The jury needs the live backend. A recorded session is playing right now.</p>
             )}
-            <button className="gp-btn" onClick={() => setInvite(false)}>Listo</button>
+            <button className="gp-btn" onClick={() => setInvite(false)}>Done</button>
           </div>
         </div>
       )}
 
       <footer className="gp-controls">
-        <button className="gp-btn is-ghost" onClick={() => actions.setClock({ action: state.clock.running ? 'pause' : 'play' })}>{state.clock.running ? 'Pausa' : 'Reanudar'}</button>
+        <button className="gp-btn is-ghost" onClick={() => actions.setClock({ action: state.clock.running ? 'pause' : 'play' })}>{state.clock.running ? 'Pause' : 'Resume'}</button>
         <label className={`gp-switch${state.clock.autonomy_mode ? ' is-on' : ''}${connectionMode !== 'live' ? ' is-disabled' : ''}`}>
           <input type="checkbox" checked={state.clock.autonomy_mode} disabled={connectionMode !== 'live'} onChange={(e) => setAutonomy(e.target.checked)} />
-          <span /> Modo autónomo
+          <span /> Autonomous mode
         </label>
-        {connectionMode === 'offline' && <button className="gp-btn is-ghost" onClick={() => actions.replayOfflineDemo()}>Repetir sesión</button>}
-        <button className="gp-btn is-ghost" onClick={() => setInvite(true)}>Invitar al jurado</button>
-        <span className="gp-hint">Toca una central o una línea para ver su detalle o provocar una falla.</span>
+        {connectionMode === 'offline' && <button className="gp-btn is-ghost" onClick={() => actions.replayOfflineDemo()}>Replay session</button>}
+        <button className="gp-btn is-ghost" onClick={() => setInvite(true)}>Invite the jury</button>
+        <span className="gp-hint">Tap a plant or a line for details or to trigger an outage.</span>
       </footer>
     </div>
   );
@@ -393,13 +457,14 @@ function leverTarget(id: string, assets: ReturnType<typeof buildAssets>, lines: 
   const a = assets.find((x) => x.id === id);
   if (a) return assetTitle(a);
   if (ZONES[id]) return ZONES[id].label;
-  if (lines.find((l) => l.id === id)) return `Línea ${id}`;
+  if (lines.find((l) => l.id === id)) return `Line ${id}`;
   return id;
 }
 
-function Kpi({ label, value, hot }: { label: string; value: string; hot?: boolean }) {
+// `dup` KPIs repeat the incident banner's numbers, so they hide while the banner is up.
+function Kpi({ label, value, hot, dup }: { label: string; value: string; hot?: boolean; dup?: boolean }) {
   return (
-    <div className={`gp-kpi${hot ? ' is-hot' : ''}`}>
+    <div className={`gp-kpi${hot ? ' is-hot' : ''}${dup ? ' is-dup' : ''}`}>
       <span>{label}</span>
       <b key={value} className="gp-kpi-v">{value}</b>
     </div>
@@ -439,9 +504,9 @@ function Spark({ series, cap, hour }: { series?: number[]; cap: number; hour: nu
 }
 
 type Note = ReturnType<typeof useLiveSession>['state']['notes'][number];
-const SEVERITY_LABEL = { info: 'Normal', watch: 'Vigilar', alert: 'Alerta' } as const;
+const SEVERITY_LABEL = { info: 'Normal', watch: 'Watch', alert: 'Alert' } as const;
 
-// Jimmy: the hourly monitor. Numbers arrive from code in `metrics`; the sentence may be model-worded.
+// Gemini monitor: the hourly reading. Numbers arrive from code in `metrics`; the sentence may be model-worded.
 function MonitorBlock({ notes, catalog }: { notes: Note[]; catalog: NonNullable<ReturnType<typeof useLiveSession>['state']['catalog']> }) {
   if (notes.length === 0) return null;
   const last = notes[notes.length - 1];
@@ -454,26 +519,26 @@ function MonitorBlock({ notes, catalog }: { notes: Note[]; catalog: NonNullable<
   const line = m.max_line_id ? catalog.lines.find((l) => l.id === m.max_line_id) : undefined;
   const lineName = line ? `${line.id} · ${ZONES[line.from]?.label ?? line.from} → ${ZONES[line.to]?.label ?? line.to}` : m.max_line_id;
   const stats: { k: string; v: string; hot?: boolean }[] = [];
-  if (m.reserve_margin_pct != null) stats.push({ k: 'Reserva', v: `${fmt(m.reserve_margin_pct, 1)} %`, hot: m.reserve_margin_pct < 10 });
-  if (m.max_line_loading_pct != null) stats.push({ k: lineName ? `Línea ${lineName}` : 'Línea más cargada', v: `${fmt(m.max_line_loading_pct, 0)} %`, hot: m.max_line_loading_pct >= 90 });
-  if ((m.unserved_mw ?? 0) > 0) stats.push({ k: 'Sin servir', v: `${fmt(m.unserved_mw!, 0)} MW`, hot: true });
-  else if (m.curtailment_mw != null) stats.push({ k: 'Vertimiento', v: `${fmt(m.curtailment_mw, 0)} MW` });
+  if (m.reserve_margin_pct != null) stats.push({ k: 'Reserve', v: `${fmt(m.reserve_margin_pct, 1)} %`, hot: m.reserve_margin_pct < 10 });
+  if (m.max_line_loading_pct != null) stats.push({ k: lineName ? `Line ${lineName}` : 'Busiest line', v: `${fmt(m.max_line_loading_pct, 0)} %`, hot: m.max_line_loading_pct >= 90 });
+  if ((m.unserved_mw ?? 0) > 0) stats.push({ k: 'Unserved', v: `${fmt(m.unserved_mw!, 0)} MW`, hot: true });
+  else if (m.curtailment_mw != null) stats.push({ k: 'Curtailment', v: `${fmt(m.curtailment_mw, 0)} MW` });
   return (
-    <section className={`gp-jimmy is-${sev}`}>
-      <div className="gp-jimmy-head">
-        <b>Jimmy · monitor</b>
+    <section className={`gp-monitor is-${sev}`}>
+      <div className="gp-monitor-head">
+        <b>Gemini · monitor</b>
         <span className={`gp-sev is-${sev}`}>{SEVERITY_LABEL[sev]}</span>
         <em>{clock(last.sim_hour)}</em>
       </div>
       <p>{last.text_es}</p>
       {stats.length > 0 && (
-        <dl className="gp-jimmy-stats">
+        <dl className="gp-monitor-stats">
           {stats.slice(0, 3).map((x) => <div key={x.k} className={x.hot ? 'is-hot' : ''}><dt>{x.k}</dt><dd>{x.v}</dd></div>)}
         </dl>
       )}
       <MonitorBadge m={last.model_execution} />
       {earlier.length > 0 && (
-        <ul className="gp-jimmy-hist">
+        <ul className="gp-monitor-hist">
           {earlier.map((n, i) => (
             <li key={i} className={`is-${n.severity ?? 'info'}`}><em>{clock(n.sim_hour)}</em>{n.text_es}</li>
           ))}
@@ -488,20 +553,20 @@ function MonitorBadge({ m }: { m?: Note['model_execution'] }) {
   if (!m) return null;
   const deterministic = m.model === 'deterministic-monitor' || (m.response_id ?? '').startsWith('det-');
   const status = m.status as string;
-  const label = deterministic ? 'Sin modelo · texto determinista'
-    : status === 'timeout' ? `${m.model} no respondió a tiempo`
-    : status === 'error' ? `${m.model} con error`
-    : status === 'no_key' ? 'Sin modelo · sin clave'
-    : `${m.model} · ${(m.latency_ms / 1000).toLocaleString('es-CL', { maximumFractionDigits: 1 })} s${m.cached ? ' · respuesta en caché' : ''}`;
-  return <em className={`gp-model gp-jimmy-model${deterministic || status !== 'ok' ? ' is-warn' : ''}`}>{label}</em>;
+  const label = deterministic ? 'No model · deterministic text'
+    : status === 'timeout' ? `${m.model} did not answer in time`
+    : status === 'error' ? `${m.model} error`
+    : status === 'no_key' ? 'No model · no key'
+    : `${m.model} · ${(m.latency_ms / 1000).toLocaleString('en-GB', { maximumFractionDigits: 1 })} s${m.cached ? ' · cached answer' : ''}`;
+  return <em className={`gp-model gp-monitor-model${deterministic || status !== 'ok' ? ' is-warn' : ''}`}>{label}</em>;
 }
 
 // Who actually answered. A deterministic fallback or a cached answer must never pass for a live call.
 function ModelBadge({ m }: { m: NonNullable<ReturnType<typeof useLiveSession>['state']['model_execution']> }) {
   const deterministic = (m.response_id ?? '').startsWith('det-');
-  const label = m.status === 'timeout' ? `${m.model} no respondió a tiempo · ranking del solver`
-    : m.status === 'error' ? `${m.model} con error · ranking del solver`
-    : deterministic ? 'Planificador determinista · sin llamada a Gemini'
-    : `${m.model} · ${(m.latency_ms / 1000).toLocaleString('es-CL', { maximumFractionDigits: 1 })} s${m.cached ? ' · respuesta en caché' : ''}`;
+  const label = m.status === 'timeout' ? `${m.model} did not answer in time · solver ranking`
+    : m.status === 'error' ? `${m.model} error · solver ranking`
+    : deterministic ? 'Deterministic planner · no Gemini call'
+    : `${m.model} · ${(m.latency_ms / 1000).toLocaleString('en-GB', { maximumFractionDigits: 1 })} s${m.cached ? ' · cached answer' : ''}`;
   return <em className={`gp-model${deterministic || m.status !== 'ok' ? ' is-warn' : ''}`}>{label}</em>;
 }

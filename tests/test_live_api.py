@@ -252,7 +252,7 @@ def test_zero_improvement_guardrails_and_autonomy():
         recommended_id="opt_zero",
         diagnosis_es="Falla en corredor aislado.",
     )
-    assert "ninguna maniobra" in diag_zero.lower()
+    assert "no available operating move" in diag_zero.lower()
     assert not has_digits(diag_zero)
 
     # Case 3b: Autonomous mode must not start countdown or apply a 0-improvement plan

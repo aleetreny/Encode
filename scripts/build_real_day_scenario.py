@@ -266,7 +266,7 @@ def build(
         "date": DATE,
         "method": "scaled-observed-shape",
         "scale_factor": scale_factor,
-        "label_es": "Día real CEN · 14-ago-2026 · perfil escalado",
+        "label_es": "Real CEN day · 14 Aug 2026 · scaled profile",
     }
     scen["day_profile"] = day_profile
     scen["provenance"] = {

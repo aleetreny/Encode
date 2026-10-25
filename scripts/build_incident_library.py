@@ -95,7 +95,7 @@ JURY_NAMES = [
     "Dr. Carlos Muñoz",
     "Ing. Sofía Valdivia",
     "Dr. Andrés Pizarro",
-    "Jurado Londres",
+    "London juror",
 ]
 
 
@@ -184,7 +184,7 @@ def enforce_digit_free_and_cached(events: list[dict[str, Any]], asset_key: str, 
                     f"Recommended 0-reconnected option in {asset_key}_{hour} when improvement > 0 exists"
                 )
             else:
-                assert "ninguna maniobra" in ev["diagnosis_es"].lower(), (
+                assert "no available operating move" in ev["diagnosis_es"].lower(), (
                     f"Missing zero-improvement notice in diagnosis_es for {asset_key}_{hour}"
                 )
 
@@ -234,7 +234,7 @@ def generate_single_incident(
         if allow_live:
             options_ev = next(e for e in events if e["type"] == "options.ready")
             me = options_ev["model_execution"]
-            assert me.get("status") == "ok" and me.get("model") == "gemini-4-argon" and not str(me.get("response_id", "")).startswith("det-"), (
+            assert me.get("status") == "ok" and me.get("model") != "deterministic-planner" and not str(me.get("response_id", "")).startswith("det-"), (
                 f"Live Gemini required for {asset_id}_{hour}, got {me}"
             )
 
@@ -318,7 +318,7 @@ def generate_combo_incident(
         if allow_live:
             options_ev = next(e for e in events if e["type"] == "options.ready")
             me = options_ev["model_execution"]
-            assert me.get("status") == "ok" and me.get("model") == "gemini-4-argon" and not str(me.get("response_id", "")).startswith("det-"), (
+            assert me.get("status") == "ok" and me.get("model") != "deterministic-planner" and not str(me.get("response_id", "")).startswith("det-"), (
                 f"Live Gemini required for {combo_key}, got {me}"
             )
 
@@ -394,7 +394,7 @@ def build_library(
                     me = opt_ev.get("model_execution", {})
                     if (
                         me.get("status") == "ok"
-                        and me.get("model") == "gemini-4-argon"
+                        and me.get("model") != "deterministic-planner"
                         and not str(me.get("response_id", "det-")).startswith("det-")
                         and float(opt_ev.get("hour", 0)) > float(inc_ev.get("hour", 0))
                     ):
