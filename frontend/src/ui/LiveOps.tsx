@@ -3,6 +3,7 @@ import { LiveSessionProvider, useLiveSession } from '../live/store';
 import type { Option, Solution } from '../live/types';
 import { GridScene, TECH_COLOR, TECH_LABEL, assetTitle, at, buildAssets } from './GridScene';
 import { ZONES } from './layout';
+import { AndesMark } from './brand';
 import './ui.css';
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || '/api';
@@ -165,7 +166,8 @@ function Screen() {
     <div className={`gp iso is-${state.grid_state}${options && (phase === 'awaiting_operator' || countdown?.active) ? ' has-options' : ''}`} data-theme="light">
       <header className="gp-top">
         <div className="gp-brand">
-          <span className="gp-logo">GridPilot</span>
+          <AndesMark size={26} />
+          <span className="gp-logo">Andes</span>
           <span className="gp-sub">Coordinador · SEN Chile · gemelo digital</span>
         </div>
         <div className={`gp-state is-${state.grid_state}`}>{STATE_LABEL[state.grid_state] ?? state.grid_state}</div>

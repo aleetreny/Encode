@@ -65,3 +65,5 @@
 .jr-btn.is-ghost { background: #f2f2ef; color: var(--ink); }
 @keyframes jr-fade { from { opacity: 0; } }
 @keyframes jr-up { from { transform: translateY(40px); opacity: 0; } }
+.jr-brand { display: flex; gap: 10px; align-items: center; }
+.jr-top b { letter-spacing: .32em; }

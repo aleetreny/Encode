@@ -41,8 +41,9 @@
   display: flex; align-items: center; gap: 18px;
   padding: 14px 22px;
 }
-.gp-brand { display: flex; flex-direction: column; }
-.gp-logo { font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; font-size: 14px; }
+.gp-brand { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; }
+.gp-brand svg { grid-row: span 2; }
+.gp-logo { font-weight: 800; letter-spacing: 0.32em; text-transform: uppercase; font-size: 15px; }
 .gp-sub { font: 10.5px var(--mono); color: var(--ink-3); letter-spacing: 0.04em; }
 .gp-state {
   font: 700 10.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase;

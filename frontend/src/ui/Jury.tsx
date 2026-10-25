@@ -5,6 +5,7 @@ import { Asset, TECH_COLOR, assetTitle, at, buildAssets } from './GridScene';
 import { P, ZONES, screen } from './layout';
 import { Battery, CoalPlant, Diesel, GasPlant, Hydro, Solar, Wind } from './objects';
 import * as k from '../iso/iso-kit';
+import { AndesMark } from './brand';
 import './ui.css';
 import './jury.css';
 
@@ -102,9 +103,12 @@ export function Jury() {
   return (
     <div className="jr">
       <header className="jr-top">
-        <div>
-          <b>GridPilot</b>
-          <span>Sala en vivo · jurado</span>
+        <div className="jr-brand">
+          <AndesMark size={22} />
+          <div>
+            <b>Andes</b>
+            <span>Sala en vivo · jurado</span>
+          </div>
         </div>
         <span className={`jr-state is-${state.grid_state}`}>{link === 'live' ? state.grid_state : link === 'down' ? 'sin conexión' : 'conectando'}</span>
       </header>
