@@ -506,7 +506,7 @@ function Spark({ series, cap, hour }: { series?: number[]; cap: number; hour: nu
 type Note = ReturnType<typeof useLiveSession>['state']['notes'][number];
 const SEVERITY_LABEL = { info: 'Normal', watch: 'Watch', alert: 'Alert' } as const;
 
-// Jimmy: the hourly monitor. Numbers arrive from code in `metrics`; the sentence may be model-worded.
+// Gemini monitor: the hourly reading. Numbers arrive from code in `metrics`; the sentence may be model-worded.
 function MonitorBlock({ notes, catalog }: { notes: Note[]; catalog: NonNullable<ReturnType<typeof useLiveSession>['state']['catalog']> }) {
   if (notes.length === 0) return null;
   const last = notes[notes.length - 1];
@@ -524,21 +524,21 @@ function MonitorBlock({ notes, catalog }: { notes: Note[]; catalog: NonNullable<
   if ((m.unserved_mw ?? 0) > 0) stats.push({ k: 'Unserved', v: `${fmt(m.unserved_mw!, 0)} MW`, hot: true });
   else if (m.curtailment_mw != null) stats.push({ k: 'Curtailment', v: `${fmt(m.curtailment_mw, 0)} MW` });
   return (
-    <section className={`gp-jimmy is-${sev}`}>
-      <div className="gp-jimmy-head">
-        <b>Jimmy · monitor</b>
+    <section className={`gp-monitor is-${sev}`}>
+      <div className="gp-monitor-head">
+        <b>Gemini · monitor</b>
         <span className={`gp-sev is-${sev}`}>{SEVERITY_LABEL[sev]}</span>
         <em>{clock(last.sim_hour)}</em>
       </div>
       <p>{last.text_es}</p>
       {stats.length > 0 && (
-        <dl className="gp-jimmy-stats">
+        <dl className="gp-monitor-stats">
           {stats.slice(0, 3).map((x) => <div key={x.k} className={x.hot ? 'is-hot' : ''}><dt>{x.k}</dt><dd>{x.v}</dd></div>)}
         </dl>
       )}
       <MonitorBadge m={last.model_execution} />
       {earlier.length > 0 && (
-        <ul className="gp-jimmy-hist">
+        <ul className="gp-monitor-hist">
           {earlier.map((n, i) => (
             <li key={i} className={`is-${n.severity ?? 'info'}`}><em>{clock(n.sim_hour)}</em>{n.text_es}</li>
           ))}
@@ -558,7 +558,7 @@ function MonitorBadge({ m }: { m?: Note['model_execution'] }) {
     : status === 'error' ? `${m.model} error`
     : status === 'no_key' ? 'No model · no key'
     : `${m.model} · ${(m.latency_ms / 1000).toLocaleString('en-GB', { maximumFractionDigits: 1 })} s${m.cached ? ' · cached answer' : ''}`;
-  return <em className={`gp-model gp-jimmy-model${deterministic || status !== 'ok' ? ' is-warn' : ''}`}>{label}</em>;
+  return <em className={`gp-model gp-monitor-model${deterministic || status !== 'ok' ? ' is-warn' : ''}`}>{label}</em>;
 }
 
 // Who actually answered. A deterministic fallback or a cached answer must never pass for a live call.
