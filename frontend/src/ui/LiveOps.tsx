@@ -262,6 +262,12 @@ function Screen() {
         }
         return (
           <section key={restored ? `r-${restored.key}` : attack.key} className={`gp-incident is-${stage}`} aria-live="polite">
+            {/* who caused it stays in view through every stage */}
+            {stage !== 'outage' && stage !== 'absorbed' && (
+              <span className={`gp-inc-who${attack.jury ? ' is-jury' : ''}`}>
+                ✕ <b>{attack.who || 'Sudden outage'}</b> {attack.who ? 'knocked out' : ':'} {attack.target}
+              </span>
+            )}
             <ol className="gp-steps">
               {STEPS.map((label, i) => (
                 <li key={label} className={i < stepIdx ? 'is-done' : i === stepIdx ? 'is-now' : ''}>
