@@ -108,6 +108,9 @@ class LiveSession:
         self._clock_task: asyncio.Task[None] | None = None
         self._countdown_task: asyncio.Task[None] | None = None
         self._eval_tasks: set[asyncio.Task[Any]] = set()
+        # Incidents Gemini is still analysing. The simulated clock holds meanwhile, so the options arrive
+        # while the outage they answer is still on (a 10-20 s model call is hours of simulated time).
+        self._analysing: int = 0
         self._disruption_lock: asyncio.Lock | None = None
 
         # Initial baseline solve
@@ -273,7 +276,7 @@ class LiveSession:
                 now = time.perf_counter()
                 dt_real = max(0.0, min(2.5, now - last_ts))
                 last_ts = now
-                dh = dt_real / max(0.2, self.speed_s_per_hour)
+                dh = 0.0 if self._analysing else dt_real / max(0.2, self.speed_s_per_hour)
                 self.hour = (self.hour + dh) % 24.0
                 self._emit({"type": "clock.tick", "running": self.running})
                 await self._check_expired_events()
@@ -588,19 +591,23 @@ class LiveSession:
                 },
             )
 
-        res = await asyncio.to_thread(
-            run_incident_evaluation,
-            incident_id=incident_id,
-            scenario=self.scenario,
-            active_disruptions=rec["active_events_snapshot"],
-            base_sol=rec["baseline_solution"],
-            from_hour=rec["from_hour"],
-            to_hour=rec["to_hour"],
-            emit_thought=emit_thought_cb,
-            emit_tool_call=emit_tool_cb,
-            allow_live_gemini=self.allow_live_gemini,
-            exclude_candidate_ids=set(self.previous_option_ids),
-        )
+        self._analysing += 1
+        try:
+            res = await asyncio.to_thread(
+                run_incident_evaluation,
+                incident_id=incident_id,
+                scenario=self.scenario,
+                active_disruptions=rec["active_events_snapshot"],
+                base_sol=rec["baseline_solution"],
+                from_hour=rec["from_hour"],
+                to_hour=rec["to_hour"],
+                emit_thought=emit_thought_cb,
+                emit_tool_call=emit_tool_cb,
+                allow_live_gemini=self.allow_live_gemini,
+                exclude_candidate_ids=set(self.previous_option_ids),
+            )
+        finally:
+            self._analysing = max(0, self._analysing - 1)
 
         # Allow any queued call_soon_threadsafe callbacks to flush before options.ready
         await asyncio.sleep(0.01)
@@ -859,6 +866,7 @@ class LiveSession:
         for t in list(self._eval_tasks):
             t.cancel()
         self._eval_tasks.clear()
+        self._analysing = 0
 
         self.running = False
         if self._clock_task and not self._clock_task.done():

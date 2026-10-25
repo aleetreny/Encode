@@ -675,3 +675,24 @@ def test_a_monitor_failure_never_breaks_the_clock(no_key, monkeypatch, caplog):
     session._maybe_emit_monitor_note()  # logged, not raised, and no invented note
     assert monitor_notes(session) == []
     assert "could not assess" in caplog.text
+
+
+def test_the_simulated_clock_holds_while_gemini_analyses_an_attack(no_key):
+    async def scenario():
+        session = LiveSession(
+            "clock-hold", start_hour=18.0, speed_s_per_hour=0.5, allow_live_gemini=False
+        )
+        session._analysing = 1  # an attack is being analysed
+        await session.set_clock("play")
+        await asyncio.sleep(2.3)
+        held = session.hour
+        ticks = [e for e in session.event_history if e["type"] == "clock.tick" and e["seq"] > 0]
+        session._analysing = 0
+        await asyncio.sleep(1.2)
+        moved = session.hour
+        await session.set_clock("pause")
+        return held, len(ticks), moved
+
+    held, n_ticks, moved = run(scenario())
+    assert held == 18.0 and n_ticks >= 2  # ticks keep flowing, the hour does not move
+    assert moved > 18.0  # and it resumes once the options are out
