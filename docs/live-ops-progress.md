@@ -93,13 +93,13 @@
 
 > **Corrección (25 oct, `feature/real-day`):** en la Etapa 5 solo `demo-stream.jsonl` y los 3 `combo_*` se regrabaron. Los otros 108 archivos de la biblioteca cambiaron una línea (se les agregó `source: "jury"` y un `jury_name`) y conservaban las respuestas de Gemini de la grabación anterior. La Etapa 6 sí los regrabó todos.
 
-## Etapa 6 — Día real del CEN y Jimmy monitoreando (`feature/real-day`)
+## Etapa 6 — Día real del CEN y Gemini monitoreando (`feature/real-day`)
 - **Estado**: COMPLETADO (rama `feature/real-day`; contrato en `docs/real-day-contract.md`)
 - **Qué entró**:
   - Escenario `chile-sen-5node-real-2026-08-14` con la forma del día real del CEN del 14-ago-2026, escalada a la red de 5 nodos (`scale_factor` 0,18). Es el escenario por defecto (`GRIDPILOT_SCENARIO=real-day`; `synthetic` sigue disponible).
   - Demanda horaria del sistema según los retiros medidos por barra. Las proporciones por zona son supuestas, porque el mapeo de barras cubre el 78,2 % de la energía.
   - La forma horaria solar y eólica es real; su amplitud está normalizada a la capacidad. Topología, límites, capacidades y costos siguen siendo sintéticos.
-  - Jimmy (`backend/live/monitor.py`): una nota por hora simulada, más otra cuando sube la severidad. Las métricas las calcula el código y la redacción la hace `GRIDPILOT_MODEL_MONITOR` (por defecto `gemini-3.5-flash-lite`, unos 0,7 s), con un límite de 3 s. Si falla, la nota se rotula como `deterministic-monitor`. Un corredor saturado es "vigilar"; solo hay "alerta" si hay hogares sin servicio.
-  - Panel de Jimmy y etiqueta del día en la pantalla grande.
-  - Se regrabaron con Gemini real `demo-stream.jsonl` (11 notas de Jimmy `ok`; decisor en 11,6 s y 15,9 s) y los 111 archivos de la biblioteca (todos `gemini-4-argon`, `ok`).
+  - Monitor de Gemini (`backend/live/monitor.py`): una nota por hora simulada, más otra cuando sube la severidad. Las métricas las calcula el código y la redacción la hace `GRIDPILOT_MODEL_MONITOR` (por defecto `gemini-3.5-flash-lite`, unos 0,7 s), con un límite de 3 s. Si falla, la nota se rotula como `deterministic-monitor`. Un corredor saturado es "vigilar"; solo hay "alerta" si hay hogares sin servicio.
+  - Panel del monitor de Gemini y etiqueta del día en la pantalla grande.
+  - Se regrabaron con Gemini real `demo-stream.jsonl` (11 notas del monitor `ok`; decisor en 11,6 s y 15,9 s) y los 111 archivos de la biblioteca (todos `gemini-4-argon`, `ok`).
 - **Pendiente para la demo en vivo**: el decisor tardó entre 10 y 16 s el 25 oct. Con `GRIDPILOT_GEMINI_TIMEOUT_S` en su valor por defecto de 12 s, algunas fallas caen al planificador determinista (rotulado). Con `GRIDPILOT_GEMINI_TIMEOUT_S=20` responde Gemini. A 3–4 s por hora simulada, el reloj avanza unas 3 horas mientras el decisor piensa.

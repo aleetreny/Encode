@@ -1,4 +1,4 @@
-"""Jimmy monitor: metrics, severity, wording, model fallbacks and the engine's hourly/escalation cadence.
+"""Gemini monitor: metrics, severity, wording, model fallbacks and the engine's hourly/escalation cadence.
 
 Nothing here touches the network: the Gemini HTTP helper is replaced in every test.
 """

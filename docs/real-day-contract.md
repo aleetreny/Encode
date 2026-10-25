@@ -1,6 +1,6 @@
 # Real-day contract (`feature/real-day`)
 
-Goal: the live demo runs on the shape of a real CEN day (14 Aug 2026), Jimmy (the Gemini monitor)
+Goal: the live demo runs on the shape of a real CEN day (14 Aug 2026), the Gemini monitor
 comments on the grid every simulated hour and warns before something breaks, and jury attacks are
 still resolved live by the existing decider. The synthetic day stays as a selectable fallback.
 
@@ -62,7 +62,7 @@ does not replace the current demo.
    action, and the existing candidate sweep finds ≥ 2 validated options for each.
 5. `validate()` passes on the baseline solution.
 
-## 2. Jimmy monitor (`agent.note`, optional additive fields)
+## 2. Gemini monitor (`agent.note`, optional additive fields)
 
 - Cadence: one monitor note per simulated hour (`kind: "monitor"`), plus an immediate one when
   severity rises. Replaces the canned `generate_periodic_note_es` texts.
@@ -77,7 +77,7 @@ does not replace the current demo.
   If the model answers after the clock crossed an hour, or fails, the note is worded by code from the
   grid as it is at emission (`status: "stale"` for a late answer). A note that falls due during a call
   sets a flag and the grid is read again when the call returns, so a queued alert is never downgraded.
-- The persona name "Jimmy" lives only in the UI; the badge shows the real `model_execution.model`.
+- The UI labels it "Gemini · monitor"; the badge shows the real `model_execution.model`.
 
 ## 3. Ownership on this branch
 
@@ -85,7 +85,7 @@ does not replace the current demo.
 |---|---|---|
 | Bus → zone table | `scripts/map_buses_to_zones.py`, `data/processed/cen-sip/bus-zone-2026-08-14.csv` | Haiku 5.5 |
 | Real-day scenario + selection | `scripts/build_real_day_scenario.py`, `optimisation/fixtures/real_day_scenario.json`, `backend/live/catalog.py`, `tests/test_real_day_scenario.py` | Sonnet 5.5 high |
-| Jimmy monitor | new `backend/live/monitor.py`, `backend/live/engine.py` (note loop only), `agent_loop.py` (`generate_periodic_note_es` only), `tests/test_monitor.py` | Sonnet 5.5 xhigh |
+| Gemini monitor | new `backend/live/monitor.py`, `backend/live/engine.py` (note loop only), `agent_loop.py` (`generate_periodic_note_es` only), `tests/test_monitor.py` | Sonnet 5.5 xhigh |
 | UI | `frontend/src/ui/`, `frontend/src/live/offline.ts`, `frontend/src/live/store.ts` | Sonnet 5.5 medium |
 | Contract, merges, recording, verification | this file, `contracts/`, `frontend/src/live/types.ts`, recordings | Opus 5.5 (orchestrator) |
 

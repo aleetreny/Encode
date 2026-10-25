@@ -7,7 +7,7 @@ Manages:
 - Asynchronous candidate + Gemini 4 Argon option generation (`options.ready`)
 - Autonomous countdown (`autonomy.countdown` 5->0) with operator `veto` cancellation
 - Event expiration (`event.ended` + `solution.updated` returning to `normal`)
-- Jimmy monitor `agent.note` every simulated hour and on severity rise (digit-free, `backend/live/monitor.py`)
+- Gemini monitor `agent.note` every simulated hour and on severity rise (digit-free, `backend/live/monitor.py`)
 - `SessionManager`: multi-session registry with auto-creation for `"demo"` or any session ID
 """
 
@@ -344,7 +344,7 @@ class LiveSession:
         return monitor.assess(self.scenario, self.solution, self.hour, outaged_battery_ids=down)
 
     def _maybe_emit_monitor_note(self) -> None:
-        """Jimmy: one monitor note per simulated hour (bucket `int(hour)`), plus one when severity rises.
+        """Gemini monitor: one monitor note per simulated hour (bucket `int(hour)`), plus one when severity rises.
 
         Never awaits the model: without a key the deterministic note is emitted here, otherwise the call runs
         in a background task (at most one in flight; if another note falls due meanwhile, the grid is read
@@ -402,7 +402,7 @@ class LiveSession:
                     self._emit_monitor_payload(payload)
                 else:
                     # The model failed, or answered after the clock crossed an hour: word the grid as it is
-                    # now, labelled with why. A slow model can never silence Jimmy or show an old reading.
+                    # now, labelled with why. A slow model can never silence the monitor or show an old reading.
                     self._emit_monitor_payload(
                         monitor.deterministic_note(
                             self._assess_monitor(),

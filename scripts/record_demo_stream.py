@@ -39,13 +39,13 @@ SCHEMA_PATH = ROOT / "contracts" / "live.schema.json"
 
 
 async def _drain_monitor(session: LiveSession) -> None:
-    """Wait for Jimmy's in-flight note so the recording keeps a deterministic order."""
+    """Wait for the monitor's in-flight note so the recording keeps a deterministic order."""
     while session._monitor_task is not None and not session._monitor_task.done():
         await session._monitor_task
 
 
 async def _monitor_hour(session: LiveSession, hour: float) -> None:
-    """Advance the simulated clock to `hour` and record Jimmy's note for it, as the 1 Hz loop would."""
+    """Advance the simulated clock to `hour` and record the monitor note for it, as the 1 Hz loop would."""
     session.hour = hour
     session._emit({"type": "clock.tick", "running": True})
     session._maybe_emit_monitor_note()
@@ -64,7 +64,7 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
     session.running = True
     session.event_history[0]["clock"]["running"] = True
 
-    # 12:00 -> 17:00: Jimmy reads the real-day grid every simulated hour (midday congestion, evening ramp)
+    # 12:00 -> 17:00: the Gemini monitor reads the real-day grid every simulated hour (midday congestion, evening ramp)
     session._monitor_bucket = -1
     for h in range(12, 18):
         await _monitor_hour(session, float(h))
@@ -90,7 +90,7 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
         by="operator",
     )
 
-    # 19:00 -> Jimmy's hourly reading with the plan applied, then Incident 2: Jury triggers L3 corridor
+    # 19:00 -> the monitor's hourly reading with the plan applied, then Incident 2: Jury triggers L3 corridor
     # outage [19, 22) with autonomous mode enabled
     await _monitor_hour(session, 19.0)
     session.autonomy = True
@@ -109,12 +109,12 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
         await cd_task
     await _drain_monitor(session)
 
-    # Next whole hours until 22:00 -> Jimmy keeps reading the grid while the plan holds. The countdown has
+    # Next whole hours until 22:00 -> the monitor keeps reading the grid while the plan holds. The countdown has
     # already advanced the clock, so start after it: the stream's hour never goes backwards.
     for h in range(int(session.hour) + 1, 22):
         await _monitor_hour(session, float(h))
 
-    # 22:00 -> Both disruptions reach to_hour=22 and expire; grid returns to normal and Jimmy says so
+    # 22:00 -> Both disruptions reach to_hour=22 and expire; grid returns to normal and the monitor says so
     await session.set_clock("seek", hour=22.0)
     await _drain_monitor(session)
 
@@ -205,7 +205,7 @@ def verify_stream(events: list[dict[str, Any]]) -> None:
 
     from datetime import datetime
 
-    # Jimmy: an hourly reading with code-computed metrics; a fallback must say so, never pass for the model.
+    # Gemini monitor: an hourly reading with code-computed metrics; a fallback must say so, never pass for the model.
     monitor_notes = [e for e in events if e.get("type") == "agent.note" and e.get("kind") == "monitor"]
     assert len(monitor_notes) >= 9, f"Expected >= 9 monitor notes (12:00-22:00), got {len(monitor_notes)}"
     hours = [e["hour"] for e in events]
