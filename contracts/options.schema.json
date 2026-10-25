@@ -1,0 +1,21 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "allow_load_shedding": {
+      "default": false,
+      "title": "Allow Load Shedding",
+      "type": "boolean"
+    },
+    "battery_policy": {
+      "default": "optimised",
+      "enum": [
+        "disabled",
+        "optimised"
+      ],
+      "title": "Battery Policy",
+      "type": "string"
+    }
+  },
+  "title": "Options",
+  "type": "object"
+}

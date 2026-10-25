@@ -1,0 +1,82 @@
+{
+  "source_sha256": "df142e0b9bc654b5b24b296857b294ff6e1589a18bc2dde3b575c9741af2ce44",
+  "plant_day_records": 4123,
+  "day_technology_records": 62,
+  "checks": [
+    "31 days per technology",
+    "unique plant/day keys",
+    "numeric nonnegative observations or explicit null for source '-'",
+    "plant published totals versus sum of available cells",
+    "complete selected event and its hourly totals",
+    "published daily totals",
+    "monthly published GWh to available-cell MWh reconciliation"
+  ],
+  "missing_observations": 122,
+  "incomplete_days": [
+    {
+      "date": "2026-08-29",
+      "technology": "solar",
+      "missing": 54
+    },
+    {
+      "date": "2026-08-30",
+      "technology": "solar",
+      "missing": 14
+    },
+    {
+      "date": "2026-08-29",
+      "technology": "wind",
+      "missing": 38
+    },
+    {
+      "date": "2026-08-30",
+      "technology": "wind",
+      "missing": 16
+    }
+  ],
+  "source_anomalies": [
+    {
+      "date": "2026-08-10",
+      "technology": "solar",
+      "issue": "Source hour-2 header is '|'. Values retained by column position, not silently relabelled."
+    },
+    {
+      "date": "2026-08-09",
+      "technology": "solar",
+      "issue": "Published hourly Total row disagrees with sum of plant cells; plant data retained without alteration.",
+      "max_residual_mwh": 2370.05485848
+    },
+    {
+      "date": "2026-08-10",
+      "technology": "solar",
+      "issue": "Published hourly Total row disagrees with sum of plant cells; plant data retained without alteration.",
+      "max_residual_mwh": 1236.8236666666667
+    },
+    {
+      "date": "2026-08-11",
+      "technology": "solar",
+      "issue": "Published hourly Total row disagrees with sum of plant cells; plant data retained without alteration.",
+      "max_residual_mwh": 7.230299999999998
+    },
+    {
+      "date": "2026-08-13",
+      "technology": "solar",
+      "issue": "Published hourly Total row disagrees with sum of plant cells; plant data retained without alteration.",
+      "max_residual_mwh": 9.341400000000004
+    }
+  ],
+  "monthly_reconciliation": {
+    "solar": {
+      "calculated_mwh": 159098.3864021798,
+      "summary_mwh": 159098.38640217975,
+      "residual_mwh": 5.820766091346741e-11,
+      "source_cell": "X15"
+    },
+    "wind": {
+      "calculated_mwh": 157580.26194666667,
+      "summary_mwh": 157580.26194666667,
+      "residual_mwh": 0.0,
+      "source_cell": "X14"
+    }
+  }
+}

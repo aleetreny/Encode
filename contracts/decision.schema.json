@@ -1,0 +1,37 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "decision": {
+      "enum": [
+        "approved",
+        "rejected"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "expected_revision": {
+      "minimum": 0,
+      "title": "Expected Revision",
+      "type": "integer"
+    },
+    "note": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Note",
+      "type": "string"
+    },
+    "operator": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Operator",
+      "type": "string"
+    }
+  },
+  "required": [
+    "decision",
+    "expected_revision",
+    "operator"
+  ],
+  "title": "Decision",
+  "type": "object"
+}

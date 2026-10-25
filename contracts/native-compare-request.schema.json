@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "baseline": {
+      "additionalProperties": true,
+      "title": "Baseline",
+      "type": "object"
+    },
+    "candidate": {
+      "additionalProperties": true,
+      "title": "Candidate",
+      "type": "object"
+    },
+    "scenario_id": {
+      "default": "chile-sen-5node-demo",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+      "title": "Scenario Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "baseline",
+    "candidate"
+  ],
+  "title": "NativeCompareRequest",
+  "type": "object"
+}

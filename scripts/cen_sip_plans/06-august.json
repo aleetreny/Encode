@@ -1,0 +1,5 @@
+[
+  {"name": "generacion-real/2026-08-14", "endpoint": "/generacion-real/v3/findByDate", "params": {"startDate": "2026-08-14", "endDate": "2026-08-14"}},
+  {"name": "demanda-neta/2026-08-14", "endpoint": "/demanda-neta/v4/findByDate", "params": {"startDate": "2026-08-14", "endDate": "2026-08-14"}},
+  {"name": "demanda-real-estimada/2026-08-14", "endpoint": "/demanda-real-estimada/v4/findByDate", "params": {"startDate": "2026-08-14", "endDate": "2026-08-14"}}
+]

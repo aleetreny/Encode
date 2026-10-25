@@ -1,0 +1,14 @@
+{
+  "source_id": "cen-2026-08",
+  "publisher": "Coordinador Eléctrico Nacional",
+  "source_url": "https://www.coordinador.cl/wp-content/uploads/2026/10/Reducciones-de-Energia-Eolica-Solar-Hidro-en-el-SEN_Agosto-26-PE-PFV_Publicar.xlsx",
+  "landing_url": "https://www.coordinador.cl/operacion/documentos/reducciones-de-generacion-renovable/reducciones-erv-2026/",
+  "publication_date_as_listed": "2026-09-30",
+  "retrieved_at_utc": "2026-10-24T15:54:10.841481+00:00",
+  "sha256": "df142e0b9bc654b5b24b296857b294ff6e1589a18bc2dde3b575c9741af2ce44",
+  "bytes": 2272461,
+  "units": "MWh (daily/hourly); GWh (monthly summary)",
+  "source_timezone": "America/Santiago (context; hourly boundary convention unverified)",
+  "license": "Publicly downloadable; no explicit redistribution license established. Preserve attribution.",
+  "revision_note": "Upload URL contains 2026/10; retain listed publication date separately."
+}

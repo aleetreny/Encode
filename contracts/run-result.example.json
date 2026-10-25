@@ -1,0 +1,1304 @@
+{
+  "approval_status": "pending",
+  "baseline": {
+    "metrics": {
+      "assumed_cost_usd": 15600.0,
+      "curtailed_energy_mwh": 210.0,
+      "unserved_energy_mwh": 0.0
+    },
+    "solution": {
+      "charge_mw_by_battery": {
+        "b1": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "curtailment_mw_by_generator": {
+        "solar1": [
+          60.0,
+          80.0,
+          70.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wind1": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "discharge_mw_by_battery": {
+        "b1": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "generation_mw_by_generator": {
+        "solar1": [
+          80.0,
+          80.0,
+          80.0,
+          70.0,
+          20.0,
+          0.0
+        ],
+        "thermal1": [
+          15.0,
+          12.0,
+          10.0,
+          25.0,
+          78.0,
+          100.0
+        ],
+        "wind1": [
+          15.0,
+          18.0,
+          20.0,
+          15.0,
+          12.0,
+          10.0
+        ]
+      },
+      "line_flows_mw_by_line": {
+        "L1": [
+          60.0,
+          60.0,
+          60.0,
+          50.0,
+          0.0,
+          -20.0
+        ],
+        "L2": [
+          30.0,
+          30.0,
+          30.0,
+          20.0,
+          -30.0,
+          -50.0
+        ],
+        "L3": [
+          -5.0,
+          -8.0,
+          -10.0,
+          -5.0,
+          -2.0,
+          0.0
+        ]
+      },
+      "load_shedding_mw_by_node": {
+        "central": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "coast": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "north": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "south": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "native_result": {
+        "assets": {
+          "batteries": [
+            {
+              "charge_efficiency": 0.9486832980505138,
+              "discharge_efficiency": 0.9486832980505138,
+              "energy_capacity_mwh": 90.0,
+              "id": "b1",
+              "initial_soc_mwh": 10.0,
+              "min_soc_mwh": 0.0,
+              "node_id": "north",
+              "power_capacity_mw": 0.0
+            }
+          ],
+          "lines": [
+            {
+              "capacity_mw": 60.0,
+              "from": "north",
+              "id": "L1",
+              "to": "central"
+            },
+            {
+              "capacity_mw": 80.0,
+              "from": "central",
+              "id": "L2",
+              "to": "south"
+            },
+            {
+              "capacity_mw": 30.0,
+              "from": "south",
+              "id": "L3",
+              "to": "coast"
+            }
+          ]
+        },
+        "binding_constraints": [
+          {
+            "detail": "flow north -> central at 60 MW limit",
+            "hours": [
+              0,
+              1,
+              2
+            ],
+            "id": "L1",
+            "type": "line_limit"
+          },
+          {
+            "detail": "available renewable output not used",
+            "hours": [
+              0,
+              1,
+              2
+            ],
+            "id": "solar1",
+            "type": "renewable_curtailed"
+          }
+        ],
+        "candidate_id": "baseline",
+        "events": [],
+        "message": null,
+        "metrics": {
+          "assumed_cost_proxy_usd": 15600.0,
+          "battery_charge_mwh": 0.0,
+          "battery_discharge_mwh": 0.0,
+          "battery_losses_mwh": 0.0,
+          "curtailment_mwh": 210.0,
+          "curtailment_mwh_by_generator": {
+            "solar1": 210.0,
+            "wind1": 0.0
+          },
+          "demand_mwh": 660.0,
+          "dispatchable_mwh": 240.0,
+          "line_hours_at_limit": {
+            "L1": 3.0,
+            "L2": 0.0,
+            "L3": 0.0
+          },
+          "renewable_used_mwh": 420.0,
+          "unserved_mwh": 0.0,
+          "unserved_mwh_by_node": {
+            "central": 0.0,
+            "coast": 0.0,
+            "north": 0.0,
+            "south": 0.0
+          }
+        },
+        "modifications": [],
+        "objective": {
+          "terms": {
+            "battery_throughput_cost_usd": 0.0,
+            "curtailment_penalty_usd": 0.0,
+            "dispatchable_cost_usd": 15600.0,
+            "transmission_tiebreak_usd": 0.0,
+            "unserved_penalty_usd": 0.0
+          },
+          "total_usd": 15600.0
+        },
+        "options": {
+          "allow_unserved": false,
+          "time_limit_s": 30.0
+        },
+        "scenario_id": "chile-demo-001",
+        "solver": {
+          "name": "HiGHS",
+          "solve_time_s": 0.0042,
+          "solves": 1,
+          "version": "1.15.1"
+        },
+        "status": "optimal",
+        "time_step_hours": 1.0,
+        "timeseries": {
+          "available_mw": {
+            "solar1": [
+              140.0,
+              160.0,
+              150.0,
+              70.0,
+              20.0,
+              0.0
+            ],
+            "thermal1": [
+              150.0,
+              150.0,
+              150.0,
+              150.0,
+              150.0,
+              150.0
+            ],
+            "wind1": [
+              15.0,
+              18.0,
+              20.0,
+              15.0,
+              12.0,
+              10.0
+            ]
+          },
+          "battery_charge_mw": {
+            "b1": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "battery_discharge_mw": {
+            "b1": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "battery_soc_mwh": {
+            "b1": [
+              10.0,
+              10.0,
+              10.0,
+              10.0,
+              10.0,
+              10.0,
+              10.0
+            ]
+          },
+          "curtailment_mw": {
+            "solar1": [
+              60.0,
+              80.0,
+              70.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "wind1": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "generation_mw": {
+            "solar1": [
+              80.0,
+              80.0,
+              80.0,
+              70.0,
+              20.0,
+              0.0
+            ],
+            "thermal1": [
+              15.0,
+              12.0,
+              10.0,
+              25.0,
+              78.0,
+              100.0
+            ],
+            "wind1": [
+              15.0,
+              18.0,
+              20.0,
+              15.0,
+              12.0,
+              10.0
+            ]
+          },
+          "line_flow_mw": {
+            "L1": [
+              60.0,
+              60.0,
+              60.0,
+              50.0,
+              0.0,
+              -20.0
+            ],
+            "L2": [
+              30.0,
+              30.0,
+              30.0,
+              20.0,
+              -30.0,
+              -50.0
+            ],
+            "L3": [
+              -5.0,
+              -8.0,
+              -10.0,
+              -5.0,
+              -2.0,
+              0.0
+            ]
+          },
+          "unserved_mw": {
+            "central": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "coast": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "north": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "south": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "timestamps_utc": [
+          "2026-08-01T14:00:00Z",
+          "2026-08-01T15:00:00Z",
+          "2026-08-01T16:00:00Z",
+          "2026-08-01T17:00:00Z",
+          "2026-08-01T18:00:00Z",
+          "2026-08-01T19:00:00Z"
+        ]
+      },
+      "reason": null,
+      "soc_mwh_by_battery": {
+        "b1": [
+          10.0,
+          10.0,
+          10.0,
+          10.0,
+          10.0,
+          10.0,
+          10.0
+        ]
+      },
+      "status": "optimal"
+    },
+    "valid": true
+  },
+  "candidate": {
+    "metrics": {
+      "assumed_cost_usd": 11123.888889,
+      "curtailed_energy_mwh": 132.222222,
+      "unserved_energy_mwh": 0.0
+    },
+    "solution": {
+      "charge_mw_by_battery": {
+        "b1": [
+          17.777778,
+          30.0,
+          30.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "curtailment_mw_by_generator": {
+        "solar1": [
+          42.222222,
+          50.0,
+          40.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "wind1": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "discharge_mw_by_battery": {
+        "b1": [
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          30.0,
+          30.0
+        ]
+      },
+      "generation_mw_by_generator": {
+        "solar1": [
+          97.777778,
+          110.0,
+          110.0,
+          70.0,
+          20.0,
+          0.0
+        ],
+        "thermal1": [
+          15.0,
+          12.0,
+          10.0,
+          15.0,
+          48.0,
+          70.0
+        ],
+        "wind1": [
+          15.0,
+          18.0,
+          20.0,
+          15.0,
+          12.0,
+          10.0
+        ]
+      },
+      "line_flows_mw_by_line": {
+        "L1": [
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          30.0,
+          10.0
+        ],
+        "L2": [
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          0.0,
+          -20.0
+        ],
+        "L3": [
+          -5.0,
+          -8.0,
+          -10.0,
+          -5.0,
+          -2.0,
+          0.0
+        ]
+      },
+      "load_shedding_mw_by_node": {
+        "central": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "coast": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "north": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "south": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "native_result": {
+        "assets": {
+          "batteries": [
+            {
+              "charge_efficiency": 0.9486832980505138,
+              "discharge_efficiency": 0.9486832980505138,
+              "energy_capacity_mwh": 90.0,
+              "id": "b1",
+              "initial_soc_mwh": 10.0,
+              "min_soc_mwh": 0.0,
+              "node_id": "north",
+              "power_capacity_mw": 30.0
+            }
+          ],
+          "lines": [
+            {
+              "capacity_mw": 60.0,
+              "from": "north",
+              "id": "L1",
+              "to": "central"
+            },
+            {
+              "capacity_mw": 80.0,
+              "from": "central",
+              "id": "L2",
+              "to": "south"
+            },
+            {
+              "capacity_mw": 30.0,
+              "from": "south",
+              "id": "L3",
+              "to": "coast"
+            }
+          ]
+        },
+        "binding_constraints": [
+          {
+            "detail": "flow north -> central at 60 MW limit",
+            "hours": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "id": "L1",
+            "type": "line_limit"
+          },
+          {
+            "detail": "charging or discharging at 30 MW limit",
+            "hours": [
+              1,
+              2,
+              4,
+              5
+            ],
+            "id": "b1",
+            "type": "battery_power_limit"
+          },
+          {
+            "detail": "available renewable output not used",
+            "hours": [
+              0,
+              1,
+              2
+            ],
+            "id": "solar1",
+            "type": "renewable_curtailed"
+          }
+        ],
+        "candidate_id": "baseline",
+        "events": [],
+        "message": null,
+        "metrics": {
+          "assumed_cost_proxy_usd": 11050.0,
+          "battery_charge_mwh": 77.777778,
+          "battery_discharge_mwh": 70.0,
+          "battery_losses_mwh": 7.777778,
+          "curtailment_mwh": 132.222222,
+          "curtailment_mwh_by_generator": {
+            "solar1": 132.222222,
+            "wind1": 0.0
+          },
+          "demand_mwh": 660.0,
+          "dispatchable_mwh": 170.0,
+          "line_hours_at_limit": {
+            "L1": 4.0,
+            "L2": 0.0,
+            "L3": 0.0
+          },
+          "renewable_used_mwh": 497.777778,
+          "unserved_mwh": 0.0,
+          "unserved_mwh_by_node": {
+            "central": 0.0,
+            "coast": 0.0,
+            "north": 0.0,
+            "south": 0.0
+          }
+        },
+        "modifications": [],
+        "objective": {
+          "terms": {
+            "battery_throughput_cost_usd": 73.888889,
+            "curtailment_penalty_usd": 0.0,
+            "dispatchable_cost_usd": 11050.0,
+            "transmission_tiebreak_usd": 0.0,
+            "unserved_penalty_usd": 0.0
+          },
+          "total_usd": 11123.888889
+        },
+        "options": {
+          "allow_unserved": false,
+          "time_limit_s": 30.0
+        },
+        "scenario_id": "chile-demo-001",
+        "solver": {
+          "name": "HiGHS",
+          "solve_time_s": 0.0008,
+          "solves": 1,
+          "version": "1.15.1"
+        },
+        "status": "optimal",
+        "time_step_hours": 1.0,
+        "timeseries": {
+          "available_mw": {
+            "solar1": [
+              140.0,
+              160.0,
+              150.0,
+              70.0,
+              20.0,
+              0.0
+            ],
+            "thermal1": [
+              150.0,
+              150.0,
+              150.0,
+              150.0,
+              150.0,
+              150.0
+            ],
+            "wind1": [
+              15.0,
+              18.0,
+              20.0,
+              15.0,
+              12.0,
+              10.0
+            ]
+          },
+          "battery_charge_mw": {
+            "b1": [
+              17.777778,
+              30.0,
+              30.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "battery_discharge_mw": {
+            "b1": [
+              0.0,
+              0.0,
+              0.0,
+              10.0,
+              30.0,
+              30.0
+            ]
+          },
+          "battery_soc_mwh": {
+            "b1": [
+              10.0,
+              26.865481,
+              55.32598,
+              83.786479,
+              73.245553,
+              41.622777,
+              10.0
+            ]
+          },
+          "curtailment_mw": {
+            "solar1": [
+              42.222222,
+              50.0,
+              40.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "wind1": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "generation_mw": {
+            "solar1": [
+              97.777778,
+              110.0,
+              110.0,
+              70.0,
+              20.0,
+              0.0
+            ],
+            "thermal1": [
+              15.0,
+              12.0,
+              10.0,
+              15.0,
+              48.0,
+              70.0
+            ],
+            "wind1": [
+              15.0,
+              18.0,
+              20.0,
+              15.0,
+              12.0,
+              10.0
+            ]
+          },
+          "line_flow_mw": {
+            "L1": [
+              60.0,
+              60.0,
+              60.0,
+              60.0,
+              30.0,
+              10.0
+            ],
+            "L2": [
+              30.0,
+              30.0,
+              30.0,
+              30.0,
+              0.0,
+              -20.0
+            ],
+            "L3": [
+              -5.0,
+              -8.0,
+              -10.0,
+              -5.0,
+              -2.0,
+              0.0
+            ]
+          },
+          "unserved_mw": {
+            "central": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "coast": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "north": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "south": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "timestamps_utc": [
+          "2026-08-01T14:00:00Z",
+          "2026-08-01T15:00:00Z",
+          "2026-08-01T16:00:00Z",
+          "2026-08-01T17:00:00Z",
+          "2026-08-01T18:00:00Z",
+          "2026-08-01T19:00:00Z"
+        ]
+      },
+      "reason": null,
+      "soc_mwh_by_battery": {
+        "b1": [
+          10.0,
+          26.865481,
+          55.32598,
+          83.786479,
+          73.245553,
+          41.622777,
+          10.0
+        ]
+      },
+      "status": "optimal"
+    },
+    "valid": true
+  },
+  "comparison": {
+    "assumed_cost_delta_usd": -4476.111111,
+    "curtailment_reduction_mwh": 77.77777800000001,
+    "unserved_energy_delta_mwh": 0.0
+  },
+  "created_at": "2026-10-24T00:00:00Z",
+  "error": null,
+  "execution_mode": "replay",
+  "historical_evidence": {
+    "classification": {
+      "plant_cell_values": "observed",
+      "simulation_inputs": "synthetic assumptions",
+      "technology_aggregates": "derived"
+    },
+    "event_date": "2026-08-01",
+    "evidence_id": "cen-2026-08-01",
+    "hour_labels": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24
+    ],
+    "limitations": [
+      "Curtailment is not renewable availability or actual generation.",
+      "Generation, demand, network constraints and causal attribution have not been joined.",
+      "Historical evidence does not calibrate or validate the illustrative network.",
+      "Solar and wind only; hydro sheets excluded explicitly."
+    ],
+    "selection_rule": "First calendar day in the latest downloaded monthly export; not selected for simulated improvement.",
+    "source_id": "cen-2026-08",
+    "source_sha256": "df142e0b9bc654b5b24b296857b294ff6e1589a18bc2dde3b575c9741af2ce44",
+    "source_urls": [
+      "https://www.coordinador.cl/wp-content/uploads/2026/10/Reducciones-de-Energia-Eolica-Solar-Hidro-en-el-SEN_Agosto-26-PE-PFV_Publicar.xlsx",
+      "https://www.coordinador.cl/operacion/documentos/reducciones-de-generacion-renovable/reducciones-erv-2026/"
+    ],
+    "technologies": [
+      {
+        "coverage": "complete",
+        "daily_mwh": 6501.247783333333,
+        "date": "2026-08-01",
+        "hourly_mwh": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          25.47383333333334,
+          291.1957166666666,
+          1030.7143333333333,
+          866.5473333333334,
+          841.1713333333333,
+          854.8558333333333,
+          956.0331666666666,
+          985.7953333333335,
+          640.4549,
+          8.806000000000001,
+          0.19999999999999982,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "missing_observations": 0,
+        "plant_count": 77,
+        "source_daily_total_mwh": 6501.247783333336,
+        "source_hourly_total_max_residual_mwh": 3.410605131648481e-13,
+        "technology": "solar"
+      },
+      {
+        "coverage": "complete",
+        "daily_mwh": 11060.926558333333,
+        "date": "2026-08-01",
+        "hourly_mwh": [
+          91.83853500000001,
+          153.10526666666667,
+          233.43126333333336,
+          336.8999916666667,
+          326.399895,
+          262.6251516666667,
+          220.35598833333333,
+          215.41980500000005,
+          742.7375999999999,
+          883.1913550000002,
+          811.7626450000001,
+          653.6208316666667,
+          639.9506666666665,
+          790.5216666666668,
+          1034.360515,
+          1069.5545566666665,
+          1012.3324133333334,
+          222.29023666666663,
+          237.67688333333336,
+          171.86650999999998,
+          182.25388833333332,
+          241.7045366666665,
+          286.13435333333325,
+          240.89200333333332
+        ],
+        "missing_observations": 0,
+        "plant_count": 56,
+        "source_daily_total_mwh": 11060.92655833333,
+        "source_hourly_total_max_residual_mwh": 2.2737367544323206e-13,
+        "technology": "wind"
+      }
+    ],
+    "time_convention": "Workbook labels 1..24 are retained as labels. No observed UTC interval mapping is asserted.",
+    "units": "MWh"
+  },
+  "operator_report": {
+    "agent_commentary": {
+      "assumptions": [
+        "Transport model with no electrical losses or voltage constraints",
+        "Symmetric charge/discharge efficiency = sqrt(round-trip efficiency)",
+        "Final SOC is at least initial SOC; no end-of-horizon battery depletion",
+        "Baseline disables battery dispatch; candidate enables existing battery; common exogenous inputs and asset ratings"
+      ],
+      "limitations": [
+        "Cached replay is not a live Gemini investigation",
+        "Not a reconstruction of Chilean dispatch",
+        "No claim about real savings, emissions, security or optimal real-world operation"
+      ],
+      "sources": [
+        "https://www.coordinador.cl/wp-content/uploads/2026/10/Reducciones-de-Energia-Eolica-Solar-Hidro-en-el-SEN_Agosto-26-PE-PFV_Publicar.xlsx",
+        "https://www.coordinador.cl/operacion/documentos/reducciones-de-generacion-renovable/reducciones-erv-2026/"
+      ],
+      "summary": "Offline reference scenario: inspect the independently verified simulated baseline and battery alternative. All dispatch inputs are synthetic."
+    },
+    "agent_commentary_status": "generated narrative; numerical authority is the deterministic comparison and validation",
+    "assumptions": [
+      "Synthetic transport network; all dispatch inputs are assumptions",
+      "Baseline battery dispatch disabled; candidate policy explicitly recorded",
+      "Identical exogenous inputs, asset ratings and declared final SOC policies/targets"
+    ],
+    "limitations": [
+      "Simulation only; not an operational dispatch instruction",
+      "No physical grid security assessment",
+      "Historical evidence does not calibrate the network"
+    ],
+    "sources": [
+      "https://www.coordinador.cl/wp-content/uploads/2026/10/Reducciones-de-Energia-Eolica-Solar-Hidro-en-el-SEN_Agosto-26-PE-PFV_Publicar.xlsx",
+      "https://www.coordinador.cl/operacion/documentos/reducciones-de-generacion-renovable/reducciones-erv-2026/"
+    ],
+    "summary": "Verified simulated curtailment reduction: 77.777778 MWh over 6 hours. Candidate minus baseline assumed-cost proxy: -4476.111111 USD."
+  },
+  "provenance": {
+    "comparison_basis": "fixed_asset_battery_policy",
+    "data": {
+      "derived_fields": [],
+      "evidence_id": "cen-2026-08-01",
+      "gaps": [
+        "Observed demand and generation have not been aligned",
+        "No actual transmission model",
+        "Observed hour boundaries unverified; simulation clock is assumed"
+      ],
+      "historical_event_date": "2026-08-01",
+      "notes": "Historical evidence is separate context only. All dispatch inputs, including generation availability and demand, are synthetic. The network is not calibrated to Chile.",
+      "observed_fields": [
+        "historical_event_date"
+      ],
+      "observed_source_urls": [
+        "https://www.coordinador.cl/wp-content/uploads/2026/10/Reducciones-de-Energia-Eolica-Solar-Hidro-en-el-SEN_Agosto-26-PE-PFV_Publicar.xlsx",
+        "https://www.coordinador.cl/operacion/documentos/reducciones-de-generacion-renovable/reducciones-erv-2026/"
+      ],
+      "source_timezone": "America/Santiago",
+      "synthetic_fields": [
+        "network_topology",
+        "line_limits",
+        "battery_parameters",
+        "demand_mw_by_node",
+        "renewable_availability_mw_by_generator",
+        "generator_ratings",
+        "cost_parameters",
+        "timestamps_utc"
+      ]
+    },
+    "example_metadata": "Run identifier and timestamps are illustrative; numerical outputs are checked reference replay results.",
+    "execution_mode": "replay",
+    "live_gemini": false,
+    "mode": "historically_anchored_simulation",
+    "replay_sha256": "db66318145f01dd9917cf34621f9076e11fc3a4b92733b3c34999a1f5da9ab8f",
+    "requested_options": {
+      "allow_load_shedding": false,
+      "battery_policy": "optimised"
+    },
+    "scenario_sha256": "c4a749ee824b4a5dd4e11b08f0d99efa99812f29b889c8a38b0a9d89dbfcc19a"
+  },
+  "revision": 2,
+  "run_id": "example-replay-run",
+  "scenario_id": "chile-demo-001",
+  "scenario_snapshot": {
+    "batteries": [
+      {
+        "energy_capacity_mwh": 90.0,
+        "final_soc_mwh": 10.0,
+        "final_soc_policy": "at_least",
+        "id": "b1",
+        "initial_soc_mwh": 10.0,
+        "node_id": "north",
+        "power_capacity_mw": 30.0,
+        "round_trip_efficiency": 0.9
+      }
+    ],
+    "battery_throughput_cost_usd_per_mwh": 0.5,
+    "curtailment_penalty_usd_per_mwh": 0.0,
+    "demand_mw_by_node": {
+      "central": [
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0
+      ],
+      "coast": [
+        10.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0
+      ],
+      "north": [
+        20.0,
+        20.0,
+        20.0,
+        20.0,
+        20.0,
+        20.0
+      ],
+      "south": [
+        50.0,
+        50.0,
+        50.0,
+        50.0,
+        50.0,
+        50.0
+      ]
+    },
+    "generators": [
+      {
+        "capacity_mw": 160.0,
+        "id": "solar1",
+        "node_id": "north",
+        "technology": "solar",
+        "variable_cost_usd_per_mwh": 0.0
+      },
+      {
+        "capacity_mw": 30.0,
+        "id": "wind1",
+        "node_id": "coast",
+        "technology": "wind",
+        "variable_cost_usd_per_mwh": 0.0
+      },
+      {
+        "capacity_mw": 150.0,
+        "id": "thermal1",
+        "node_id": "south",
+        "technology": "thermal",
+        "variable_cost_usd_per_mwh": 65.0
+      }
+    ],
+    "lines": [
+      {
+        "capacity_mw": 60.0,
+        "from": "north",
+        "id": "L1",
+        "to": "central"
+      },
+      {
+        "capacity_mw": 80.0,
+        "from": "central",
+        "id": "L2",
+        "to": "south"
+      },
+      {
+        "capacity_mw": 30.0,
+        "from": "south",
+        "id": "L3",
+        "to": "coast"
+      }
+    ],
+    "load_shedding_penalty_usd_per_mwh": 10000.0,
+    "mode": "historically_anchored_simulation",
+    "network_model": "transport",
+    "nodes": [
+      {
+        "id": "north",
+        "label": "North — illustrative"
+      },
+      {
+        "id": "central",
+        "label": "Central — illustrative"
+      },
+      {
+        "id": "south",
+        "label": "South — illustrative"
+      },
+      {
+        "id": "coast",
+        "label": "Coast — illustrative"
+      }
+    ],
+    "provenance": {
+      "derived_fields": [],
+      "evidence_id": "cen-2026-08-01",
+      "gaps": [
+        "Observed demand and generation have not been aligned",
+        "No actual transmission model",
+        "Observed hour boundaries unverified; simulation clock is assumed"
+      ],
+      "historical_event_date": "2026-08-01",
+      "notes": "Historical evidence is separate context only. All dispatch inputs, including generation availability and demand, are synthetic. The network is not calibrated to Chile.",
+      "observed_fields": [
+        "historical_event_date"
+      ],
+      "observed_source_urls": [
+        "https://www.coordinador.cl/wp-content/uploads/2026/10/Reducciones-de-Energia-Eolica-Solar-Hidro-en-el-SEN_Agosto-26-PE-PFV_Publicar.xlsx",
+        "https://www.coordinador.cl/operacion/documentos/reducciones-de-generacion-renovable/reducciones-erv-2026/"
+      ],
+      "source_timezone": "America/Santiago",
+      "synthetic_fields": [
+        "network_topology",
+        "line_limits",
+        "battery_parameters",
+        "demand_mw_by_node",
+        "renewable_availability_mw_by_generator",
+        "generator_ratings",
+        "cost_parameters",
+        "timestamps_utc"
+      ]
+    },
+    "renewable_availability_mw_by_generator": {
+      "solar1": [
+        140.0,
+        160.0,
+        150.0,
+        70.0,
+        20.0,
+        0.0
+      ],
+      "wind1": [
+        15.0,
+        18.0,
+        20.0,
+        15.0,
+        12.0,
+        10.0
+      ]
+    },
+    "scenario_id": "chile-demo-001",
+    "schema_version": "1.0.0",
+    "time_step_hours": 1.0,
+    "timestamps_utc": [
+      "2026-08-01T14:00:00Z",
+      "2026-08-01T15:00:00Z",
+      "2026-08-01T16:00:00Z",
+      "2026-08-01T17:00:00Z",
+      "2026-08-01T18:00:00Z",
+      "2026-08-01T19:00:00Z"
+    ]
+  },
+  "schema_version": "1.0.0",
+  "status": "completed",
+  "tool_trace": [
+    {
+      "execution_mode": "replay",
+      "input_summary": null,
+      "live_gemini": false,
+      "note": "Independently validated production HiGHS outputs loaded from a saved fixture. No agent was executed.",
+      "output_summary": null,
+      "scope": null,
+      "status": "success",
+      "timestamp_utc": null,
+      "tool": "load_cached_dispatch"
+    },
+    {
+      "scope": "all timesteps, baseline and candidate",
+      "status": "success",
+      "tool": "backend_acceptance_audit"
+    }
+  ],
+  "updated_at": "2026-10-24T00:00:00Z",
+  "validation": {
+    "baseline": {
+      "max_residual_mw": 0.0,
+      "metrics": {
+        "assumed_cost_usd": 15600.0,
+        "curtailed_energy_mwh": 210.0,
+        "unserved_energy_mwh": 0.0
+      },
+      "passed": true,
+      "violations": []
+    },
+    "candidate": {
+      "max_residual_mw": 3.552713678800501e-15,
+      "metrics": {
+        "assumed_cost_usd": 11123.888889,
+        "curtailed_energy_mwh": 132.222222,
+        "unserved_energy_mwh": 0.0
+      },
+      "passed": true,
+      "violations": []
+    },
+    "max_residual_mw": 3.552713678800501e-15,
+    "passed": true,
+    "violations": []
+  }
+}

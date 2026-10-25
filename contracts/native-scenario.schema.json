@@ -1,0 +1,248 @@
+{
+  "$defs": {
+    "HouseholdMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "const": "synthetic_assumption",
+          "default": "synthetic_assumption",
+          "title": "Classification",
+          "type": "string"
+        },
+        "households_per_mw": {
+          "default": 1000,
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "title": "Households Per Mw",
+          "type": "number"
+        },
+        "interpretation": {
+          "default": "Residential-equivalent load; not identified customers or actual feeder reconnections.",
+          "title": "Interpretation",
+          "type": "string"
+        },
+        "residential_share_by_node": {
+          "additionalProperties": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Residential Share By Node",
+          "type": "object"
+        }
+      },
+      "required": [
+        "residential_share_by_node"
+      ],
+      "title": "HouseholdMapping",
+      "type": "object"
+    },
+    "Outage": {
+      "additionalProperties": false,
+      "properties": {
+        "from_hour": {
+          "maximum": 23,
+          "minimum": 0,
+          "title": "From Hour",
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "mode": {
+          "default": "sudden",
+          "enum": [
+            "planned",
+            "sudden"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "to_hour": {
+          "exclusiveMinimum": 0,
+          "maximum": 24,
+          "title": "To Hour",
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "generator_outage",
+            "line_outage"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "from_hour",
+        "to_hour"
+      ],
+      "title": "Outage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "batteries": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "maxItems": 4,
+      "title": "Batteries",
+      "type": "array"
+    },
+    "demand_mw_by_node": {
+      "additionalProperties": {
+        "items": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "title": "Demand Mw By Node",
+      "type": "object"
+    },
+    "display_timezone": {
+      "const": "America/Santiago",
+      "default": "America/Santiago",
+      "title": "Display Timezone",
+      "type": "string"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/Outage"
+      },
+      "maxItems": 2,
+      "title": "Events",
+      "type": "array"
+    },
+    "generators": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "maxItems": 12,
+      "minItems": 1,
+      "title": "Generators",
+      "type": "array"
+    },
+    "household_mapping": {
+      "$ref": "#/$defs/HouseholdMapping"
+    },
+    "lines": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "maxItems": 7,
+      "minItems": 1,
+      "title": "Lines",
+      "type": "array"
+    },
+    "mode": {
+      "enum": [
+        "synthetic",
+        "historically_anchored_simulation"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "modification_limits": {
+      "additionalProperties": true,
+      "title": "Modification Limits",
+      "type": "object"
+    },
+    "nodes": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "maxItems": 6,
+      "minItems": 2,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "objective": {
+      "additionalProperties": {
+        "minimum": 0,
+        "type": "number"
+      },
+      "title": "Objective",
+      "type": "object"
+    },
+    "provenance": {
+      "additionalProperties": true,
+      "title": "Provenance",
+      "type": "object"
+    },
+    "regulatory_framework": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "maxItems": 10,
+      "title": "Regulatory Framework",
+      "type": "array"
+    },
+    "renewable_availability_mw_by_generator": {
+      "additionalProperties": {
+        "items": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "title": "Renewable Availability Mw By Generator",
+      "type": "object"
+    },
+    "scenario_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "2.0.0",
+      "default": "2.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "time_step_hours": {
+      "exclusiveMinimum": 0,
+      "maximum": 24,
+      "title": "Time Step Hours",
+      "type": "number"
+    },
+    "timestamps_utc": {
+      "items": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "maxItems": 24,
+      "minItems": 1,
+      "title": "Timestamps Utc",
+      "type": "array"
+    }
+  },
+  "required": [
+    "scenario_id",
+    "mode",
+    "time_step_hours",
+    "timestamps_utc",
+    "provenance",
+    "nodes",
+    "lines",
+    "generators",
+    "batteries",
+    "demand_mw_by_node",
+    "renewable_availability_mw_by_generator",
+    "objective",
+    "household_mapping"
+  ],
+  "title": "NativeScenario",
+  "type": "object"
+}

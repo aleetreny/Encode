@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      GRIDPILOT_DB_PATH: /app/var/runs.sqlite3
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      GRIDPILOT_API_TOKEN: ${GRIDPILOT_API_TOKEN:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - run-journal:/app/var
+    init: true
+    restart: unless-stopped
+volumes:
+  run-journal:

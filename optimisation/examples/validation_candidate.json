@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "checks_run": [
+    "status",
+    "inputs",
+    "events_consistent",
+    "shape",
+    "generator_bounds",
+    "curtailment_consistency",
+    "battery_bounds",
+    "soc_initial",
+    "soc_dynamics",
+    "soc_final",
+    "simultaneous_charge_discharge",
+    "line_limits",
+    "unserved_bounds",
+    "nodal_balance",
+    "ramp_limits",
+    "metrics_recomputed"
+  ],
+  "violations": [],
+  "violation_count": 0,
+  "max_residual_mw": 3.5e-07
+}

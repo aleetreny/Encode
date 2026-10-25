@@ -1,0 +1,31 @@
+# Free hackathon API. SQLite survives process restarts, not Render redeploys.
+# For durable hosted runs, add a paid persistent disk after choosing a budget.
+services:
+  - type: web
+    name: gridpilot-api
+    runtime: docker
+    plan: free
+    branch: feature/live-ops
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/ready?mode=replay
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: GRIDPILOT_ENV
+        value: production
+      - key: GRIDPILOT_DB_PATH
+        value: /app/var/runs.sqlite3
+      - key: GRIDPILOT_API_TOKEN
+        generateValue: true
+      - key: PUBLIC_ORIGIN
+        value: https://andes-a38.pages.dev
+      - key: CORS_ORIGINS
+        value: https://andes-a38.pages.dev,http://localhost:5173
+      - key: GRIDPILOT_MODEL_AGENT
+        value: gemini-4-argon
+      - key: GRIDPILOT_MODEL_DECIDER
+        value: gemini-4-argon
+      - key: GRIDPILOT_MODEL_FAST
+        value: gemini-3.8-flash
+      - key: GEMINI_API_KEY
+        sync: false

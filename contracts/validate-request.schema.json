@@ -1,0 +1,167 @@
+{
+  "$defs": {
+    "Options": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_load_shedding": {
+          "default": false,
+          "title": "Allow Load Shedding",
+          "type": "boolean"
+        },
+        "battery_policy": {
+          "default": "optimised",
+          "enum": [
+            "disabled",
+            "optimised"
+          ],
+          "title": "Battery Policy",
+          "type": "string"
+        }
+      },
+      "title": "Options",
+      "type": "object"
+    },
+    "Solution": {
+      "additionalProperties": false,
+      "properties": {
+        "charge_mw_by_battery": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Charge Mw By Battery",
+          "type": "object"
+        },
+        "curtailment_mw_by_generator": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Curtailment Mw By Generator",
+          "type": "object"
+        },
+        "discharge_mw_by_battery": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Discharge Mw By Battery",
+          "type": "object"
+        },
+        "generation_mw_by_generator": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Generation Mw By Generator",
+          "type": "object"
+        },
+        "line_flows_mw_by_line": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Line Flows Mw By Line",
+          "type": "object"
+        },
+        "load_shedding_mw_by_node": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Load Shedding Mw By Node",
+          "type": "object"
+        },
+        "native_result": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Result"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "soc_mwh_by_battery": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Soc Mwh By Battery",
+          "type": "object"
+        },
+        "status": {
+          "enum": [
+            "optimal",
+            "infeasible",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "Solution",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "options": {
+      "$ref": "#/$defs/Options"
+    },
+    "scenario_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "solution": {
+      "$ref": "#/$defs/Solution"
+    }
+  },
+  "required": [
+    "scenario_id",
+    "solution"
+  ],
+  "title": "ValidateRequest",
+  "type": "object"
+}

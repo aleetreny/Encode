@@ -1,0 +1,61 @@
+{
+  "evidence_id": "cen-2026-08-01",
+  "source_id": "cen-2026-08",
+  "source_sha256": "df142e0b9bc654b5b24b296857b294ff6e1589a18bc2dde3b575c9741af2ce44",
+  "event_date": "2026-08-01",
+  "selection_rule": "First calendar day in the latest downloaded monthly export; not selected for simulated improvement.",
+  "source_urls": [
+    "https://www.coordinador.cl/wp-content/uploads/2026/10/Reducciones-de-Energia-Eolica-Solar-Hidro-en-el-SEN_Agosto-26-PE-PFV_Publicar.xlsx",
+    "https://www.coordinador.cl/operacion/documentos/reducciones-de-generacion-renovable/reducciones-erv-2026/"
+  ],
+  "hour_labels": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+  "units": "MWh",
+  "technologies": [
+    {
+      "date": "2026-08-01",
+      "technology": "solar",
+      "plant_count": 77,
+      "hourly_mwh": [
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        25.47383333333334, 291.1957166666666, 1030.7143333333333, 866.5473333333334,
+        841.1713333333333, 854.8558333333333, 956.0331666666666, 985.7953333333335,
+        640.4549, 8.806000000000001, 0.19999999999999982, 0.0, 0.0, 0.0, 0.0, 0.0
+      ],
+      "daily_mwh": 6501.247783333333,
+      "source_daily_total_mwh": 6501.247783333336,
+      "source_hourly_total_max_residual_mwh": 3.410605131648481e-13,
+      "missing_observations": 0,
+      "coverage": "complete"
+    },
+    {
+      "date": "2026-08-01",
+      "technology": "wind",
+      "plant_count": 56,
+      "hourly_mwh": [
+        91.83853500000001, 153.10526666666667, 233.43126333333336, 336.8999916666667,
+        326.399895, 262.6251516666667, 220.35598833333333, 215.41980500000005,
+        742.7375999999999, 883.1913550000002, 811.7626450000001, 653.6208316666667,
+        639.9506666666665, 790.5216666666668, 1034.360515, 1069.5545566666665,
+        1012.3324133333334, 222.29023666666663, 237.67688333333336, 171.86650999999998,
+        182.25388833333332, 241.7045366666665, 286.13435333333325, 240.89200333333332
+      ],
+      "daily_mwh": 11060.926558333333,
+      "source_daily_total_mwh": 11060.92655833333,
+      "source_hourly_total_max_residual_mwh": 2.2737367544323206e-13,
+      "missing_observations": 0,
+      "coverage": "complete"
+    }
+  ],
+  "classification": {
+    "plant_cell_values": "observed",
+    "technology_aggregates": "derived",
+    "simulation_inputs": "synthetic assumptions"
+  },
+  "time_convention": "Workbook labels 1..24 are retained as labels. No observed UTC interval mapping is asserted.",
+  "limitations": [
+    "Curtailment is not renewable availability or actual generation.",
+    "Generation, demand, network constraints and causal attribution have not been joined.",
+    "Historical evidence does not calibrate or validate the illustrative network.",
+    "Solar and wind only; hydro sheets excluded explicitly."
+  ]
+}

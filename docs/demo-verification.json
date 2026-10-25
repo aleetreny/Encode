@@ -1,0 +1,126 @@
+{
+  "verified_on": "2026-10-24",
+  "frontend_commit": "260744a",
+  "agent_commit": "d0acb32",
+  "numerical_commit": "e60d223",
+  "backend_runtime_only_environment": true,
+  "adapters": {
+    "agent": true,
+    "solver": true,
+    "validator": true
+  },
+  "gemini_credentials_configured": false,
+  "real_google_call_observed": false,
+  "strict_live_start_http_status": 503,
+  "strict_live_start_error": {
+    "code": "http_503",
+    "message": "Live mode requires Gemini credentials and installed agent/solver/validator; no live execution was started"
+  },
+  "shared_typescript_client_strict_live_http_status": 503,
+  "allowed_fallback": {
+    "run_id": "dece57d7-8e82-4e3f-b734-4c8aec789647",
+    "requested_execution_mode": "live",
+    "execution_mode": "replay",
+    "reason": "gemini_credentials_missing",
+    "live_gemini": false
+  },
+  "approved_backend_http_runs": [
+    {
+      "client": "Python HTTP checker",
+      "run_id": "65a3fbda-cc41-4e2c-8ff8-c57c00e2c3b3",
+      "execution_mode": "deterministic",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "1d5ed205ae1d44c0e3d400c031676ce5eac2a2fc223d17e92ffb4f0b512fe4cf",
+      "local_report": "var/integration-latest/python/deterministic-65a3fbda-cc41-4e2c-8ff8-c57c00e2c3b3.json"
+    },
+    {
+      "client": "Python HTTP checker",
+      "run_id": "90d7dca4-8fde-4d7b-81d4-4491f430b3eb",
+      "execution_mode": "deterministic",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "31b7158f82f2f4172fd730ce26359535a5ecb78c7f77bbbabffea37dcdb11b8a",
+      "local_report": "var/integration-latest/python/deterministic-90d7dca4-8fde-4d7b-81d4-4491f430b3eb.json"
+    },
+    {
+      "client": "Python HTTP checker",
+      "run_id": "05c1f1fd-0a81-4685-b059-d26e61b8c933",
+      "execution_mode": "replay",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "1bd574695dfce545f0e63f6a1944e16c18fda43bd7edbf06f223c0c2e75d1e12",
+      "local_report": "var/integration-latest/python/replay-05c1f1fd-0a81-4685-b059-d26e61b8c933.json"
+    },
+    {
+      "client": "Python HTTP checker",
+      "run_id": "4b1b18e1-b460-48d3-9a87-87efa464bf09",
+      "execution_mode": "replay",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "84e673a125efd8e965b60f9ad1b42125aaee3bf5f5ac16fc216b1bdc2053dd71",
+      "local_report": "var/integration-latest/python/replay-4b1b18e1-b460-48d3-9a87-87efa464bf09.json"
+    },
+    {
+      "client": "shared TypeScript client",
+      "run_id": "1587f341-c662-433e-a359-8042ddcc092f",
+      "execution_mode": "deterministic",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "1aac9ceba10974edcc1d531b3574f9b52f96a91409963f37ab8b8982cc043e5d",
+      "local_report": "var/integration-latest/typescript/deterministic-1587f341-c662-433e-a359-8042ddcc092f.json"
+    },
+    {
+      "client": "shared TypeScript client",
+      "run_id": "da4ca571-8112-4706-9ca6-4e1386647a02",
+      "execution_mode": "replay",
+      "validation_passed": true,
+      "approval_status": "approved",
+      "report_sha256": "96edf6343d2e87de13da562670460335d2d6bd37b7380d0b09d91bf4faec30a9",
+      "local_report": "var/integration-latest/typescript/replay-da4ca571-8112-4706-9ca6-4e1386647a02.json"
+    }
+  ],
+  "actual_native_agent_offline_contract": {
+    "baseline_passed": true,
+    "candidate_passed": true,
+    "candidate_id": "north_bess",
+    "trace_events": 53,
+    "provider_metadata_accepted": false,
+    "real_google_call_observed": false
+  },
+  "frontend_standard_build": {
+    "passed": true,
+    "owner_source_edited": false
+  },
+  "frontend_backend_wiring": {
+    "implemented": false,
+    "source": "frontend/src/App.tsx",
+    "current_behavior": "Local JavaScript sandbox calculations and timer-based SOC; no backend scenario/run/decision/report calls"
+  },
+  "numerical_generated_examples_refreshed": 0,
+  "numerical_solver_validator_tests_source_modified": false,
+  "browser_verification": {
+    "completed": false,
+    "reason": "Earlier browser authorization denied localhost access; not retried or bypassed"
+  },
+  "integrated_live_demo_ready": false,
+  "numerical_examples_restored_to_owner": true,
+  "numerical_platform_difference": {
+    "case": "sudden_outage/c2_battery_sur",
+    "original_independent_validation_passed": true,
+    "current_independent_validation_passed": true,
+    "original_no_hindsight_passed": true,
+    "current_no_hindsight_passed": true,
+    "metrics_identical": true,
+    "objective_identical": true,
+    "hourly_arrays_identical": false,
+    "policy": "Preserve numerical owner examples; document platform-dependent degenerate optimum; do not change physics/tests."
+  },
+  "local_test_result_with_preserved_owner_examples": {
+    "passed": 208,
+    "failed": 1,
+    "failed_test": "optimisation/tests/test_optimisation.py::test_examples_match_current_code",
+    "reason": "platform-dependent degenerate optimum; all metrics/objective and independent physics/no-hindsight checks agree",
+    "tests_skipped_or_relaxed": false
+  }
+}

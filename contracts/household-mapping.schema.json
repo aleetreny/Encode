@@ -1,0 +1,37 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "classification": {
+      "const": "synthetic_assumption",
+      "default": "synthetic_assumption",
+      "title": "Classification",
+      "type": "string"
+    },
+    "households_per_mw": {
+      "default": 1000,
+      "exclusiveMinimum": 0,
+      "maximum": 10000,
+      "title": "Households Per Mw",
+      "type": "number"
+    },
+    "interpretation": {
+      "default": "Residential-equivalent load; not identified customers or actual feeder reconnections.",
+      "title": "Interpretation",
+      "type": "string"
+    },
+    "residential_share_by_node": {
+      "additionalProperties": {
+        "maximum": 1,
+        "minimum": 0,
+        "type": "number"
+      },
+      "title": "Residential Share By Node",
+      "type": "object"
+    }
+  },
+  "required": [
+    "residential_share_by_node"
+  ],
+  "title": "HouseholdMapping",
+  "type": "object"
+}
