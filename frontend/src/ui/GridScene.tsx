@@ -119,9 +119,39 @@ function PowerWire({ from, to, mw, cap, state, lift = 14, label }: {
   );
 }
 
+// An event on the map announces itself large and glowing, then settles into a small tag on the
+// object so the maquette stays readable. Hovering the tag brings the full message back.
+function Callout({ x, y, mx = x, my = y, text, what, mini, tone, onClick }: {
+  x: number; y: number; mx?: number; my?: number; text: string; what?: string; mini: string; tone: 'bad' | 'good'; onClick?: (e: React.MouseEvent) => void;
+}) {
+  const w = (text.length + (what ? what.length + 1 : 0)) * 10.4 + 34;
+  const mw = mini.length * 7.9 + 18;
+  return (
+    <g className={`gp-callout is-${tone}`} onClick={onClick}>
+      <g className="gp-callout-full">
+        <g className="gp-callout-glow">
+          <rect x={x - w / 2} y={y - 18} width={w} height={36} rx={18} className="gp-callout-bg" />
+          {what ? (
+            <>
+              <text x={x - w / 2 + 17} y={y + 6} className="gp-callout-name">{text}</text>
+              <text x={x + w / 2 - 17} y={y + 6} textAnchor="end" className="gp-callout-what">{what}</text>
+            </>
+          ) : (
+            <text x={x} y={y + 6} textAnchor="middle" className="gp-callout-name">{text}</text>
+          )}
+        </g>
+      </g>
+      <g className="gp-callout-mini">
+        <rect x={mx - mw / 2} y={my - 11} width={mw} height={22} rx={11} className="gp-callout-bg" />
+        <text x={mx} y={my + 4.5} textAnchor="middle" className="gp-callout-mini-text">{mini}</text>
+      </g>
+    </g>
+  );
+}
+
 // Trunk lines ride above everything else: thick, coloured by state, with a pill label.
-function TrunkLine({ from, to, mw, cap, state, label, lift = 26 }: {
-  from: k.Point3; to: k.Point3; mw: number; cap: number; state: 'ok' | 'hot' | 'tripped' | 'boost'; label: string; lift?: number;
+function TrunkLine({ from, to, mw, cap, state, label, mini = '', lift = 26 }: {
+  from: k.Point3; to: k.Point3; mw: number; cap: number; state: 'ok' | 'hot' | 'tripped' | 'boost'; label: string; mini?: string; lift?: number;
 }) {
   const mid: k.Point3 = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2, lift * 0.8];
   const pts = [k.iso([from[0], from[1], lift], P), k.iso(mid, P), k.iso([to[0], to[1], lift], P)];
@@ -132,7 +162,7 @@ function TrunkLine({ from, to, mw, cap, state, label, lift = 26 }: {
   const dur = 4.6 - load * 3;
   const [lx, ly] = along(pts, 0.5);
   const big = state === 'tripped' || state === 'boost';
-  const tw = label.length * (big ? 10.4 : 7.3) + 26;
+  const tw = label.length * 7.3 + 26;
   // A break in the middle of a cut line
   const [b0x, b0y] = along(pts, 0.46), [b1x, b1y] = along(pts, 0.54);
   return (
@@ -158,10 +188,14 @@ function TrunkLine({ from, to, mw, cap, state, label, lift = 26 }: {
           <animateMotion dur={`${dur}s`} begin={`${(-i * dur) / n}s`} repeatCount="indefinite" path={d} keyPoints={mw < 0 ? '1;0' : '0;1'} keyTimes="0;1" calcMode="linear" />
         </circle>
       ))}
-      <g transform={`translate(${lx},${ly - (big ? 24 : 16)})`} className={big ? 'gp-callout-glow' : undefined}>
-        <rect x={-tw / 2} y={big ? -18 : -11} width={tw} height={big ? 34 : 20} rx={big ? 17 : 10} className="gp-trunk-pill" />
-        <text y={big ? 6 : 3.5} textAnchor="middle" className="gp-trunk-text">{label}</text>
-      </g>
+      {big ? (
+        <Callout x={lx} y={ly - 26} my={ly - 14} text={label} mini={mini} tone={state === 'tripped' ? 'bad' : 'good'} />
+      ) : (
+        <g transform={`translate(${lx},${ly - 16})`}>
+          <rect x={-tw / 2} y={-11} width={tw} height={20} rx={10} className="gp-trunk-pill" />
+          <text y={3.5} textAnchor="middle" className="gp-trunk-text">{label}</text>
+        </g>
+      )}
     </g>
   );
 }
@@ -285,7 +319,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
       : `${l.id} · ${Math.round((Math.abs(mw) / cap) * 100)} %${hot ? ' ⚠' : ''}`;
     return (
       <g key={l.id} className="gp-asset" onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}>
-        <TrunkLine from={from} to={to} mw={mw} cap={cap} state={isTripped ? 'tripped' : lineBoost ? 'boost' : hot ? 'hot' : 'ok'} label={label} />
+        <TrunkLine from={from} to={to} mw={mw} cap={cap} state={isTripped ? 'tripped' : lineBoost ? 'boost' : hot ? 'hot' : 'ok'} label={label} mini={isTripped ? `✕ ${l.id} cut` : `⚡ ${l.id} +`} />
       </g>
     );
   });
@@ -317,7 +351,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
 
   // Labels live inside the drawing (so they zoom with it) and are spread out so none overlap:
   // each one starts right above its object and climbs until it is clear, keeping a thin leader.
-  type Lbl = { id: string; x: number; y: number; ax: number; ay: number; w: number; h: number; name: string; mw: string; color: string; state: string };
+  type Lbl = { id: string; x: number; y: number; ax: number; ay: number; w: number; h: number; name: string; mw: string; mini?: string; color: string; state: string };
   const ACTION: Record<string, string> = {
     activate_reserve_bess: 'ON', hydro_reserve_release: 'RELEASED', start_peaker: 'STARTED', add_battery: 'ADDED',
   };
@@ -333,7 +367,8 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     if (s === 'tripped' || s === 'boost') {
       const name = s === 'tripped' ? `✕ ${assetTitle(a)}` : `⚡ ${assetTitle(a)}`;
       const mw = s === 'tripped' ? 'OFFLINE' : `${ACTION[boosted.get(a.id) ?? ''] ?? 'ON'} · ${flowMw}`;
-      labels.push({ id: a.id, x: ax, y: ay - 22, ax, ay, w: (name.length + mw.length) * 10.4 + 46, h: 36, name, mw, color: TECH_COLOR[a.technology], state: s });
+      const mini = s === 'tripped' ? '✕ OFF' : `⚡ ${ACTION[boosted.get(a.id) ?? ''] ?? 'ON'}`;
+      labels.push({ id: a.id, x: ax, y: ay - 22, ax, ay, w: (name.length + mw.length) * 10.4 + 46, h: 36, name, mw, mini, color: TECH_COLOR[a.technology], state: s });
       continue;
     }
     const name = TECH_LABEL[a.technology] ?? a.technology;
@@ -345,7 +380,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     if (!ZONES[id] || type !== 'demand_response') continue;
     const [ax, ay] = screen([housesOf(id)[0], housesOf(id)[1], 22]);
     const name = `⚡ Flexible demand · ${ZONES[id].label}`, mw = 'ON';
-    labels.push({ id: `dr-${id}`, x: ax, y: ay - 22, ax, ay, w: (name.length + mw.length) * 10.4 + 46, h: 36, name, mw, color: '#22a06b', state: 'boost' });
+    labels.push({ id: `dr-${id}`, x: ax, y: ay - 22, ax, ay, w: (name.length + mw.length) * 10.4 + 46, h: 36, name, mw, mini: '⚡ Flexible demand', color: '#22a06b', state: 'boost' });
   }
   labels.sort((p, q) => q.ay - p.ay); // lower objects first, so higher labels climb above them
   const placed: Lbl[] = [];
@@ -422,15 +457,11 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
               const off = at(solution.households_off[id], Math.floor(hour));
               const [x, y] = screen(uvAt(z.hub, -8, 128));
               const darkText = `⚠ ${Math.round(off).toLocaleString('en-GB')} homes without power`;
-              const dw = darkText.length * 10.4 + 30;
               return (
                 <g key={id} className={`gp-zlabel${off > 1 ? ' is-dark' : ''}`}>
                   <text x={x} y={y} textAnchor="middle" className="gp-zlabel-name">{z.label.toUpperCase()}</text>
                   {off > 1 ? (
-                    <g className="gp-callout is-tripped"><g className="gp-callout-glow">
-                      <rect x={x - dw / 2} y={y + 6} width={dw} height={36} rx={18} className="gp-callout-bg" />
-                      <text x={x} y={y + 30} textAnchor="middle" className="gp-callout-name">{darkText}</text>
-                    </g></g>
+                    <Callout x={x} y={y + 24} my={y + 18} text={darkText} mini={`⚠ ${Math.round(off).toLocaleString('en-GB')} off`} tone="bad" />
                   ) : (
                     <text x={x} y={y + 17} textAnchor="middle" className="gp-zlabel-sub">
                       {n ? `${(n.households_total / 1e6).toLocaleString('en-GB', { maximumFractionDigits: 2 })} M homes · powered` : ''}
@@ -440,13 +471,13 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
               );
             })}
             {placed.map((l) => l.h > 20 ? (
-              <g key={l.id} className={`gp-callout is-${l.state}`} onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}>
+              <g key={l.id} className={`gp-callout-wrap is-${l.state}`}>
                 <line x1={l.ax} y1={l.ay} x2={l.x} y2={l.y + 16} className="gp-callout-leader" />
-                <g className="gp-callout-glow">
-                  <rect x={l.x - l.w / 2} y={l.y - 18} width={l.w} height={36} rx={18} className="gp-callout-bg" />
-                  <text x={l.x - l.w / 2 + 17} y={l.y + 6} className="gp-callout-name">{l.name}</text>
-                  <text x={l.x + l.w / 2 - 17} y={l.y + 6} textAnchor="end" className="gp-callout-what">{l.mw}</text>
-                </g>
+                <Callout
+                  x={l.x} y={l.y} mx={l.ax} my={l.ay - 14}
+                  text={l.name} what={l.mw} mini={l.mini ?? ''} tone={l.state === 'tripped' ? 'bad' : 'good'}
+                  onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}
+                />
               </g>
             ) : (
               <g key={l.id} className={`gp-alabel is-${l.state}${selected === l.id ? ' is-selected' : ''}`} onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}>
@@ -461,11 +492,11 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
               const z = ZONES[b.id];
               if (!z) return null;
               const [x, y0] = screen(uvAt(z.hub, -8, 128));
-              const y = y0 + 64;
+              const y = y0 + 54;
               const text = `✓ +${Math.round(b.n).toLocaleString('en-GB')} homes back on`;
               const w = text.length * 10.4 + 34;
               return (
-                <g key={b.key} className="gp-back gp-callout is-boost" transform={`translate(${x},${y})`}>
+                <g key={b.key} className="gp-back gp-callout is-good" transform={`translate(${x},${y})`}>
                   <g className="gp-callout-glow">
                     <rect x={-w / 2} y={-18} width={w} height={36} rx={18} className="gp-callout-bg" />
                     <text y={6} textAnchor="middle" className="gp-callout-name">{text}</text>
