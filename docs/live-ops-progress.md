@@ -87,6 +87,7 @@
 - **Estado**: COMPLETADO
 - **Qué entró**: Configuración de `PUBLIC_ORIGIN=https://andes-a38.pages.dev` (QR hacia `/jurado?s=<id>`) y CORS para `https://andes-a38.pages.dev` y `http://localhost:5173` (incluyendo cabeceras SSE `Cache-Control: no-cache`, `X-Accel-Buffering: no`, `X-Jury-Device`, `Last-Event-ID`) en `backend/config.py`, `backend/main.py`, `backend/live/router.py`, `frontend/src/live/client.ts` y `render.yaml`; publicación del backend HTTPS público en `https://hemlock-untold-control.ngrok-free.dev` (`VITE_API_BASE_URL=https://hemlock-untold-control.ngrok-free.dev/api`), documentación en `docs/release-runbook.md` y prueba real extremo a extremo (disparo móvil en `/jurado?s=<id>` reflejado por SSE en pantalla grande en `110.9 ms < 2 s`).
 
-
-
+## Etapa 5 — Grabación Final con Gemini Real (`demo-stream.jsonl` y Biblioteca de Incidentes)
+- **Estado**: COMPLETADO
+- **Qué entró**: Regeneración final con `gemini-4-argon` real (`GEMINI_API_KEY` desde `.env.local` fuera de git) bajo el prompt renombrado **Andes** de `frontend/src/live/fixtures/demo-stream.jsonl` (38 eventos verificados) y de los 111 archivos de `frontend/public/incidents/*.jsonl` + `index.json`, incluyendo en la grabación: (1) nombres del jurado (`jury_name`: `"Prof. María González"` en la falla de `gas_centro` a las 18:00 y `"Dr. Carlos Muñoz"` en la falla de `L3` a las 19:00, más nombres del jurado en la biblioteca offline y preservación de `jury_name` en `offline.ts`), (2) opciones distintas y verificadas para cada falla (`demand_response` / `activate_reserve_bess + start_peaker` en `gas_centro` vs `activate_reserve_bess + emergency_rating` / `emergency_rating + demand_response` en `L3`), y (3) cuenta regresiva del modo autónomo (`autonomy.countdown` de 5 a 0) a 1 evento por segundo real (`countdown_step_s=1.0`, `ts_utc` espaciados 1 s y horas simuladas crecientes).
 

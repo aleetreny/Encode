@@ -45,7 +45,7 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
         speed_s_per_hour=4.0,
         start_hour=12.0,
         allow_live_gemini=True,
-        countdown_step_s=0.02,
+        countdown_step_s=1.0,
     )
     # Mark initial snapshot clock as running=True for offline demo playback
     session.running = True
@@ -61,12 +61,13 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
         "Corredor Norte Chico hacia la Zona Central opera a plena capacidad con recorte solar preventivo en el norte bajo despacho económico."
     )
 
-    # 18:00 -> Incident 1: sudden outage of gas_centro [18, 22)
+    # 18:00 -> Incident 1: Jury triggers sudden outage of gas_centro [18, 22)
     session.hour = 18.0
     inc1 = await session.disrupt(
         "gas_centro",
         duration_h=4,
-        source="operator",
+        source="jury",
+        jury_name="Prof. María González",
         from_hour_override=18,
         wait_for_options=True,
     )
@@ -87,7 +88,7 @@ async def record_live_session_stream() -> list[dict[str, Any]]:
         "L3",
         duration_h=3,
         source="jury",
-        jury_name="Jurado Londres",
+        jury_name="Dr. Carlos Muñoz",
         from_hour_override=19,
         wait_for_options=True,
     )
@@ -193,10 +194,24 @@ def verify_stream(events: list[dict[str, Any]]) -> None:
         f"Expected emergency_rating or hydro_reserve_release in Incident 2 (L3), got {inc2_lever_types}"
     )
 
+    from datetime import datetime
+
+    incident_events = [e for e in events if e.get("type") == "incident.detected"]
+    assert len(incident_events) == 2, f"Expected 2 incident.detected events, got {len(incident_events)}"
+    jury_names = [e.get("disruption", {}).get("jury_name") for e in incident_events]
+    assert all(jury_names) and len(set(jury_names)) == 2, (
+        f"Expected 2 distinct non-empty jury_name values on incident.detected, got {jury_names}"
+    )
+
     assert len(countdown_events) == 6, f"Expected 6 autonomy.countdown events, got {len(countdown_events)}"
     cd_hours = [e["hour"] for e in countdown_events]
     assert len(set(cd_hours)) == 6 and cd_hours == sorted(cd_hours), (
         f"Expected strictly increasing countdown hours, got {cd_hours}"
+    )
+    cd_ts = [datetime.fromisoformat(e["ts_utc"]) for e in countdown_events]
+    cd_deltas = [(cd_ts[i + 1] - cd_ts[i]).total_seconds() for i in range(len(cd_ts) - 1)]
+    assert all(0.8 <= d <= 1.5 for d in cd_deltas), (
+        f"Expected ~1.0s spacing between autonomy.countdown events, got {cd_deltas}"
     )
 
 

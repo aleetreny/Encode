@@ -90,6 +90,20 @@ COMBOS = [
 ]
 
 
+JURY_NAMES = [
+    "Prof. María González",
+    "Dr. Carlos Muñoz",
+    "Ing. Sofía Valdivia",
+    "Dr. Andrés Pizarro",
+    "Jurado Londres",
+]
+
+
+def _pick_jury_name(asset_key: str, hour: int) -> str:
+    idx = (sum(ord(c) for c in asset_key) + hour) % len(JURY_NAMES)
+    return JURY_NAMES[idx]
+
+
 def enforce_digit_free_and_cached(events: list[dict[str, Any]], asset_key: str, hour: int) -> None:
     """Enforce cached model execution metadata and zero digits across all prose fields.
     Preserves honest `model`, `status`, and `response_id` from `run_incident_evaluation`.
@@ -98,7 +112,12 @@ def enforce_digit_free_and_cached(events: list[dict[str, Any]], asset_key: str, 
 
     for ev in events:
         etype = ev.get("type")
-        if etype == "agent.thought":
+        if etype == "incident.detected":
+            disr = ev.setdefault("disruption", {})
+            disr["source"] = "jury"
+            if not disr.get("jury_name"):
+                disr["jury_name"] = _pick_jury_name(asset_key, hour)
+        elif etype == "agent.thought":
             raw_delta = ev.get("delta", "")
             if has_digits(raw_delta):
                 ev["delta"] = sanitize_no_digits(raw_delta)
@@ -189,6 +208,8 @@ def generate_single_incident(
             disrupt_res = await ses.disrupt(
                 asset_id,
                 duration_h=DURATION_H,
+                source="jury",
+                jury_name=_pick_jury_name(asset_id, hour),
                 from_hour_override=hour,
                 wait_for_options=True,
             )
@@ -378,6 +399,7 @@ def build_library(
                         and float(opt_ev.get("hour", 0)) > float(inc_ev.get("hour", 0))
                     ):
                         enforce_digit_free_and_cached(existing_evs, asset, h)
+                        write_jsonl(jsonl_path, existing_evs)
                         impact = inc_ev.get("impact", {})
                         meta = {
                             "file": f"/incidents/{asset}_{h}.jsonl",

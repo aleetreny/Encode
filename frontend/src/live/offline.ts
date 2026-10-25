@@ -171,7 +171,7 @@ export class OfflineSessionController {
   }
 
   async postJuryCommand(sessionId: string, cmd: JuryDisruptCommandRequest): Promise<Response> {
-    await this.injectCrisis(cmd.asset_id);
+    await this.injectCrisis(cmd.asset_id, cmd.jury_name);
     return new Response(null, { status: 202 });
   }
 
@@ -179,7 +179,7 @@ export class OfflineSessionController {
     this.setAutonomy(cmd.autonomy);
   }
 
-  async injectCrisis(assetId: string): Promise<void> {
+  async injectCrisis(assetId: string, juryName?: string): Promise<void> {
     const nearestHour = this.getClosestLibraryHour(this.simHour);
     try {
       const res = await fetch(`/incidents/${assetId}_${nearestHour}.jsonl`);
@@ -207,6 +207,14 @@ export class OfflineSessionController {
           hour: this.simHour,
           ts_utc: new Date().toISOString(),
         };
+
+        if (stamped.type === 'incident.detected' && juryName) {
+          stamped.disruption = {
+            ...stamped.disruption,
+            source: 'jury',
+            jury_name: juryName,
+          };
+        }
 
         if (stamped.type === 'options.ready') {
           stamped.model_execution = {
