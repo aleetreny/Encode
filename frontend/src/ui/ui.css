@@ -444,3 +444,9 @@
   .gp-preview-banner, .gp-toast { display: none; }
   .gp-invite { position: fixed !important; }
 }
+/* hover hints only where there is a pointer that can hover */
+.gp-only-touch { display: none; }
+@media (hover: none), (max-width: 900px) {
+  .gp-only-pointer { display: none; }
+  .gp-only-touch { display: inline; }
+}

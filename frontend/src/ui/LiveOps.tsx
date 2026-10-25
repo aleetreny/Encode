@@ -274,7 +274,7 @@ function Screen() {
         <section className="gp-options">
           <div className="gp-options-head">
             <b>¿Qué hacemos?</b>
-            <span>{countdown?.active ? `Modo autónomo: Gemini aplica su recomendación en ${countdown.seconds_left} s` : 'Elige un camino. Pasa el cursor para ver cómo quedaría la red.'}</span>
+            <span>{countdown?.active ? `Modo autónomo: Gemini aplica su recomendación en ${countdown.seconds_left} s` : <><span className="gp-only-pointer">Elige un camino. Pasa el cursor para ver cómo quedaría la red.</span><span className="gp-only-touch">Elige un camino y toca «Aplicar».</span></>}</span>
             {state.model_execution && <ModelBadge m={state.model_execution} />}
           </div>
           <div className="gp-options-row">
