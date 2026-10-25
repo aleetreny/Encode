@@ -229,7 +229,7 @@ def test_assess_is_alert_when_the_solution_is_not_optimal():
     a = monitor.assess(small_scenario(), sol, 0)
     assert a.severity == "alert"
     assert a.watch[0] == "solver_status"
-    assert "no es óptima" in monitor.deterministic_text_es(a.metrics, a.severity, a.watch)
+    assert "not optimal" in monitor.deterministic_text_es(a.metrics, a.severity, a.watch)
 
 
 # --------------------------------------------------------------------------- deterministic wording
@@ -240,29 +240,29 @@ def test_deterministic_text_is_specific_and_digit_free():
     hot = monitor.deterministic_text_es(
         {**full, "curtailment_mw": 120.0}, "alert", ["L2"], "alerta"
     )
-    assert "corredor troncal del Norte Chico a la Zona Central" in hot
-    assert "límite" in hot and "recorta" in hot and "una parte considerable" in hot
-    assert "una parte pequeña" in monitor.deterministic_text_es(
+    assert agent_loop.ASSET_NAMES_ES["L2"] in hot
+    assert "limit" in hot and "curtailed" in hot and "a considerable part" in hot
+    assert "a small part" in monitor.deterministic_text_es(
         {**full, "curtailment_mw": 10.0}, "alert", ["L2"]
     )
-    assert "una parte muy grande" in monitor.deterministic_text_es(
+    assert "a very large part" in monitor.deterministic_text_es(
         {**full, "curtailment_mw": 300.0}, "alert", ["L2"]
     )
 
     ramp = monitor.deterministic_text_es(
         {**CALM, "demand_mw": 1000.0, "net_load_ramp_mw_per_h": 200.0}, "info", []
     )
-    assert "rampa" in ramp
+    assert "ramp" in ramp
 
     storage = monitor.deterministic_text_es(
         {**CALM, "storage_soc_pct": 5.0}, "watch", ["storage_soc"]
     )
-    assert "almacenamiento" in storage
+    assert "storage" in storage
 
     reserve = monitor.deterministic_text_es(
         {**CALM, "reserve_margin_pct": 3.0}, "watch", ["reserve_margin"]
     )
-    assert "reserva" in reserve
+    assert "reserve" in reserve
 
     unserved = monitor.deterministic_text_es(
         {**CALM, "unserved_mw": 12.0, "households_off": 12000.0},
@@ -270,10 +270,10 @@ def test_deterministic_text_is_specific_and_digit_free():
         ["unserved"],
         "emergencia",
     )
-    assert "sin suministro" in unserved
+    assert "without power" in unserved
 
     recovery = monitor.deterministic_text_es(CALM, "info", [], "recuperacion")
-    assert "plan de mitigación" in recovery
+    assert "mitigation plan" in recovery
 
     texts = {hot, ramp, storage, reserve, unserved, recovery}
     assert len(texts) == 6
@@ -322,7 +322,7 @@ def test_ok_path_uses_the_fast_model_and_strips_digits(fake_key, monkeypatch):
     def fake(**kwargs):
         seen.update(kwargs)
         return gemini_reply(
-            "El corredor L1 está al 92% de su capacidad.\nVigilar el recorte solar de la tarde."
+            "Corridor L1 is at 92% of its capacity.\nWatch the solar curtailment this afternoon."
         )
 
     monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", fake)
@@ -332,7 +332,7 @@ def test_ok_path_uses_the_fast_model_and_strips_digits(fake_key, monkeypatch):
             hour=1.0,
             grid_state="alerta",
             active_events=[{"asset_id": "L2", "type": "line_outage"}],
-            previous_text="Nota previa de prueba.",
+            previous_text="Test previous note.",
         )
     )
     ex = note["model_execution"]
@@ -345,18 +345,16 @@ def test_ok_path_uses_the_fast_model_and_strips_digits(fake_key, monkeypatch):
     )
     assert isinstance(ex["latency_ms"], int)
     assert not has_digits(note["text_es"])
-    assert "Vigilar el recorte solar" in note["text_es"]
+    assert "Watch the solar curtailment" in note["text_es"]
     assert (note["kind"], note["severity"], note["watch"]) == ("monitor", "watch", ["L1"])
 
     assert seen["model"] == "fake-fast-model"
     assert seen["timeout_s"] == monitor.MONITOR_TIMEOUT_S == 3.0
     assert seen["system_instruction"] == monitor.MONITOR_SYSTEM_PROMPT_ES
     prompt = seen["contents"][0]["parts"][0]["text"]
-    assert "corredor troncal del Norte Grande al Norte Chico" in prompt  # most loaded line, named
-    assert (
-        "corte de un corredor: corredor troncal del Norte Chico a la Zona Central" in prompt
-    )  # active fault, named
-    assert "Nota previa de prueba." in prompt
+    assert agent_loop.ASSET_NAMES_ES["L1"] in prompt  # most loaded line, named
+    assert f"corridor outage: {agent_loop.ASSET_NAMES_ES['L2']}" in prompt  # active fault, named
+    assert "Test previous note." in prompt
     assert "max_line_loading_pct=92.3" in prompt
 
 
@@ -365,9 +363,9 @@ def test_ok_path_uses_the_fast_model_and_strips_digits(fake_key, monkeypatch):
     [
         gemini_reply(""),
         gemini_reply("1234 5678 90"),
-        gemini_reply("Corto."),
+        gemini_reply("Short."),
         {"candidates": []},
-        {"candidates": [{"content": {"parts": [{"text": "pensando " * 5, "thought": True}]}}]},
+        {"candidates": [{"content": {"parts": [{"text": "thinking " * 5, "thought": True}]}}]},
     ],
 )
 def test_unusable_model_reply_falls_back_with_error_status(fake_key, monkeypatch, reply):
@@ -400,7 +398,7 @@ def test_slow_model_times_out_with_labelled_deterministic_note(fake_key, monkeyp
 
     def slow(**kwargs):
         release.wait(5.0)
-        return gemini_reply("Respuesta tardía que nunca debe mostrarse en pantalla.")
+        return gemini_reply("Late answer that must never be shown on screen.")
 
     monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", slow)
 
@@ -424,7 +422,7 @@ def test_slow_model_times_out_with_labelled_deterministic_note(fake_key, monkeyp
         False,
     )
     assert ex["latency_ms"] >= 250
-    assert "tardía" not in note["text_es"]
+    assert "Late answer" not in note["text_es"]
 
 
 # --------------------------------------------------------------------------- engine cadence
@@ -509,7 +507,7 @@ def test_severity_that_stays_or_falls_does_not_repeat(no_key):
 
 def test_emit_note_keeps_working_for_custom_texts(no_key):
     session = LiveSession("monitor-custom", start_hour=7.0)
-    ev = session.emit_note("Corredor Norte Chico a 100 por ciento con recorte solar.")
+    ev = session.emit_note("North Chico corridor at 100 percent with solar curtailment.")
     assert ev["type"] == "agent.note"
     assert ev["kind"] == "periodic"
     assert not has_digits(ev["text_es"])
@@ -523,7 +521,7 @@ def test_clock_keeps_ticking_while_a_slow_model_is_pending(fake_key, monkeypatch
     def slow(**kwargs):
         calls.append(kwargs)
         release.wait(5.0)
-        return gemini_reply("Respuesta tardía que nunca debe mostrarse en pantalla.")
+        return gemini_reply("Late answer that must never be shown on screen.")
 
     monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", slow)
 
@@ -591,7 +589,7 @@ def test_a_late_answer_is_replaced_by_a_fresh_reading_and_the_grid_is_read_again
     def gated(**kwargs):
         calls.append(kwargs["contents"][0]["parts"][0]["text"])
         release.wait(5.0)
-        return gemini_reply(f"Nota de prueba número uno para la llamada {len(calls)} del monitor.")
+        return gemini_reply(f"Test note number one for monitor call {len(calls)} of the run.")
 
     monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", gated)
 
@@ -625,7 +623,7 @@ def test_an_escalation_queued_during_a_call_is_emitted_from_a_fresh_reading(fake
 
     def gated(**kwargs):
         release.wait(5.0)
-        return gemini_reply("Nota de prueba sobre el estado actual de la red simulada del sistema.")
+        return gemini_reply("Test note about the current state of the simulated grid system.")
 
     monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", gated)
 
