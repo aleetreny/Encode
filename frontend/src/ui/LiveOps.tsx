@@ -146,6 +146,8 @@ function Screen() {
 
   const shown: Solution | null = hovered?.solution ?? solution;
   const deciding = !!options && (phase === 'awaiting_operator' || !!countdown?.active);
+  // The recorded session holds the clock at the decision, so Resume would do nothing there.
+  const holding = deciding && !state.clock.running && connectionMode === 'offline';
   const assets = useMemo(() => (catalog ? buildAssets(catalog) : []), [catalog]);
 
   const boosted = useMemo(() => new Set((applied?.levers ?? []).map((l) => l.target_id)), [applied]);
@@ -207,7 +209,7 @@ function Screen() {
   const setAutonomy = async (enabled: boolean) => {
     if (connectionMode !== 'live' || !state.sessionId) return;
     await fetch(`${API_BASE}/live/sessions/${encodeURIComponent(state.sessionId)}/autonomy`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }),
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS }, body: JSON.stringify({ enabled }),
     });
   };
 
@@ -371,7 +373,7 @@ function Screen() {
           )}
           <MonitorBlock notes={state.notes} catalog={catalog} />
           {state.thoughts.slice(-3).map((th, i, arr) => (
-            <Typed key={`${th.ts_utc}-${i}`} className="gp-thought" text={th.text_es} prefix={clock(th.sim_hour)} live={i === arr.length - 1} />
+            <Typed key={`${th.ts_utc}-${i}`} className={`gp-thought${i === arr.length - 1 ? ' is-latest' : ''}`} text={th.text_es} prefix={clock(th.sim_hour)} live={i === arr.length - 1} />
           ))}
           {state.tool_calls.length > 0 && (
             <ul className="gp-tools">
@@ -428,7 +430,7 @@ function Screen() {
             <h2>Try to knock out the grid</h2>
             {connectionMode === 'live' && state.sessionId ? (
               <>
-                <img src={`${API_BASE}/live/sessions/${encodeURIComponent(state.sessionId)}/qr.svg`} alt="QR code for the jury page" />
+                <JuryQr sessionId={state.sessionId} />
                 <code>{`${window.location.origin}/jurado?s=${state.sessionId}`}</code>
               </>
             ) : (
@@ -440,7 +442,12 @@ function Screen() {
       )}
 
       <footer className="gp-controls">
-        <button className="gp-btn is-ghost" onClick={() => actions.setClock({ action: state.clock.running ? 'pause' : 'play' })}>{state.clock.running ? 'Pause' : 'Resume'}</button>
+        <button
+          className="gp-btn is-ghost gp-btn-clock"
+          disabled={holding}
+          title={holding ? 'The clock waits until you pick a plan' : undefined}
+          onClick={() => actions.setClock({ action: state.clock.running ? 'pause' : 'play' })}
+        >{holding ? 'Waiting for you' : state.clock.running ? 'Pause' : 'Resume'}</button>
         <label className={`gp-switch${state.clock.autonomy_mode ? ' is-on' : ''}${connectionMode !== 'live' ? ' is-disabled' : ''}`}>
           <input type="checkbox" checked={state.clock.autonomy_mode} disabled={connectionMode !== 'live'} onChange={(e) => setAutonomy(e.target.checked)} />
           <span /> Autonomous mode
@@ -569,4 +576,23 @@ function ModelBadge({ m }: { m: NonNullable<ReturnType<typeof useLiveSession>['s
     : deterministic ? 'Deterministic planner · no Gemini call'
     : `${m.model} · ${(m.latency_ms / 1000).toLocaleString('en-GB', { maximumFractionDigits: 1 })} s${m.cached ? ' · cached answer' : ''}`;
   return <em className={`gp-model${deterministic || m.status !== 'ok' ? ' is-warn' : ''}`}>{label}</em>;
+}
+
+// ngrok's free tier answers a browser request without this header with an HTML warning page,
+// so API calls made outside client.ts must send it too.
+const NGROK_HEADERS: Record<string, string> = API_BASE.includes('ngrok') ? { 'ngrok-skip-browser-warning': '1' } : {};
+
+// An <img> cannot send that header, so the QR is fetched and shown from memory.
+function JuryQr({ sessionId }: { sessionId: string }) {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    let url: string | null = null;
+    let alive = true;
+    fetch(`${API_BASE}/live/sessions/${encodeURIComponent(sessionId)}/qr.svg`, { headers: NGROK_HEADERS })
+      .then((r) => (r.ok ? r.blob() : Promise.reject(r.status)))
+      .then((b) => { if (!alive) return; url = URL.createObjectURL(b); setSrc(url); })
+      .catch(() => alive && setSrc(null));
+    return () => { alive = false; if (url) URL.revokeObjectURL(url); };
+  }, [sessionId]);
+  return src ? <img src={src} alt="QR code for the jury page" /> : <div className="gp-qr-loading">Loading QR…</div>;
 }

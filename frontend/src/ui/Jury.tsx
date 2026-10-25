@@ -21,6 +21,8 @@ function deviceId() {
   return id;
 }
 
+const STATE_EN: Record<string, string> = { normal: 'Normal', alerta: 'Alert', emergencia: 'Emergency' };
+
 const PHASE: Record<string, string> = {
   idle: 'Gemini is watching the grid',
   analyzing: 'Gemini is analysing the outage…',
@@ -71,6 +73,7 @@ export function Jury() {
   const deficit = solution ? Object.values(solution.unserved_mw).reduce((s, v) => s + at(v, hour), 0) : 0;
   const cooldown = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
   const full = state.active_incidents.length >= 2;
+  const why = link === 'connecting' ? 'Connecting…' : link === 'down' ? 'Offline' : !named ? 'Enter your name' : cooldown > 0 ? `Wait ${cooldown} s` : full ? 'Two already out' : null;
 
   const trip = async (assetId: string) => {
     if (cooldown > 0 || busy || !named) return;
@@ -86,10 +89,12 @@ export function Jury() {
         setSent(assetId);
       } else {
         const body = await res.json().catch(() => ({}));
-        setMessage(body.message_es || body.detail || 'The room did not accept the outage. Try again in a few seconds.');
+        setMessage((typeof body.detail === 'string' && body.detail) || body.message_es || 'The room did not accept the outage. Try again in a few seconds.');
+        window.setTimeout(() => setMessage(null), 6000);
       }
     } catch {
-      setMessage('No connection to the room.');
+      setMessage('No connection to the room. Check your internet and try again.');
+      window.setTimeout(() => setMessage(null), 6000);
     } finally {
       setBusy(null);
     }
@@ -110,13 +115,13 @@ export function Jury() {
             <span>Live room · jury</span>
           </div>
         </div>
-        <span className={`jr-state is-${state.grid_state}`}>{link === 'live' ? state.grid_state : link === 'down' ? 'offline' : 'connecting'}</span>
+        <span className={`jr-state is-${state.grid_state}`}>{link === 'live' ? (STATE_EN[state.grid_state] ?? state.grid_state) : link === 'down' ? 'offline' : 'connecting'}</span>
       </header>
 
       <section className="jr-hero">
         <p>Try to knock out Chile's power grid. <b>Gemini</b> is watching it and has to propose how to recover it, live, in front of everyone.</p>
         <div className="jr-kpis">
-          <div className={off > 1 ? 'is-hot' : ''}><span>Without power</span><b>{Math.round(off).toLocaleString('en-GB')}</b></div>
+          <div className={off > 1 ? 'is-hot' : ''}><span>Homes off</span><b>{Math.round(off).toLocaleString('en-GB')}</b></div>
           <div className={deficit > 1 ? 'is-hot' : ''}><span>Deficit</span><b>{Math.round(deficit)} MW</b></div>
           <div><span>Time</span><b>{String(Math.floor(hour)).padStart(2, '0')}:{String(Math.floor((hour % 1) * 60)).padStart(2, '0')}</b></div>
         </div>
@@ -131,23 +136,22 @@ export function Jury() {
       </section>
 
       <label className={`jr-name${named ? '' : ' is-required'}`}>
-        <span>{named ? 'Your name will appear on the big screen' : 'Enter your name to attack · it will appear on the big screen'}</span>
-        <input value={name} maxLength={24} placeholder="e.g. Ana, juror" onChange={(e) => { setName(e.target.value); localStorage.setItem('gp_jury_name', e.target.value); }} />
+        <span>{named ? 'Your name appears on the big screen' : 'Your name is required · it appears on the big screen'}</span>
+        <input value={name} maxLength={24} placeholder="Your name, e.g. Ana" autoComplete="nickname" enterKeyHint="done" onChange={(e) => { setName(e.target.value); localStorage.setItem('gp_jury_name', e.target.value); }} />
       </label>
 
       {link === 'down' && <p className="jr-msg is-bad">Can't reach the room. Check that you scanned the QR on the screen and that you have internet.</p>}
-      {message && <p className="jr-msg is-bad">{message}</p>}
-      {sent && cooldown > 0 && (
-        <p className="jr-msg is-ok">
-          <b>Done! {label(sent)} is down.</b> Watch the big screen. You can attack again in {cooldown} s.
-        </p>
-      )}
       {full && <p className="jr-msg">Two outages are already under way. Wait for Gemini to resolve one.</p>}
+      {(message || (sent && cooldown > 0)) && (
+        <div className={`jr-toast ${message ? 'is-bad' : 'is-ok'}`} role="status" onClick={() => setMessage(null)}>
+          {message ? message : <><b>Done! {label(sent!)} is down.</b> Watch the big screen. You can attack again in {cooldown} s.</>}
+        </div>
+      )}
 
       <h2 className="jr-h">Plants</h2>
       <div className="jr-grid">
         {assets.map((a) => (
-          <Card key={a.id} title={assetTitle(a)} color={TECH_COLOR[a.technology]} risk={solution ? at(solution.generation_mw[a.id], hour) : 0} unit="MW generating now" down={out.has(a.id)} disabled={cooldown > 0 || full || link !== 'live' || out.has(a.id) || !named} busy={busy === a.id} onTrip={() => setConfirm({ id: a.id, title: assetTitle(a), risk: solution ? at(solution.generation_mw[a.id], hour) : 0, unit: 'MW generating now' })} action="Knock out plant">
+          <Card key={a.id} title={assetTitle(a)} color={TECH_COLOR[a.technology]} risk={solution ? at(solution.generation_mw[a.id], hour) : 0} unit="MW generating now" down={out.has(a.id)} disabled={cooldown > 0 || full || link !== 'live' || out.has(a.id) || !named} busy={busy === a.id} onTrip={() => setConfirm({ id: a.id, title: assetTitle(a), risk: solution ? at(solution.generation_mw[a.id], hour) : 0, unit: 'MW generating now' })} action="Knock out plant" why={why}>
             <Mini asset={a} down={out.has(a.id)} />
           </Card>
         ))}
@@ -155,7 +159,7 @@ export function Jury() {
       <h2 className="jr-h">Trunk lines</h2>
       <div className="jr-grid">
         {(catalog?.lines ?? []).filter((l) => l.disruptable).map((l) => (
-          <Card key={l.id} title={`Line ${l.id} · ${ZONES[l.from]?.short}→${ZONES[l.to]?.short}`} color="#3e63dd" risk={solution ? Math.abs(at(solution.line_flow_mw[l.id], hour)) : 0} unit="MW carried now" down={out.has(l.id)} disabled={cooldown > 0 || full || link !== 'live' || out.has(l.id) || !named} busy={busy === l.id} onTrip={() => setConfirm({ id: l.id, title: `Line ${l.id} (${ZONES[l.from]?.label} → ${ZONES[l.to]?.label})`, risk: solution ? Math.abs(at(solution.line_flow_mw[l.id], hour)) : 0, unit: 'MW carried now' })} action="Cut line">
+          <Card key={l.id} title={`Line ${l.id} · ${ZONES[l.from]?.short}→${ZONES[l.to]?.short}`} color="#3e63dd" risk={solution ? Math.abs(at(solution.line_flow_mw[l.id], hour)) : 0} unit="MW carried now" down={out.has(l.id)} disabled={cooldown > 0 || full || link !== 'live' || out.has(l.id) || !named} busy={busy === l.id} onTrip={() => setConfirm({ id: l.id, title: `Line ${l.id} (${ZONES[l.from]?.label} → ${ZONES[l.to]?.label})`, risk: solution ? Math.abs(at(solution.line_flow_mw[l.id], hour)) : 0, unit: 'MW carried now' })} action="Cut line" why={why}>
             <svg viewBox="0 0 120 70" className="jr-mini"><path d="M8 52 Q60 30 112 18" className={out.has(l.id) ? 'jr-line is-down' : 'jr-line'} /><circle cx="8" cy="52" r="4" /><circle cx="112" cy="18" r="4" /></svg>
           </Card>
         ))}
@@ -180,8 +184,8 @@ export function Jury() {
   );
 }
 
-function Card({ title, color, risk, unit, down, disabled, busy, onTrip, action, children }: {
-  title: string; color: string; risk: number; unit: string; down: boolean; disabled: boolean; busy: boolean; onTrip: () => void; action: string; children: React.ReactNode;
+function Card({ title, color, risk, unit, down, disabled, busy, onTrip, action, why, children }: {
+  title: string; why: string | null; color: string; risk: number; unit: string; down: boolean; disabled: boolean; busy: boolean; onTrip: () => void; action: string; children: React.ReactNode;
 }) {
   return (
     <article className={`jr-card${down ? ' is-down' : ''}`} style={{ ['--c' as string]: color }}>
@@ -190,7 +194,7 @@ function Card({ title, color, risk, unit, down, disabled, busy, onTrip, action, 
       {down ? <p className="jr-out">Out of service</p> : (
         <div className="jr-risk"><b>{Math.round(risk).toLocaleString('en-GB')}</b><span>{unit}</span></div>
       )}
-      <button className="jr-btn" disabled={disabled} onClick={onTrip}>{busy ? 'Sending…' : down ? 'Already down' : action}</button>
+      <button className="jr-btn" disabled={disabled} onClick={onTrip}>{busy ? 'Sending…' : down ? 'Already down' : why ?? action}</button>
     </article>
   );
 }
