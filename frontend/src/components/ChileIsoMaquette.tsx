@@ -639,22 +639,22 @@ export const ChileIsoMaquette: React.FC = () => {
   let stage2Summary = '';
 
   if (unservedMw > 10) {
-    stage1Summary = `ALERTA DE RED: Déficit térmico de ${Math.round(rawDeficitMw)} MW hacia 06 · Barrio Residencial`;
-    stage2Summary = `AGENTE IA APAGADO: ${Math.round(unservedMw)} MW sin suministro (${6 - litHousesCount} manzanas a oscuras · Activa IA para rescatar ${(Math.round(unservedMw) * 1000).toLocaleString('en-US')} hogares)`;
+    stage1Summary = `GRID ALERT: Thermal deficit of ${Math.round(rawDeficitMw)} MW toward 06 · Residential Neighbourhood`;
+    stage2Summary = `AI AGENT OFF: ${Math.round(unservedMw)} MW unserved (${6 - litHousesCount} blocks in the dark · Turn on the AI to rescue ${(Math.round(unservedMw) * 1000).toLocaleString('en-US')} homes)`;
   } else if (aiInjectMw > 0) {
-    stage1Summary = `FASE 1 · PERTURBACIÓN: Caída en 03 · Central Gas deja déficit de ${Math.round(rawDeficitMw)} MW en hora punta`;
-    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA: 04 · Batería BESS inyecta +${Math.round(aiInjectMw)} MW de emergencia → 100% hogares iluminados (${(Math.round(aiInjectMw) * 1000).toLocaleString('en-US')} hogares protegidos)`;
+    stage1Summary = `PHASE 1 · DISTURBANCE: Outage at 03 · Gas Plant leaves a ${Math.round(rawDeficitMw)} MW deficit at peak hour`;
+    stage2Summary = `PHASE 2 · AI AGENT SOLUTION: 04 · BESS battery injects +${Math.round(aiInjectMw)} MW of emergency power → 100% of homes lit (${(Math.round(aiInjectMw) * 1000).toLocaleString('en-US')} homes protected)`;
   } else if (curtailedSolarMw > 10) {
-    stage1Summary = `SATURACIÓN L2: Excedente renovable de +${Math.round(rawCorridorOverflowMw)} MW supera capacidad de 05 · Troncal L2 (${l2CapMw} MW)`;
-    stage2Summary = `AGENTE IA APAGADO: Se pierden ${Math.round(curtailedSolarMw)} MW de energía solar limpia (Activa Agente IA para almacenar en BESS)`;
+    stage1Summary = `L2 SATURATION: Renewable surplus of +${Math.round(rawCorridorOverflowMw)} MW exceeds capacity of 05 · Trunk L2 (${l2CapMw} MW)`;
+    stage2Summary = `AI AGENT OFF: ${Math.round(curtailedSolarMw)} MW of clean solar energy is lost (Turn on the AI Agent to store it in BESS)`;
   } else if (aiAbsorbMw > 0) {
     const savedUsd = Math.round((aiAbsorbMw / 400) * 51950);
     const savedMwh = ((aiAbsorbMw / 400) * 631.6).toFixed(1);
-    stage1Summary = `FASE 1 · PERTURBACIÓN: Generación Norte (${Math.round(northRenewableMw)} MW) supera capacidad de 05 · Troncal L2 (${l2CapMw} MW)`;
-    stage2Summary = `FASE 2 · SOLUCIÓN AGENTE IA: 04 · Batería BESS absorbe +${Math.round(aiAbsorbMw)} MW por línea directa → 0 MW recorte (-${savedMwh} MWh · -$${savedUsd.toLocaleString()} USD/día)`;
+    stage1Summary = `PHASE 1 · DISTURBANCE: Northern generation (${Math.round(northRenewableMw)} MW) exceeds capacity of 05 · Trunk L2 (${l2CapMw} MW)`;
+    stage2Summary = `PHASE 2 · AI AGENT SOLUTION: 04 · BESS battery absorbs +${Math.round(aiAbsorbMw)} MW via direct line → 0 MW curtailment (-${savedMwh} MWh · -$${savedUsd.toLocaleString()} USD/day)`;
   } else {
-    stage1Summary = `FLUJO NOMINAL SEN: Generación limpia (${Math.round(northRenewableMw)} MW) + Térmica (${thermalMw} MW) abasteciendo ${demandMw} MW`;
-    stage2Summary = `AGENTE IA EN GUARDIA (HiGHS LP): Corredor L2 al ${Math.round(corridorLoadRatio * 100)}% (${Math.round(solarToSubMw + windToSubMw)}/${l2CapMw} MW) · 50.00 Hz estables`;
+    stage1Summary = `NOMINAL SEN FLOW: Clean generation (${Math.round(northRenewableMw)} MW) + Thermal (${thermalMw} MW) supplying ${demandMw} MW`;
+    stage2Summary = `AI AGENT ON WATCH (HiGHS LP): L2 corridor at ${Math.round(corridorLoadRatio * 100)}% (${Math.round(solarToSubMw + windToSubMw)}/${l2CapMw} MW) · 50.00 Hz stable`;
   }
 
   // 4-datum minimalist borderless specifications + inline parameter controls
@@ -684,15 +684,15 @@ export const ChileIsoMaquette: React.FC = () => {
       pos: toPct([SOLAR_C[0] - 8, SOLAR_C[1] - 32, 20]),
       align: 'center',
       dotColor: curtailedSolarMw > 10 ? '#e5484d' : '#16a34a',
-      name: '01 · PLANTA SOLAR ATACAMA',
+      name: '01 · ATACAMA SOLAR PLANT',
       d1: `${solarMw} MW · FV NORTE GRANDE`,
       d2:
         aiAbsorbMw > 0
-          ? `→ +${Math.round(aiAbsorbMw)} MW A BATERÍA IA · ${Math.round(solarToSubMw)} MW A L2`
-          : `220 kV DC/AC → ${Math.round(solarToSubMw)} MW EN L2`,
+          ? `→ +${Math.round(aiAbsorbMw)} MW TO AI BATTERY · ${Math.round(solarToSubMw)} MW TO L2`
+          : `220 kV DC/AC → ${Math.round(solarToSubMw)} MW ON L2`,
       d3:
         curtailedSolarMw > 10
-          ? `▲ ${Math.round(curtailedSolarMw)} MW RECORTE SOLAR`
+          ? `▲ ${Math.round(curtailedSolarMw)} MW SOLAR CURTAILMENT`
           : `${Math.round((solarMw / 989) * 100)}% IRRADIANCIA · 0 VERTIMIENTO`,
       slider: {
         value: solarMw,
@@ -718,9 +718,9 @@ export const ChileIsoMaquette: React.FC = () => {
       pos: toPct([WIND_C[0] - 16, WIND_C[1] + 20, -18]),
       align: 'center',
       dotColor: '#16a34a',
-      name: '02 · PARQUE EÓLICO NORTE',
-      d1: `${windMw} MW · EÓLICA`,
-      d2: `220 kV AC → ${Math.round(windToSubMw)} MW EN L2`,
+      name: '02 · NORTE WIND FARM',
+      d1: `${windMw} MW · WIND`,
+      d2: `220 kV AC → ${Math.round(windToSubMw)} MW ON L2`,
       d3: `${(8.5 + (windMw / 400) * 9.5).toFixed(1)} RPM · 3 TURBINAS`,
       slider: {
         value: windMw,
@@ -733,7 +733,7 @@ export const ChileIsoMaquette: React.FC = () => {
           setWindMw(v);
           triggerTwoStageReaction('wind');
         },
-        quickLabel: windMw < 340 ? 'Ráfaga 360 MW' : 'Base 180 MW',
+        quickLabel: windMw < 340 ? 'Gust 360 MW' : 'Base 180 MW',
         onQuickClick: () => {
           const next = windMw < 340 ? 360 : 180;
           setWindMw(next);
@@ -746,10 +746,10 @@ export const ChileIsoMaquette: React.FC = () => {
       pos: toPct([THERMAL_C[0] + 6, THERMAL_C[1] + 28, -12]),
       align: 'center',
       dotColor: thermalMw === 0 ? '#e5484d' : '#2563eb',
-      name: '03 · CENTRAL TÉRMICA GAS',
-      d1: thermalMw === 0 ? '0 MW · FUERA DE SERVICIO' : `${thermalMw} MW · CICLO COMBINADO`,
+      name: '03 · GAS THERMAL PLANT',
+      d1: thermalMw === 0 ? '0 MW · OUT OF SERVICE' : `${thermalMw} MW · COMBINED CYCLE`,
       d2: '500 kV AC · GAS_CENTRO',
-      d3: thermalMw === 0 ? '▲ CAÍDA FORZADA 18:00–22:00' : 'RESERVA SINCRÓNICA ACTIVA',
+      d3: thermalMw === 0 ? '▲ FORCED OUTAGE 18:00–22:00' : 'SYNCHRONOUS RESERVE ACTIVE',
       slider: {
         value: thermalMw,
         min: 0,
@@ -761,7 +761,7 @@ export const ChileIsoMaquette: React.FC = () => {
           setThermalMw(v);
           triggerTwoStageReaction('thermal');
         },
-        quickLabel: thermalMw > 0 ? 'Provocar caída 0 MW' : 'Restaurar 380 MW',
+        quickLabel: thermalMw > 0 ? 'Trigger outage 0 MW' : 'Restore 380 MW',
         onQuickClick: () => {
           if (thermalMw > 0) {
             applyScenarioPreset('sudden_outage');
@@ -778,26 +778,26 @@ export const ChileIsoMaquette: React.FC = () => {
       pos: toPct([BATTERY_C[0] - 2, BATTERY_C[1] - 32, 20]),
       align: 'center',
       dotColor: !aiEnabled ? '#71717a' : aiInjectMw > 0 ? '#2563eb' : '#16a34a',
-      name: '04 · BATERÍA AGENTE IA (BESS)',
+      name: '04 · AI AGENT BATTERY (BESS)',
       d1: !aiEnabled
-        ? '0 MW · AGENTE IA EN PAUSA'
+        ? '0 MW · AI AGENT PAUSED'
         : netBessMw > 0
         ? `+${Math.round(netBessMw)} MW · ABSORBIENDO EXCEDENTE`
         : netBessMw < 0
-        ? `+${Math.round(Math.abs(netBessMw))} MW · INYECCIÓN RESCATE`
-        : 'EN GUARDIA · OPTIMIZADOR HiGHS',
+        ? `+${Math.round(Math.abs(netBessMw))} MW · RESCUE INJECTION`
+        : 'ON WATCH · HiGHS OPTIMISER',
       d2: '800 MWh NORTE + 600 MWh SUR',
-      d3: `${bessTargetSoc}% SoC · ${aiEnabled ? 'DESPACHO IA AUTOMÁTICO' : 'MODO MANUAL SIN IA'}`,
+      d3: `${bessTargetSoc}% SoC · ${aiEnabled ? 'AUTOMATIC AI DISPATCH' : 'MANUAL MODE, NO AI'}`,
     },
     {
       id: 'substation',
       pos: toPct([SUBSTATION_C[0] - 2, SUBSTATION_C[1] + 34, -11]),
       align: 'center',
       dotColor: curtailedSolarMw > 10 ? '#e5484d' : '#2563eb',
-      name: '05 · SUBESTACIÓN TRONCAL L2',
+      name: '05 · TRUNK L2 SUBSTATION',
       d1: `${Math.round(solarToSubMw + windToSubMw)} / ${l2CapMw} MW · CORREDOR L2`,
       d2: '500 kV / 220 kV · NORTE → CENTRO',
-      d3: `${freqHz.toFixed(2)} Hz · ${l2CapMw > 450 ? 'AMPLIACIÓN c3 ACTIVA' : 'CAPACIDAD NOMINAL'}`,
+      d3: `${freqHz.toFixed(2)} Hz · ${l2CapMw > 450 ? 'c3 UPGRADE ACTIVE' : 'NOMINAL CAPACITY'}`,
       slider: {
         value: l2CapMw,
         min: 300,
@@ -822,12 +822,12 @@ export const ChileIsoMaquette: React.FC = () => {
       pos: toPct([HOUSES_C[0] - 10, HOUSES_C[1] - 26, 29]),
       align: 'center',
       dotColor: unservedMw > 15 ? '#e5484d' : '#16a34a',
-      name: '06 · BARRIO RESIDENCIAL',
-      d1: `${demandMw} MW · DEMANDA HOGARES`,
-      d2: aiInjectMw > 0 ? `+${Math.round(aiInjectMw)} MW RESPALDO BESS IA` : '23 kV / 220 V AC · CENTRO-SUR',
+      name: '06 · RESIDENTIAL NEIGHBOURHOOD',
+      d1: `${demandMw} MW · HOME DEMAND`,
+      d2: aiInjectMw > 0 ? `+${Math.round(aiInjectMw)} MW AI BESS BACKUP` : '23 kV / 220 V AC · CENTRO-SUR',
       d3:
         unservedMw > 15
-          ? `▲ ${Math.round(unservedMw)} MW DÉFICIT (${litHousesCount}/6 MANZANAS)`
+          ? `▲ ${Math.round(unservedMw)} MW DEFICIT (${litHousesCount}/6 BLOCKS)`
           : `100% SUMINISTRO (${litHousesCount}/6 MANZANAS ILUMINADAS)`,
       slider: {
         value: demandMw,
@@ -870,7 +870,7 @@ export const ChileIsoMaquette: React.FC = () => {
                       : '#2563eb',
                 }}
               />
-              SEN CHILE · RED 3D & AGENTE IA (HiGHS LP)
+              SEN CHILE · 3D GRID & AI AGENT (HiGHS LP)
             </span>
 
             <div className="bare-preset-links">
@@ -879,7 +879,7 @@ export const ChileIsoMaquette: React.FC = () => {
                 className={`bare-link-btn ${activePreset === 'normal' ? 'is-current' : ''}`}
                 onClick={() => applyScenarioPreset('normal')}
               >
-                01 · Pico Solar (880 MW)
+                01 · Solar Peak (880 MW)
               </button>
               <span className="bare-sep">·</span>
               <button
@@ -887,7 +887,7 @@ export const ChileIsoMaquette: React.FC = () => {
                 className={`bare-link-btn ${activePreset === 'sudden_outage' ? 'is-current' : ''}`}
                 onClick={() => applyScenarioPreset('sudden_outage')}
               >
-                02 · Caída Gas (0 MW)
+                02 · Gas Outage (0 MW)
               </button>
               <span className="bare-sep">·</span>
               <button
@@ -895,7 +895,7 @@ export const ChileIsoMaquette: React.FC = () => {
                 className={`bare-link-btn ${activePreset === 'planned_maintenance' ? 'is-current' : ''}`}
                 onClick={() => applyScenarioPreset('planned_maintenance')}
               >
-                03 · Ampliación L2 (600 MW)
+                03 · L2 Upgrade (600 MW)
               </button>
               <span className="bare-sep">|</span>
               <button
@@ -907,7 +907,7 @@ export const ChileIsoMaquette: React.FC = () => {
                   triggerTwoStageReaction('battery', next);
                 }}
               >
-                {aiEnabled ? '● AGENTE IA: ACTIVO' : '○ AGENTE IA: APAGADO'}
+                {aiEnabled ? '● AI AGENT: ON' : '○ AI AGENT: OFF'}
               </button>
             </div>
           </div>
@@ -938,7 +938,7 @@ export const ChileIsoMaquette: React.FC = () => {
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="fullspace-svg"
-          aria-label="Esquema 3D interactivo de la red eléctrica de Chile"
+          aria-label="Interactive 3D diagram of Chile's power grid"
         >
           {/* =========================================================
               SUSPENDED MID-AIR NETWORK WIRES WITH 2-STAGE ANIMATION
@@ -970,7 +970,7 @@ export const ChileIsoMaquette: React.FC = () => {
               labelT={0.64}
               midLabel={
                 solarToBessMw > 0
-                  ? `IA +${Math.round(solarToBessMw)} MW → CARGA BESS`
+                  ? `AI +${Math.round(solarToBessMw)} MW → BESS CHARGE`
                   : undefined
               }
             />
@@ -990,9 +990,9 @@ export const ChileIsoMaquette: React.FC = () => {
               labelT={0.5}
               midLabel={
                 animStage === 'perturbing' && perturbedNode === 'solar'
-                  ? `PICO SOLAR ${solarMw} MW → L2`
+                  ? `SOLAR PEAK ${solarMw} MW → L2`
                   : curtailedSolarMw > 10
-                  ? `L2 SATURADA (+${Math.round(curtailedSolarMw)} MW RECORTE)`
+                  ? `L2 SATURATED (+${Math.round(curtailedSolarMw)} MW CURTAILMENT)`
                   : `${Math.round(solarToSubMw)} MW SOLAR → L2`
               }
             />
@@ -1012,7 +1012,7 @@ export const ChileIsoMaquette: React.FC = () => {
               labelT={0.62}
               midLabel={
                 animStage === 'perturbing' && perturbedNode === 'wind'
-                  ? `${windMw} MW EÓLICA → L2`
+                  ? `${windMw} MW WIND → L2`
                   : undefined
               }
             />
@@ -1032,9 +1032,9 @@ export const ChileIsoMaquette: React.FC = () => {
               labelT={0.5}
               midLabel={
                 thermalMw === 0
-                  ? '0 MW · CAÍDA GAS_CENTRO'
+                  ? '0 MW · GAS_CENTRO OUTAGE'
                   : animStage === 'perturbing' && perturbedNode === 'thermal'
-                  ? `${thermalMw} MW TÉRMICA`
+                  ? `${thermalMw} MW THERMAL`
                   : undefined
               }
             />
@@ -1053,8 +1053,8 @@ export const ChileIsoMaquette: React.FC = () => {
               midLabel={
                 animStage === 'ai_solving'
                   ? aiAbsorbMw > 0
-                    ? 'IA DESCONGESTIONA L2'
-                    : 'IA ESTABILIZA 50 Hz'
+                    ? 'AI RELIEVES L2 CONGESTION'
+                    : 'AI STABILISES 50 Hz'
                   : undefined
               }
             />
@@ -1074,7 +1074,7 @@ export const ChileIsoMaquette: React.FC = () => {
               labelT={0.62}
               midLabel={
                 bessToHousesMw > 0
-                  ? `RESCATE IA +${Math.round(bessToHousesMw)} MW → HOGARES`
+                  ? `AI RESCUE +${Math.round(bessToHousesMw)} MW → HOMES`
                   : undefined
               }
             />
@@ -1097,7 +1097,7 @@ export const ChileIsoMaquette: React.FC = () => {
               labelT={0.62}
               midLabel={
                 unservedMw > 15
-                  ? `DÉFICIT -${Math.round(unservedMw)} MW`
+                  ? `DEFICIT -${Math.round(unservedMw)} MW`
                   : `${Math.round(subToHousesMw)} MW TRONCAL`
               }
             />
@@ -1726,7 +1726,7 @@ export const ChileIsoMaquette: React.FC = () => {
                   <button
                     type="button"
                     className="bare-step-btn"
-                    title="Reducir parámetro"
+                    title="Decrease value"
                     onClick={() =>
                       spec.slider!.onChange(
                         Math.max(spec.slider!.min, spec.slider!.value - spec.slider!.step)
@@ -1752,7 +1752,7 @@ export const ChileIsoMaquette: React.FC = () => {
                   <button
                     type="button"
                     className="bare-step-btn"
-                    title="Aumentar parámetro"
+                    title="Increase value"
                     onClick={() =>
                       spec.slider!.onChange(
                         Math.min(spec.slider!.max, spec.slider!.value + spec.slider!.step)
@@ -1788,7 +1788,7 @@ export const ChileIsoMaquette: React.FC = () => {
                       triggerTwoStageReaction('battery', next);
                     }}
                   >
-                    {aiEnabled ? 'Pausar Agente IA' : 'Activar Agente IA'}
+                    {aiEnabled ? 'Pause AI Agent' : 'Activate AI Agent'}
                   </button>
                   <span className="bare-sep">·</span>
                   <button
@@ -1796,7 +1796,7 @@ export const ChileIsoMaquette: React.FC = () => {
                     className="bare-quick-trigger"
                     onClick={() => applyScenarioPreset('normal')}
                   >
-                    Simular Absorción Solar
+                    Simulate Solar Absorption
                   </button>
                 </div>
               )}

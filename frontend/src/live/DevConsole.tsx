@@ -107,7 +107,7 @@ function sessionReducer(state: LiveSessionState, event: LiveEvent): LiveSessionS
         validation: event.solution?.validation || null,
         agent_status:
           event.reason === 'plan_applied'
-            ? { ...next.agent_status, phase: 'executing', detail_es: 'Plan de mitigación aplicado' }
+            ? { ...next.agent_status, phase: 'executing', detail_es: 'Mitigation plan applied' }
             : event.reason === 'event_ended'
             ? { ...next.agent_status, phase: 'resolved', detail_es: 'Evento finalizado' }
             : next.agent_status,
@@ -469,11 +469,11 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
     >
       <header style={{ borderBottom: '1px solid #374151', paddingBottom: '12px', marginBottom: '20px' }}>
         <h1 style={{ margin: '0 0 8px 0', fontSize: '20px', color: '#60a5fa' }}>
-          Andes · Operación de la red eléctrica con IA — Developer Console (/dev)
+          Andes · AI grid operations — Developer Console (/dev)
         </h1>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div>
-            <span>Conexión: </span>
+            <span>Connection: </span>
             <span
               data-testid="dev-connection-mode"
               style={{
@@ -536,7 +536,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
           backgroundColor: '#1f2937',
         }}
       >
-        <h2 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#9ca3af' }}>Control de Reloj y Autonomía</h2>
+        <h2 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#9ca3af' }}>Clock and Autonomy Control</h2>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             data-testid="dev-clock-toggle"
@@ -576,7 +576,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
           </label>
 
           <label>
-            Modo Autonomía:{' '}
+            Autonomy mode:{' '}
             <select
               data-testid="dev-autonomy-select"
               value={autonomyMode}
@@ -589,14 +589,14 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
                 borderRadius: '4px',
               }}
             >
-              <option value="autopilot">autopilot (Gemini decide y aplica)</option>
-              <option value="human_in_loop">human_in_loop (Gemini propone con cuenta regresiva)</option>
-              <option value="manual">manual (Operador aprueba exclusivamente)</option>
+              <option value="autopilot">autopilot (Gemini decides and applies)</option>
+              <option value="human_in_loop">human_in_loop (Gemini proposes with countdown)</option>
+              <option value="manual">manual (operator approval only)</option>
             </select>
           </label>
 
           <div style={{ marginLeft: 'auto', fontSize: '14px', color: '#34d399' }}>
-            Hora: {hook.interpolatedSimHour.toFixed(2)} hrs ({hook.state.clock.running ? 'CORRIENDO' : 'PAUSADO'})
+            Time: {hook.interpolatedSimHour.toFixed(2)} h ({hook.state.clock.running ? 'RUNNING' : 'PAUSED'})
           </div>
         </div>
       </section>
@@ -612,18 +612,18 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
           backgroundColor: '#1f2937',
         }}
       >
-        <h2 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#9ca3af' }}>Inyector de Incidentes y Recetas de Estrés</h2>
+        <h2 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#9ca3af' }}>Incident Injector and Stress Recipes</h2>
         
         <div style={{ marginBottom: '12px' }}>
-          <span style={{ fontSize: '12px', color: '#9ca3af', display: 'block', marginBottom: '6px' }}>Generadores:</span>
+          <span style={{ fontSize: '12px', color: '#9ca3af', display: 'block', marginBottom: '6px' }}>Generators:</span>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {[
               { id: 'gas_centro', label: 'Gas Centro (600 MW)' },
               { id: 'solar_ng', label: 'Solar Crucero (700 MW)' },
-              { id: 'coal_cs', label: 'Carbón Coronel (350 MW)' },
+              { id: 'coal_cs', label: 'Coronel coal (350 MW)' },
               { id: 'gas_ng', label: 'Gas Mejillones (350 MW)' },
               { id: 'hydro_sur', label: 'Ralco Chapo (200 MW)' },
-              { id: 'diesel_centro', label: 'Diésel Renca (150 MW)' },
+              { id: 'diesel_centro', label: 'Renca diesel (150 MW)' },
             ].map((gen) => (
               <button
                 key={gen.id}
@@ -638,14 +638,14 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
                   fontSize: '12px',
                 }}
               >
-                Falla {gen.label}
+                Outage {gen.label}
               </button>
             ))}
           </div>
         </div>
 
         <div style={{ marginBottom: '12px' }}>
-          <span style={{ fontSize: '12px', color: '#9ca3af', display: 'block', marginBottom: '6px' }}>Líneas de Transmisión:</span>
+          <span style={{ fontSize: '12px', color: '#9ca3af', display: 'block', marginBottom: '6px' }}>Transmission lines:</span>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {[
               { id: 'L1', label: 'L1 Crucero-Cardones (400 MW)' },
@@ -666,20 +666,20 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
                   fontSize: '12px',
                 }}
               >
-                Corte {line.label}
+                Cut {line.label}
               </button>
             ))}
           </div>
         </div>
 
         <div>
-          <span style={{ fontSize: '12px', color: '#9ca3af', display: 'block', marginBottom: '6px' }}>Recetas de Estrés Compuesto:</span>
+          <span style={{ fontSize: '12px', color: '#9ca3af', display: 'block', marginBottom: '6px' }}>Compound stress recipes:</span>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {[
-              { id: 'stress_terremoto', label: 'Terremoto Norte (L1 + Gas NG)', asset: 'L1' },
-              { id: 'stress_ola_calor', label: 'Ola de Calor Centro (Demanda +20%)', asset: 'gas_centro' },
-              { id: 'stress_sequia', label: 'Sequía Sur (Ralco -50%)', asset: 'hydro_sur' },
-              { id: 'stress_n_minus_2', label: 'Contingencia N-2 (L2 + L3)', asset: 'L2' },
+              { id: 'stress_terremoto', label: 'Northern earthquake (L1 + NG gas)', asset: 'L1' },
+              { id: 'stress_ola_calor', label: 'Centro heatwave (demand +20%)', asset: 'gas_centro' },
+              { id: 'stress_sequia', label: 'Southern drought (Ralco -50%)', asset: 'hydro_sur' },
+              { id: 'stress_n_minus_2', label: 'N-2 contingency (L2 + L3)', asset: 'L2' },
             ].map((recipe) => (
               <button
                 key={recipe.id}
@@ -704,11 +704,11 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
 
       {/* Live Agent Stream Inspector */}
       <section style={{ border: '1px solid #374151', padding: '12px', borderRadius: '6px', marginBottom: '20px', backgroundColor: '#1f2937' }}>
-        <h2 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#9ca3af' }}>Supervisión del Agente Gemini</h2>
+        <h2 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#9ca3af' }}>Gemini Agent Supervision</h2>
 
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>
           <div data-testid="dev-agent-phase" style={{ fontSize: '14px' }}>
-            <strong>Fase:</strong>{' '}
+            <strong>Phase:</strong>{' '}
             <span style={{ color: '#fbbf24', textTransform: 'uppercase' }}>
               {hook.state.agent_status.phase}
             </span>{' '}
@@ -728,7 +728,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
             Cuenta regresiva:{' '}
             {hook.state.countdown && hook.state.countdown.active ? (
               <span style={{ color: '#ef4444', fontWeight: 'bold' }}>
-                {hook.state.countdown.seconds_left}s (Opción: {hook.state.countdown.candidate_id})
+                {hook.state.countdown.seconds_left}s (Option: {hook.state.countdown.candidate_id})
               </span>
             ) : (
               <span style={{ color: '#9ca3af' }}>Inactivo</span>
@@ -757,7 +757,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
 
         {/* Thought Stream */}
         <div style={{ marginBottom: '16px' }}>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '13px', color: '#93c5fd' }}>Flujo de Razonamiento (Thoughts):</h3>
+          <h3 style={{ margin: '0 0 6px 0', fontSize: '13px', color: '#93c5fd' }}>Reasoning stream (thoughts):</h3>
           <div
             data-testid="dev-thoughts"
             style={{
@@ -771,7 +771,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
             }}
           >
             {hook.state.thoughts.length === 0 ? (
-              <span style={{ color: '#6b7280' }}>Sin pensamientos recientes.</span>
+              <span style={{ color: '#6b7280' }}>No recent thoughts.</span>
             ) : (
               hook.state.thoughts.map((th, i) => (
                 <div key={i} style={{ marginBottom: '4px', color: '#e5e7eb' }}>
@@ -784,7 +784,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
 
         {/* Tool Call Log */}
         <div style={{ marginBottom: '16px' }}>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '13px', color: '#93c5fd' }}>Registro de Herramientas (Tool Calls):</h3>
+          <h3 style={{ margin: '0 0 6px 0', fontSize: '13px', color: '#93c5fd' }}>Tool call log:</h3>
           <div
             data-testid="dev-tool-calls"
             style={{
@@ -798,7 +798,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
             }}
           >
             {hook.state.tool_calls.length === 0 ? (
-              <span style={{ color: '#6b7280' }}>Sin llamadas a herramientas registradas.</span>
+              <span style={{ color: '#6b7280' }}>No tool calls recorded.</span>
             ) : (
               hook.state.tool_calls.map((tc, i) => (
                 <div key={i} style={{ marginBottom: '4px', display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -827,7 +827,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
 
         {/* Pareto Options Table */}
         <div>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#93c5fd' }}>Frente de Pareto y Opciones Disponibles:</h3>
+          <h3 style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#93c5fd' }}>Pareto front and available options:</h3>
           <div
             data-testid="dev-options-table"
             style={{
@@ -839,22 +839,22 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
           >
             {!hook.state.options ? (
               <div style={{ padding: '12px', color: '#6b7280', fontSize: '12px' }}>
-                No hay opciones activas en este momento (esperando detección de incidente).
+                No active options right now (waiting for an incident).
               </div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #374151', color: '#9ca3af' }}>
-                    <th style={{ padding: '8px' }}>Opción ID</th>
-                    <th style={{ padding: '8px' }}>Título</th>
+                    <th style={{ padding: '8px' }}>Option ID</th>
+                    <th style={{ padding: '8px' }}>Title</th>
                     <th style={{ padding: '8px' }}>Trade-off</th>
-                    <th style={{ padding: '8px' }}>Hogares Reconectados</th>
-                    <th style={{ padding: '8px' }}>MWh No Suministrados Evitados</th>
-                    <th style={{ padding: '8px' }}>Delta Costo (USD)</th>
+                    <th style={{ padding: '8px' }}>Homes reconnected</th>
+                    <th style={{ padding: '8px' }}>Unserved MWh avoided</th>
+                    <th style={{ padding: '8px' }}>Cost delta (USD)</th>
                     <th style={{ padding: '8px' }}>Delta CO2 (t)</th>
-                    <th style={{ padding: '8px' }}>Delta Recorte (MWh)</th>
-                    <th style={{ padding: '8px' }}>Validador</th>
-                    <th style={{ padding: '8px' }}>Acción</th>
+                    <th style={{ padding: '8px' }}>Curtailment delta (MWh)</th>
+                    <th style={{ padding: '8px' }}>Validator</th>
+                    <th style={{ padding: '8px' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -918,7 +918,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
       </section>
 
       <footer style={{ color: '#6b7280', fontSize: '12px' }}>
-        Andes · Operación de la red eléctrica con IA DevConsole • Sesión Activa: {sessionId} • Eventos registrados: {hook.state.lastSeq + 1}
+        Andes · AI grid operations DevConsole • Active session: {sessionId} • Events logged: {hook.state.lastSeq + 1}
       </footer>
     </div>
   );
