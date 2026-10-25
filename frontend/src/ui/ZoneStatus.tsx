@@ -13,7 +13,7 @@ interface Props {
 }
 
 const ORDER = ['n_norte_grande', 'n_norte_chico', 'n_centro', 'n_centro_sur', 'n_sur'];
-const fmt = (n: number) => Math.round(n).toLocaleString('es-CL');
+const fmt = (n: number) => Math.round(n).toLocaleString('en-GB');
 
 export const ZoneStatus = memo(function ZoneStatus({ catalog, solution, hour, incidents }: Props) {
   const cut = new Set(incidents.filter((d) => d.type === 'line_outage' && hour >= d.from_hour && hour < d.to_hour).map((d) => d.asset_id));
@@ -25,9 +25,9 @@ export const ZoneStatus = memo(function ZoneStatus({ catalog, solution, hour, in
   return (
     <div className="gp-zones">
       <div className="gp-zones-head">
-        <b>Estado de la red · ahora</b>
+        <b>Grid status · now</b>
         <span className={totalOff > 1 ? 'is-bad' : 'is-ok'}>
-          {totalOff > 1 ? `${fmt(totalOff)} hogares sin luz (${((totalOff / totalHomes) * 100).toLocaleString('es-CL', { maximumFractionDigits: 1 })} %)` : 'Todos los hogares con luz'}
+          {totalOff > 1 ? `${fmt(totalOff)} homes without power (${((totalOff / totalHomes) * 100).toLocaleString('en-GB', { maximumFractionDigits: 1 })} %)` : 'All homes powered'}
         </span>
       </div>
       {nodes.map((n, i) => {
@@ -41,13 +41,13 @@ export const ZoneStatus = memo(function ZoneStatus({ catalog, solution, hour, in
           const cap = at(solution.line_capacity_mw[line.id], hour) || line.capacity_mw;
           const load = (flow / cap) * 100;
           lineState = cut.has(line.id) ? 'is-cut' : load >= 95 ? 'is-hot' : 'is-ok';
-          lineText = cut.has(line.id) ? `${line.id} cortada` : `${line.id} · ${Math.round(load)} %${load >= 95 ? ' saturada' : ''}`;
+          lineText = cut.has(line.id) ? `${line.id} cut` : `${line.id} · ${Math.round(load)} %${load >= 95 ? ' saturated' : ''}`;
         }
         return (
           <React.Fragment key={n.id}>
             <div className={`gp-zone${off > 1 ? ' is-dark' : ''}`}>
               <div className="gp-zone-name">{ZONES[n.id]?.label ?? n.name}</div>
-              <div className="gp-zone-bar" title={`${fmt(n.households_total - off)} con luz · ${fmt(off)} sin luz`}>
+              <div className="gp-zone-bar" title={`${fmt(n.households_total - off)} powered · ${fmt(off)} without power`}>
                 <i style={{ width: `${pct}%` }} />
               </div>
               <div className="gp-zone-n">{off > 1 ? `−${fmt(off)}` : 'ok'}</div>
@@ -61,7 +61,7 @@ export const ZoneStatus = memo(function ZoneStatus({ catalog, solution, hour, in
           </React.Fragment>
         );
       })}
-      <div className="gp-zones-key"><i className="ok" />con luz <i className="off" />sin luz · barra = hogares de la zona</div>
+      <div className="gp-zones-key"><i className="ok" />powered <i className="off" />without power · bar = homes in the zone</div>
     </div>
   );
 });

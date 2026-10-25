@@ -21,10 +21,10 @@ export const TECH_COLOR: Record<string, string> = {
   solar: '#f5b301', wind: '#38bdf8', hydro: '#2563eb', gas: '#f97316', coal: '#6b7280', diesel: '#be185d', battery: '#8b5cf6',
 };
 export const TECH_LABEL: Record<string, string> = {
-  solar: 'Solar', wind: 'Eólica', hydro: 'Hidro', gas: 'Gas', coal: 'Carbón', diesel: 'Diésel', battery: 'Batería',
+  solar: 'Solar', wind: 'Wind', hydro: 'Hydro', gas: 'Gas', coal: 'Coal', diesel: 'Diesel', battery: 'Battery',
 };
 export const assetTitle = (a: Asset) =>
-  a.kind === 'line' ? `Línea ${a.id}` : `${TECH_LABEL[a.technology] ?? a.technology} · ${ZONES[a.nodeId]?.label ?? a.nodeId}`;
+  a.kind === 'line' ? `Line ${a.id}` : `${TECH_LABEL[a.technology] ?? a.technology} · ${ZONES[a.nodeId]?.label ?? a.nodeId}`;
 
 export function buildAssets(catalog: Catalog): Asset[] {
   const spots = placeAssets([
@@ -298,7 +298,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     const top = a.technology === 'wind' ? 62 : a.technology === 'coal' ? 64 : a.technology === 'gas' || a.technology === 'diesel' ? 46 : 30;
     const [ax, ay] = screen([a.at[0], a.at[1], top]);
     const name = TECH_LABEL[a.technology] ?? a.technology;
-    const mw = s === 'tripped' ? 'FUERA' : `${Math.round(Math.abs(out))} MW${a.kind === 'battery' ? (out < -0.5 ? ' ↓' : out > 0.5 ? ' ↑' : '') : ''}`;
+    const mw = s === 'tripped' ? 'OUT' : `${Math.round(Math.abs(out))} MW${a.kind === 'battery' ? (out < -0.5 ? ' ↓' : out > 0.5 ? ' ↑' : '') : ''}`;
     const w = (name.length + mw.length) * 7.4 + 34;
     labels.push({ id: a.id, x: ax, y: ay - 10, ax, ay, w, name, mw, color: TECH_COLOR[a.technology], state: s });
   }
@@ -320,7 +320,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
         className={`gp-svg${view.s > 1 ? ' is-zoomed' : ''}`}
-        aria-label="Maqueta isométrica de la red eléctrica de Chile"
+        aria-label="Isometric model of Chile's power grid"
         onWheel={(e) => {
           const p = toSvg(e.clientX, e.clientY);
           zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0015));
@@ -381,7 +381,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
                 <g key={id} className={`gp-zlabel${off > 1 ? ' is-dark' : ''}`}>
                   <text x={x} y={y} textAnchor="middle" className="gp-zlabel-name">{z.label.toUpperCase()}</text>
                   <text x={x} y={y + 17} textAnchor="middle" className="gp-zlabel-sub">
-                    {off > 1 ? `${Math.round(off).toLocaleString('es-CL')} hogares sin luz` : n ? `${(n.households_total / 1e6).toLocaleString('es-CL', { maximumFractionDigits: 2 })} M hogares · con luz` : ''}
+                    {off > 1 ? `${Math.round(off).toLocaleString('en-GB')} homes without power` : n ? `${(n.households_total / 1e6).toLocaleString('en-GB', { maximumFractionDigits: 2 })} M homes · powered` : ''}
                   </text>
                 </g>
               );
@@ -400,7 +400,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
               return (
                 <g className={`gp-glabel is-${phase}`}>
                   <text x={x} y={y} textAnchor="middle" className="gp-glabel-name">Gemini</text>
-                  <text x={x} y={y + 17} textAnchor="middle" className="gp-glabel-sub">{phase === 'analyzing' ? 'analizando la red…' : phase === 'awaiting_operator' ? 'esperando tu decisión' : phase === 'executing' ? 'ejecutando el plan' : phase === 'resolved' ? 'plan aplicado · vigilando' : 'vigilando la red'}</text>
+                  <text x={x} y={y + 17} textAnchor="middle" className="gp-glabel-sub">{phase === 'analyzing' ? 'analysing the grid…' : phase === 'awaiting_operator' ? 'waiting for your decision' : phase === 'executing' ? 'executing the plan' : phase === 'resolved' ? 'plan applied · watching' : 'watching the grid'}</text>
                 </g>
               );
             })()}
@@ -408,9 +408,9 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
         </g>
       </svg>
       <div className="gp-zoom" onClick={(e) => e.stopPropagation()}>
-        <button onClick={() => zoomAt(W / 2, H / 2, 1.3)} aria-label="Acercar">+</button>
-        <button onClick={() => zoomAt(W / 2, H / 2, 1 / 1.3)} aria-label="Alejar">−</button>
-        <button onClick={() => setView({ x: 0, y: 0, s: 1 })} aria-label="Ver toda la red" disabled={view.s === 1 && view.x === 0 && view.y === 0}>⟲</button>
+        <button onClick={() => zoomAt(W / 2, H / 2, 1.3)} aria-label="Zoom in">+</button>
+        <button onClick={() => zoomAt(W / 2, H / 2, 1 / 1.3)} aria-label="Zoom out">−</button>
+        <button onClick={() => setView({ x: 0, y: 0, s: 1 })} aria-label="Fit whole grid" disabled={view.s === 1 && view.x === 0 && view.y === 0}>⟲</button>
       </div>
     </div>
   );

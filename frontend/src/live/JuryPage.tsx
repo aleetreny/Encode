@@ -31,36 +31,36 @@ export interface JuryCardDef {
 export const DEFAULT_JURY_CARDS: JuryCardDef[] = [
   {
     id: 'trip_gas_centro',
-    title: 'Derribar Central Gas Centro',
-    description: '600 MW en Polpaico',
+    title: 'Knock out Centro gas plant',
+    description: '600 MW at Polpaico',
     asset_id: 'gas_centro',
     action: { type: 'generator_outage', asset_id: 'gas_centro', duration_h: 4 },
   },
   {
     id: 'trip_l2',
-    title: 'Cortar Troncal L2 Norte-Centro',
+    title: 'Cut trunk line L2 North-Centre',
     description: '400 MW Cardones-Polpaico',
     asset_id: 'L2',
     action: { type: 'line_outage', asset_id: 'L2', duration_h: 4 },
   },
   {
     id: 'trip_l3',
-    title: 'Cortar Troncal L3 Centro-Sur',
+    title: 'Cut trunk line L3 Centro-Sur',
     description: '350 MW Polpaico-Charrúa',
     asset_id: 'L3',
     action: { type: 'line_outage', asset_id: 'L3', duration_h: 4 },
   },
   {
     id: 'trip_coal_cs',
-    title: 'Disparar Carbonera Centro-Sur',
-    description: '350 MW en Charrúa',
+    title: 'Trip Centro-Sur coal plant',
+    description: '350 MW at Charrúa',
     asset_id: 'coal_cs',
     action: { type: 'generator_outage', asset_id: 'coal_cs', duration_h: 4 },
   },
   {
     id: 'stress_terremoto',
-    title: 'Simular Terremoto Norte',
-    description: 'Falla simultánea L1 + Gas Norte Grande',
+    title: 'Simulate Northern earthquake',
+    description: 'Simultaneous outage: L1 + Norte Grande gas',
     asset_id: 'L1',
     action: {
       type: 'stress_recipe',
@@ -97,7 +97,7 @@ function createDefaultLiveState(sessionId: string): LiveSessionState {
     comparison: null,
     agent_status: {
       phase: 'idle',
-      detail_es: 'Sistema operando en estado normal',
+      detail_es: 'System operating normally',
       started_at_utc: null,
     },
     thoughts: [],
@@ -150,7 +150,7 @@ function sessionReducer(state: LiveSessionState, event: LiveEvent): LiveSessionS
         clock: { ...next.clock, sim_hour: event.hour },
         agent_status: {
           phase: 'analyzing',
-          detail_es: `Incidente detectado en ${event.disruption.asset_id}: ${event.impact.households_off_peak} hogares afectados`,
+          detail_es: `Incident detected at ${event.disruption.asset_id}: ${event.impact.households_off_peak} homes affected`,
           started_at_utc: event.ts_utc,
         },
       };
@@ -164,9 +164,9 @@ function sessionReducer(state: LiveSessionState, event: LiveEvent): LiveSessionS
         validation: event.solution?.validation || null,
         agent_status:
           event.reason === 'plan_applied'
-            ? { ...next.agent_status, phase: 'executing', detail_es: 'Plan de mitigación aplicado a la red' }
+            ? { ...next.agent_status, phase: 'executing', detail_es: 'Mitigation plan applied to the grid' }
             : event.reason === 'event_ended'
-            ? { ...next.agent_status, phase: 'resolved', detail_es: 'Falla normalizada, red en recuperación' }
+            ? { ...next.agent_status, phase: 'resolved', detail_es: 'Outage cleared, grid recovering' }
             : next.agent_status,
       };
 
@@ -549,7 +549,7 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
   const handleTriggerCard = async (card: JuryCardDef) => {
     if (cooldownRemaining > 0) return;
     if (hook.state.active_incidents.length >= 2) {
-      setRateLimitMessage('Dos crisis en curso — espera a que el agente resuelva una o a que termine tu enfriamiento.');
+      setRateLimitMessage('Two crises under way — wait for the agent to resolve one, or for your cooldown to end.');
       return;
     }
 
@@ -566,7 +566,7 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
       });
 
       if (res && res.status === 429) {
-        setRateLimitMessage('Dos crisis en curso — espera a que el agente resuelva una o a que termine tu enfriamiento.');
+        setRateLimitMessage('Two crises under way — wait for the agent to resolve one, or for your cooldown to end.');
       } else if (res && res.ok) {
         // Successful trigger -> start 30-second cooldown
         const until = Date.now() + 30000;
@@ -624,24 +624,24 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
       {/* Header */}
       <header style={{ marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '12px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 6px 0' }}>
-          Andes · Operación de la red eléctrica con IA — Panel del Jurado
+          Andes · AI grid operations — Jury panel
         </h1>
         <p style={{ margin: 0, color: '#4b5563', fontSize: '14px' }}>
-          Desafía la red eléctrica en tiempo real. Gemini detecta, simula y propone mitigaciones.
+          Challenge the power grid in real time. Gemini detects, simulates and proposes mitigations.
         </p>
       </header>
 
       {/* Name and Device Identification */}
       <section style={{ marginBottom: '20px', backgroundColor: '#ffffff', padding: '14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
         <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '6px' }}>
-          Nombre del Jurado (opcional):
+          Juror name (optional):
         </label>
         <input
           data-testid="jury-name-input"
           type="text"
           value={juryName}
           onChange={handleNameChange}
-          placeholder="Ej: Jurado Encode #1"
+          placeholder="e.g. Encode Juror #1"
           style={{
             width: '100%',
             padding: '8px 12px',
@@ -652,7 +652,7 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
           }}
         />
         <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '6px' }}>
-          Dispositivo ID: <code>{deviceId}</code>
+          Device ID: <code>{deviceId}</code>
         </div>
       </section>
 
@@ -674,8 +674,8 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
             justifyContent: 'space-between',
           }}
         >
-          <span>Enfriamiento por dispositivo activo:</span>
-          <span>{cooldownRemaining}s restantes</span>
+          <span>Cooldown for this device:</span>
+          <span>{cooldownRemaining}s remaining</span>
         </aside>
       )}
 
@@ -694,14 +694,14 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
             fontSize: '14px',
           }}
         >
-          Dos crisis en curso — espera a que el agente resuelva una o a que termine tu enfriamiento.
+          Two crises under way — wait for the agent to resolve one, or for your cooldown to end.
         </div>
       )}
 
       {/* 5 Action Cards */}
       <section style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px' }}>
-          Disrupciones del Sistema (Selecciona una acción)
+          System disruptions (pick an action)
         </h2>
         <div style={{ display: 'grid', gap: '12px' }}>
           {DEFAULT_JURY_CARDS.map((card) => {
@@ -747,7 +747,7 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
                     transition: 'background-color 0.2s',
                   }}
                 >
-                  {submittingCardId === card.id ? 'Ejecutando...' : 'Tumbar / Provocar Falla'}
+                  {submittingCardId === card.id ? 'Running...' : 'Knock out / trigger outage'}
                 </button>
               </article>
             );
@@ -767,39 +767,39 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
         }}
       >
         <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 10px 0', borderBottom: '1px solid #f3f4f6', paddingBottom: '6px' }}>
-          Estado en Vivo del Sistema Eléctrico
+          Live power system status
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', fontSize: '13px' }}>
           <div>
-            <span style={{ color: '#6b7280', display: 'block' }}>Hora Simulada:</span>
+            <span style={{ color: '#6b7280', display: 'block' }}>Simulated time:</span>
             <strong style={{ fontSize: '15px' }}>{formatHour(hook.interpolatedSimHour)}</strong>
           </div>
           <div>
-            <span style={{ color: '#6b7280', display: 'block' }}>Fase del Agente:</span>
+            <span style={{ color: '#6b7280', display: 'block' }}>Agent phase:</span>
             <strong style={{ fontSize: '14px', textTransform: 'capitalize' }}>{hook.state.agent_status.phase}</strong>
           </div>
           <div>
-            <span style={{ color: '#6b7280', display: 'block' }}>Hogares sin Suministro:</span>
+            <span style={{ color: '#6b7280', display: 'block' }}>Homes without power:</span>
             <strong style={{ fontSize: '15px', color: householdsWithoutSupply > 0 ? '#dc2626' : '#16a34a' }}>
-              {Math.round(householdsWithoutSupply).toLocaleString('es-CL')}
+              {Math.round(householdsWithoutSupply).toLocaleString('en-GB')}
             </strong>
           </div>
           <div>
-            <span style={{ color: '#6b7280', display: 'block' }}>Crisis Activas:</span>
+            <span style={{ color: '#6b7280', display: 'block' }}>Active crises:</span>
             <strong style={{ fontSize: '15px', color: hook.state.active_incidents.length > 0 ? '#b91c1c' : '#111827' }}>
-              {hook.state.active_incidents.length} / 2 máx
+              {hook.state.active_incidents.length} / 2 max
             </strong>
           </div>
         </div>
 
         <div style={{ marginTop: '12px', padding: '8px 10px', backgroundColor: '#f9fafb', borderRadius: '6px', fontSize: '12px', color: '#374151' }}>
-          <strong>Detalle:</strong> {hook.state.agent_status.detail_es || 'Supervisión en curso.'}
+          <strong>Detail:</strong> {hook.state.agent_status.detail_es || 'Monitoring.'}
         </div>
 
         {/* Active Incidents listing */}
         {hook.state.active_incidents.length > 0 && (
           <div style={{ marginTop: '12px' }}>
-            <span style={{ fontSize: '12px', fontWeight: '600', color: '#991b1b' }}>Fallas activas:</span>
+            <span style={{ fontSize: '12px', fontWeight: '600', color: '#991b1b' }}>Active outages:</span>
             <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '12px', color: '#b91c1c' }}>
               {hook.state.active_incidents.map((inc) => (
                 <li key={inc.event_id}>
@@ -825,10 +825,10 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#166534' }}>
-              Recomendación de Gemini
+              Gemini recommendation
             </h3>
             <span style={{ fontSize: '11px', backgroundColor: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>
-              Optimizador HiGHS Validado
+              HiGHS optimiser validated
             </span>
           </div>
 
@@ -844,9 +844,9 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
                   {rec.rationale_es}
                 </p>
                 <div style={{ fontSize: '12px', color: '#15803d', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  <span>Reconexión: {Math.round(rec.metrics.households_reconnected).toLocaleString('es-CL')} hogares</span>
+                  <span>Reconnected: {Math.round(rec.metrics.households_reconnected).toLocaleString('en-GB')} homes</span>
                   <span>•</span>
-                  <span>Costo: ${Math.round(rec.metrics.cost_delta_usd).toLocaleString('es-CL')} USD</span>
+                  <span>Cost: ${Math.round(rec.metrics.cost_delta_usd).toLocaleString('en-GB')} USD</span>
                   <span>•</span>
                   <span>Trade-off: {rec.tradeoff_tag}</span>
                 </div>
@@ -858,7 +858,7 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
 
       {/* Footer */}
       <footer style={{ textAlign: 'center', fontSize: '12px', color: '#9ca3af', marginTop: '24px' }}>
-        Andes · Operación de la red eléctrica con IA • Modo: {hook.connectionMode.toUpperCase()} • Sesión: {hook.state.sessionId || 'demo'}
+        Andes · AI grid operations • Mode: {hook.connectionMode.toUpperCase()} • Session: {hook.state.sessionId || 'demo'}
       </footer>
     </div>
   );
