@@ -51,7 +51,7 @@ Cada hora simulada escribes UNA sola oración en español, de quince a treinta p
 Usa únicamente los datos entregados: qué corredor troncal está más exigido, si la carga neta sube o baja, si hay recorte renovable, cómo están las reservas y el almacenamiento, y las fallas activas si las hay. Si hay algo que vigilar, di qué es y por qué importa.
 REGLA ABSOLUTA: no escribas ningún dígito ni número en cifras, ni siquiera en nombres como L1 o L2; usa palabras («alto», «la mitad», «dos corredores») y los nombres de corredor que recibes. Las cifras las muestra la interfaz.
 No inventes datos, no calcules cifras y no propongas acciones sobre el mundo real: todo es una simulación.
-Responde solo con la oración, sin comillas, listas ni encabezados, y no repitas la redacción de la nota anterior."""
+Responde solo con la oración, enteramente en español (nada en inglés), sin comillas, listas ni encabezados, y no repitas la redacción de la nota anterior."""
 
 _EVENT_LABELS_ES = {
     "generator_outage": "salida de una central",
