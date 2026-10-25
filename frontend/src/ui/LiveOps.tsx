@@ -146,6 +146,8 @@ function Screen() {
 
   const shown: Solution | null = hovered?.solution ?? solution;
   const deciding = !!options && (phase === 'awaiting_operator' || !!countdown?.active);
+  // The recorded session holds the clock at the decision, so Resume would do nothing there.
+  const holding = deciding && !state.clock.running && connectionMode === 'offline';
   const assets = useMemo(() => (catalog ? buildAssets(catalog) : []), [catalog]);
 
   const boosted = useMemo(() => new Set((applied?.levers ?? []).map((l) => l.target_id)), [applied]);
@@ -371,7 +373,7 @@ function Screen() {
           )}
           <MonitorBlock notes={state.notes} catalog={catalog} />
           {state.thoughts.slice(-3).map((th, i, arr) => (
-            <Typed key={`${th.ts_utc}-${i}`} className="gp-thought" text={th.text_es} prefix={clock(th.sim_hour)} live={i === arr.length - 1} />
+            <Typed key={`${th.ts_utc}-${i}`} className={`gp-thought${i === arr.length - 1 ? ' is-latest' : ''}`} text={th.text_es} prefix={clock(th.sim_hour)} live={i === arr.length - 1} />
           ))}
           {state.tool_calls.length > 0 && (
             <ul className="gp-tools">
@@ -440,7 +442,12 @@ function Screen() {
       )}
 
       <footer className="gp-controls">
-        <button className="gp-btn is-ghost" onClick={() => actions.setClock({ action: state.clock.running ? 'pause' : 'play' })}>{state.clock.running ? 'Pause' : 'Resume'}</button>
+        <button
+          className="gp-btn is-ghost gp-btn-clock"
+          disabled={holding}
+          title={holding ? 'The clock waits until you pick a plan' : undefined}
+          onClick={() => actions.setClock({ action: state.clock.running ? 'pause' : 'play' })}
+        >{holding ? 'Waiting for you' : state.clock.running ? 'Pause' : 'Resume'}</button>
         <label className={`gp-switch${state.clock.autonomy_mode ? ' is-on' : ''}${connectionMode !== 'live' ? ' is-disabled' : ''}`}>
           <input type="checkbox" checked={state.clock.autonomy_mode} disabled={connectionMode !== 'live'} onChange={(e) => setAutonomy(e.target.checked)} />
           <span /> Autonomous mode
