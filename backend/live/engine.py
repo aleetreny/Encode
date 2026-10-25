@@ -102,7 +102,7 @@ class LiveSession:
         self._monitor_bucket: int = int(self.hour) % 24
         self._monitor_rank: int = 0
         self._monitor_task: asyncio.Task[None] | None = None
-        self._monitor_pending: _MonitorJob | None = None
+        self._monitor_pending: bool = False
         self._last_monitor_text: str | None = None
 
         self._clock_task: asyncio.Task[None] | None = None
@@ -347,7 +347,8 @@ class LiveSession:
         """Jimmy: one monitor note per simulated hour (bucket `int(hour)`), plus one when severity rises.
 
         Never awaits the model: without a key the deterministic note is emitted here, otherwise the call runs
-        in a background task (at most one in flight; a note that falls due meanwhile waits, latest wins).
+        in a background task (at most one in flight; if another note falls due meanwhile, the grid is read
+        again when the call returns, so a reading is never stale and a queued alert is never downgraded).
         """
         try:
             assessment = self._assess_monitor()
@@ -361,30 +362,63 @@ class LiveSession:
         if not due:
             return
 
-        job = _MonitorJob(assessment, self.hour, self.grid_state, copy.deepcopy(self.active_events))
         api_key = get_api_key() if self.allow_live_gemini else ""
         if not api_key:
-            self._emit_monitor_payload(
-                monitor.deterministic_note(assessment, grid_state=job.grid_state, status="no_key")
-            )
+            try:
+                self._emit_monitor_payload(
+                    monitor.deterministic_note(assessment, grid_state=self.grid_state, status="no_key")
+                )
+            except Exception:  # same guard as the assessment: the clock outlives a wording bug
+                logger.exception("monitor: could not emit the deterministic note")
             return
         if self._monitor_task is not None and not self._monitor_task.done():
-            self._monitor_pending = job
+            # Read the grid again when the call returns. Keeping a flag rather than this reading means a
+            # later, calmer hour can never overwrite a queued alert, and nothing stale is ever emitted.
+            self._monitor_pending = True
             return
-        self._monitor_task = asyncio.get_running_loop().create_task(self._run_monitor(job, api_key))
+        self._monitor_task = asyncio.get_running_loop().create_task(
+            self._run_monitor(self._current_monitor_job(assessment), api_key)
+        )
+
+    def _current_monitor_job(self, assessment: monitor.MonitorAssessment | None = None) -> _MonitorJob:
+        return _MonitorJob(
+            assessment or self._assess_monitor(), self.hour, self.grid_state, copy.deepcopy(self.active_events)
+        )
 
     async def _run_monitor(self, job: _MonitorJob | None, api_key: str) -> None:
-        while job is not None:
-            payload = await monitor.generate_monitor_note(
-                job.assessment,
-                hour=job.hour,
-                grid_state=job.grid_state,
-                active_events=job.active_events,
-                previous_text=self._last_monitor_text,
-                api_key=api_key,
-            )
-            self._emit_monitor_payload(payload)
-            job, self._monitor_pending = self._monitor_pending, None
+        try:
+            while job is not None:
+                payload = await monitor.generate_monitor_note(
+                    job.assessment,
+                    hour=job.hour,
+                    grid_state=job.grid_state,
+                    active_events=job.active_events,
+                    previous_text=self._last_monitor_text,
+                    api_key=api_key,
+                )
+                me = payload["model_execution"]
+                stale = int(self.hour) % 24 != int(job.hour) % 24
+                if me["status"] == "ok" and not stale:
+                    self._emit_monitor_payload(payload)
+                else:
+                    # The model failed, or answered after the clock crossed an hour: word the grid as it is
+                    # now, labelled with why. A slow model can never silence Jimmy or show an old reading.
+                    self._emit_monitor_payload(
+                        monitor.deterministic_note(
+                            self._assess_monitor(),
+                            grid_state=self.grid_state,
+                            status="stale" if me["status"] == "ok" else me["status"],
+                            latency_ms=me.get("latency_ms", 0),
+                        )
+                    )
+                job = None
+                if self._monitor_pending:
+                    self._monitor_pending = False
+                    job = self._current_monitor_job()
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # a failed note must never take the session down; the next hour tries again
+            logger.exception("monitor: background note failed")
 
     def _emit_monitor_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
         self._last_monitor_text = payload["text_es"]
@@ -833,7 +867,7 @@ class LiveSession:
         if self._monitor_task and not self._monitor_task.done():
             self._monitor_task.cancel()
         self._monitor_task = None
-        self._monitor_pending = None
+        self._monitor_pending = False
         self._last_monitor_text = None
 
         self.hour = float(max(0.0, min(23.99, start_hour)))

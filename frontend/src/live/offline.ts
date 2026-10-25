@@ -132,7 +132,11 @@ export class OfflineSessionController {
         this.lastOptions = ev;
         this.lastCountdownEmitMs = 0;
       }
-      this.onEvent({ ...ev, seq: ++this.currentSeq } as LiveEvent);
+      // A recorded answer is a replay: every model-worded event says so and never passes for a live call.
+      const replayed = (ev.type === 'options.ready' || ev.type === 'agent.note') && ev.model_execution
+        ? { ...ev, model_execution: { ...ev.model_execution, cached: true, cached_at_utc: ev.model_execution.cached_at_utc ?? ev.ts_utc } }
+        : ev;
+      this.onEvent({ ...replayed, seq: ++this.currentSeq } as LiveEvent);
     }
 
     // Always emit clock tick to keep UI interpolated smooth sync

@@ -102,7 +102,12 @@ def test_gate2_corridor_saturates_with_curtailment_at_midday(baseline):
     flows = baseline["timeseries"]["line_flow_mw"]
     hours = [h for h in range(10, 17) if any(abs(flows[k][h]) / 400.0 >= 0.95 for k in ("L1", "L2"))]
     assert len(hours) >= 2, hours
-    assert baseline["metrics"]["curtailment_mwh"] > 0.0
+    ts = baseline["timeseries"]
+    solar = [g for g in ts["available_mw"] if g.startswith("solar")]
+    midday_solar_curtailment = sum(
+        ts["available_mw"][g][h] - ts["generation_mw"][g][h] for g in solar for h in range(10, 17)
+    )
+    assert midday_solar_curtailment > 1.0, midday_solar_curtailment  # the midday solar-curtailment story
 
 
 def test_gate3_centro_peaks_in_the_evening(scenario):
@@ -206,3 +211,19 @@ def test_engine_uses_the_switch(monkeypatch):
     session = LiveSession("sess_real_day", allow_live_gemini=False)
     assert session.scenario["scenario_id"] == "chile-sen-5node-real-2026-08-14"
     assert session.catalog["day_profile"]["date"] == "2026-08-14"
+
+
+def test_real_day_catalog_labels_demand_as_derived(monkeypatch):
+    monkeypatch.setenv("GRIDPILOT_SCENARIO", "real-day")
+    prov = build_catalog()["provenance"]
+    assert prov["demand_mw"] == "derived"
+    assert prov["renewable_availability_mw"] == "derived"
+    monkeypatch.setenv("GRIDPILOT_SCENARIO", "synthetic")
+    assert build_catalog()["provenance"]["demand_mw"] == "synthetic"
+
+
+def test_a_selected_missing_fixture_fails_instead_of_turning_synthetic(monkeypatch, tmp_path):
+    monkeypatch.setenv("GRIDPILOT_SCENARIO", "real-day")
+    monkeypatch.setattr(catalog_mod, "REAL_DAY_FIXTURE_PATH", tmp_path / "missing.json")
+    with pytest.raises(FileNotFoundError):
+        build_catalog()

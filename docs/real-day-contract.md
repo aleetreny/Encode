@@ -74,6 +74,9 @@ does not replace the current demo.
 - Wording by the fast model (`GRIDPILOT_MODEL_FAST`) with a 3 s timeout, at most one call in flight.
   The 1 Hz clock never waits for it. On timeout/error/no key the deterministic text is used and
   `model_execution` says so (`model: "deterministic-monitor"`, `status: "timeout" | "error" | "no_key"`).
+  If the model answers after the clock crossed an hour, or fails, the note is worded by code from the
+  grid as it is at emission (`status: "stale"` for a late answer). A note that falls due during a call
+  sets a flag and the grid is read again when the call returns, so a queued alert is never downgraded.
 - The persona name "Jimmy" lives only in the UI; the badge shows the real `model_execution.model`.
 
 ## 3. Ownership on this branch

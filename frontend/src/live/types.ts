@@ -162,7 +162,7 @@ export interface Option {
 export interface ModelExecution {
   model: string;
   role: 'decider' | 'monitor';
-  status: 'ok' | 'timeout' | 'error' | 'no_key';
+  status: 'ok' | 'timeout' | 'error' | 'no_key' | 'stale';
   latency_ms: number;
   response_id?: string;
   cached: boolean;

@@ -209,9 +209,12 @@ def build_catalog(scenario: dict | None = None) -> dict[str, Any]:
         if path.is_file():
             with open(path, encoding="utf-8") as f:
                 scen = json.load(f)
-        else:
+        elif path == FIXTURE_PATH:
             from optimisation.fixtures.build_demo_scenario import build
             scen = build()
+        else:
+            # An explicitly selected day that is missing must fail, not quietly become the synthetic one.
+            raise FileNotFoundError(f"Selected scenario fixture is missing: {path}")
     else:
         scen = scenario
 
@@ -296,6 +299,7 @@ def build_catalog(scenario: dict | None = None) -> dict[str, Any]:
             }
         )
 
+    observed_shape = (scen.get("day_profile") or {}).get("method") == "scaled-observed-shape"
     catalog: dict[str, Any] = {
         "scenario_id": scenario_id,
         "nodes": nodes,
@@ -314,7 +318,8 @@ def build_catalog(scenario: dict | None = None) -> dict[str, Any]:
             "generators": "synthetic",
             "batteries": "synthetic",
             "lines": "synthetic",
-            "demand_mw": "synthetic",
+            "demand_mw": "derived" if observed_shape else "synthetic",
+            "renewable_availability_mw": "derived" if observed_shape else "synthetic",
             "emission_factors": "assumption",
         },
     }

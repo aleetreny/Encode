@@ -508,7 +508,7 @@ def test_clock_keeps_ticking_while_a_slow_model_is_pending(fake_key, monkeypatch
     assert not has_digits(notes[0]["text_es"])
 
 
-def test_notes_that_fall_due_during_a_call_wait_and_the_latest_wins(fake_key, monkeypatch):
+def test_a_late_answer_is_replaced_by_a_fresh_reading_and_the_grid_is_read_again(fake_key, monkeypatch):
     release = threading.Event()
     calls: list[str] = []
 
@@ -525,10 +525,10 @@ def test_notes_that_fall_due_during_a_call_wait_and_the_latest_wins(fake_key, mo
         session._maybe_emit_monitor_note()  # starts the call for hour 8
         await asyncio.sleep(0.05)
         session.hour = 9.0
-        session._maybe_emit_monitor_note()  # waits
+        session._maybe_emit_monitor_note()  # falls due during the call: flag only
         session.hour = 10.0
-        session._maybe_emit_monitor_note()  # replaces the waiting hour
-        assert session._monitor_pending is not None and session._monitor_pending.hour == 10.0
+        session._maybe_emit_monitor_note()
+        assert session._monitor_pending is True
         assert len(calls) == 1
         release.set()
         await asyncio.wait_for(session._monitor_task, 3.0)
@@ -536,11 +536,39 @@ def test_notes_that_fall_due_during_a_call_wait_and_the_latest_wins(fake_key, mo
 
     session = run(scenario())
     notes = monitor_notes(session)
-    assert len(calls) == 2
-    assert [n["model_execution"]["status"] for n in notes] == ["ok", "ok"]
-    assert "Nota previa" not in calls[0]
-    assert notes[0]["text_es"] in calls[1]  # the second call is told what the first one said
+    assert len(calls) == 2  # the hour-8 call, then one fresh call: never one per missed hour
+    # The hour-8 answer arrived at hour 10: worded by code from the grid at hour 10, labelled stale.
+    assert [n["model_execution"]["status"] for n in notes] == ["stale", "ok"]
+    assert notes[0]["model_execution"]["model"] == "deterministic-monitor"
+    assert all(n["hour"] == 10.0 for n in notes)
     assert not any(has_digits(n["text_es"]) for n in notes)
+
+
+def test_an_escalation_queued_during_a_call_is_emitted_from_a_fresh_reading(fake_key, monkeypatch):
+    release = threading.Event()
+
+    def gated(**kwargs):
+        release.wait(5.0)
+        return gemini_reply("Nota de prueba sobre el estado actual de la red simulada del sistema.")
+
+    monkeypatch.setattr(agent_loop, "_call_gemini_generate_content", gated)
+
+    async def scenario():
+        session = LiveSession("monitor-escalation-busy", start_hour=7.0, allow_live_gemini=True)
+        session.hour = 8.0
+        session._maybe_emit_monitor_note()  # call in flight
+        await asyncio.sleep(0.05)
+        calm = session._assess_monitor()
+        alert = calm._replace(severity="alert", watch=["unserved"])
+        monkeypatch.setattr(session, "_assess_monitor", lambda: alert)
+        session._maybe_emit_monitor_note()  # severity rises during the call
+        assert session._monitor_pending is True
+        release.set()
+        await asyncio.wait_for(session._monitor_task, 3.0)
+        return session
+
+    notes = monitor_notes(run(scenario()))
+    assert [n["severity"] for n in notes][-1] == "alert"  # the queued escalation is not lost
 
 
 def test_live_gemini_disabled_sessions_never_call_the_model(fake_key):
