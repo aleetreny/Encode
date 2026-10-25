@@ -83,5 +83,10 @@
 - **Estado**: COMPLETADO
 - **Qué entró**: Cambio de "GridPilot" a **"Andes · Operación de la red eléctrica con IA"** / **"Andes"** en todo lo visible para una persona: título, encabezado y descargo legal del informe RIO (`backend/live/report.py`), prompts del agente (`backend/live/agent_loop.py`, `agent/gemini_client.py`, `agent/tools.py`), página de salud `/api/health` (`backend/main.py`), QR SVG (`backend/live/qr.py`), vistas de desarrollo `/jurado-dev` y `/dev` (`frontend/src/live/JuryPage.tsx`, `frontend/src/live/DevConsole.tsx`), `README.md`, `CLAUDE.md` y `docs/`.
 
+## Etapa 4 — Backend Público para la Demo (`https://andes-a38.pages.dev`)
+- **Estado**: COMPLETADO
+- **Qué entró**: Configuración de `PUBLIC_ORIGIN=https://andes-a38.pages.dev` (QR hacia `/jurado?s=<id>`) y CORS para `https://andes-a38.pages.dev` y `http://localhost:5173` (incluyendo cabeceras SSE `Cache-Control: no-cache`, `X-Accel-Buffering: no`, `X-Jury-Device`, `Last-Event-ID`) en `backend/config.py`, `backend/main.py`, `backend/live/router.py`, `frontend/src/live/client.ts` y `render.yaml`; publicación del backend HTTPS público en `https://hemlock-untold-control.ngrok-free.dev` (`VITE_API_BASE_URL=https://hemlock-untold-control.ngrok-free.dev/api`), documentación en `docs/release-runbook.md` y prueba real extremo a extremo (disparo móvil en `/jurado?s=<id>` reflejado por SSE en pantalla grande en `110.9 ms < 2 s`).
+
+
 
 

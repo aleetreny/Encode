@@ -13,10 +13,18 @@ class Settings:
     db_path: Path = field(
         default_factory=lambda: Path(os.getenv("GRIDPILOT_DB_PATH", ROOT / "var/runs.sqlite3"))
     )
+    public_origin: str = field(
+        default_factory=lambda: os.getenv("PUBLIC_ORIGIN", "https://andes-a38.pages.dev").rstrip("/")
+    )
     cors_origins: list[str] = field(
-        default_factory=lambda: os.getenv(
-            "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
-        ).split(",")
+        default_factory=lambda: [
+            o.strip()
+            for o in os.getenv(
+                "CORS_ORIGINS",
+                "https://andes-a38.pages.dev,http://localhost:5173,http://127.0.0.1:5173",
+            ).split(",")
+            if o.strip()
+        ]
     )
     api_token: str = field(default_factory=lambda: os.getenv("GRIDPILOT_API_TOKEN", ""))
     agent_callable: str = field(

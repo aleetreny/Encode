@@ -321,3 +321,47 @@ def test_impact_preview_endpoint_and_cache():
     assert len(ses._impact_preview_cache) == 2
 
 
+def test_public_origin_and_cors_sse():
+    session_id = "test_cors_session"
+    qr_resp = client.get(f"/api/live/sessions/{session_id}/qr.svg")
+    assert qr_resp.status_code == 200
+    assert "https://andes-a38.pages.dev/jurado?s=test_cors_session" in qr_resp.text
+
+    # Allowed origin: Cloudflare Pages frontend
+    r_cf = client.get(
+        "/api/live/catalog",
+        headers={"Origin": "https://andes-a38.pages.dev"},
+    )
+    assert r_cf.status_code == 200
+    assert r_cf.headers.get("access-control-allow-origin") == "https://andes-a38.pages.dev"
+
+    # Allowed origin on SSE stream
+    r_sse = client.get(
+        f"/api/live/sessions/{session_id}/stream?max_events=1",
+        headers={"Origin": "https://andes-a38.pages.dev"},
+    )
+    assert r_sse.status_code == 200
+    assert r_sse.headers.get("access-control-allow-origin") == "https://andes-a38.pages.dev"
+    assert r_sse.headers.get("cache-control") == "no-cache"
+
+    # Allowed preflight with X-Jury-Device
+    r_pre = client.options(
+        f"/api/live/sessions/{session_id}/jury/disrupt",
+        headers={
+            "Origin": "https://andes-a38.pages.dev",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Content-Type, X-Jury-Device",
+        },
+    )
+    assert r_pre.status_code == 200
+    assert r_pre.headers.get("access-control-allow-origin") == "https://andes-a38.pages.dev"
+
+    # Disallowed origin
+    r_evil = client.get(
+        "/api/live/catalog",
+        headers={"Origin": "https://evil.example.com"},
+    )
+    assert r_evil.headers.get("access-control-allow-origin") is None
+
+
+

@@ -1,4 +1,25 @@
-# Release runbook
+# Release runbook — Andes · Operación de la red eléctrica con IA
+
+## Backend público para la demo en vivo (Etapa 4)
+
+- **Frontend público (Cloudflare Pages):** `https://andes-a38.pages.dev`
+- **URL pública activa del backend (HTTPS con Gemini 4 Argon y HiGHS en vivo):** `https://hemlock-untold-control.ngrok-free.dev`
+- **Variable para recompilar y publicar el frontend en Cloudflare Pages:**
+  ```bash
+  VITE_API_BASE_URL=https://hemlock-untold-control.ngrok-free.dev/api
+  ```
+- **Configuración de origen y CORS en el backend (`backend/config.py`, `backend/main.py`, `render.yaml`):**
+  - `PUBLIC_ORIGIN=https://andes-a38.pages.dev` (el QR `/api/live/sessions/{id}/qr.svg` apunta a `https://andes-a38.pages.dev/jurado?s={id}`).
+  - `CORS_ORIGINS=https://andes-a38.pages.dev,http://localhost:5173,http://127.0.0.1:5173` (habilita peticiones REST y streaming SSE entre orígenes).
+  - `GEMINI_API_KEY` se carga exclusivamente desde variables de entorno del servidor / secreto del dashboard (nunca en git).
+- **Ping de calentamiento antes de la demo:**
+  ```bash
+  curl -s -H "ngrok-skip-browser-warning: 1" -H "Origin: https://andes-a38.pages.dev" \
+    "https://hemlock-untold-control.ngrok-free.dev/api/health?probe_gemini=true"
+  ```
+- **Prueba real verificada (Celular `/jurado?s=<id>` → Pantalla grande SSE):**
+  - Sala creada (`POST /api/live/sessions`), pantalla grande conectada por SSE (`GET /api/live/sessions/sala-demo-jurado-public/stream` con `Origin: https://andes-a38.pages.dev`) y disparo de central `gas_centro` desde dispositivo móvil (`POST /api/live/sessions/sala-demo-jurado-public/jury/disrupt`).
+  - Latencia medida en público HTTPS: `incident.detected` recibido en **`110.9 ms`** y `solution.updated` en **`118.6 ms`** (`< 2000 ms`).
 
 ## Local release candidate
 

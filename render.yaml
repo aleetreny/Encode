@@ -17,11 +17,15 @@ services:
         value: /app/var/runs.sqlite3
       - key: GRIDPILOT_API_TOKEN
         generateValue: true
+      - key: PUBLIC_ORIGIN
+        value: https://andes-a38.pages.dev
       - key: CORS_ORIGINS
-        sync: false
+        value: https://andes-a38.pages.dev,http://localhost:5173
       - key: GRIDPILOT_MODEL_AGENT
         value: gemini-4-argon
+      - key: GRIDPILOT_MODEL_DECIDER
+        value: gemini-4-argon
       - key: GRIDPILOT_MODEL_FAST
-        value: gemini-2.5-flash
+        value: gemini-3.8-flash
       - key: GEMINI_API_KEY
         sync: false

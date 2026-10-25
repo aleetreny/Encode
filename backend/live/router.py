@@ -61,7 +61,15 @@ def stream_session(session_id: str, request: Request, max_events: Optional[int] 
         finally:
             session.unsubscribe(q)
             
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 class ClockRequest(BaseModel):
     action: str
@@ -191,7 +199,7 @@ async def reset_session(session_id: str):
 
 @router.get("/sessions/{session_id}/qr.svg")
 def get_qr(session_id: str, request: Request):
-    base_url = os.getenv("PUBLIC_ORIGIN") or str(request.base_url).rstrip("/")
+    base_url = (os.getenv("PUBLIC_ORIGIN") or "https://andes-a38.pages.dev").rstrip("/")
     target_url = f"{base_url}/jurado?s={session_id}"
     svg = render_qr_svg(target_url)
     return Response(content=svg, media_type="image/svg+xml")

@@ -131,8 +131,16 @@ def create_app(settings=None):
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type", "Authorization", "Idempotency-Key"],
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=[
+            "Content-Type",
+            "Authorization",
+            "Idempotency-Key",
+            "X-Jury-Device",
+            "Last-Event-ID",
+            "Cache-Control",
+            "ngrok-skip-browser-warning",
+        ],
         expose_headers=["Location", "ETag", "X-Request-ID", "Content-Disposition"],
     )
 
@@ -154,7 +162,8 @@ def create_app(settings=None):
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Cache-Control"] = "no-store"
+        if "Cache-Control" not in response.headers:
+            response.headers["Cache-Control"] = "no-store"
         log.info(
             "request id=%s method=%s status=%s", request_id, request.method, response.status_code
         )
