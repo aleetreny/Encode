@@ -4,6 +4,7 @@ import type { Option, Solution } from '../live/types';
 import { GridScene, TECH_COLOR, TECH_LABEL, assetTitle, at, buildAssets } from './GridScene';
 import { ZONES } from './layout';
 import { AndesMark } from './brand';
+import { SystemChart } from './SystemChart';
 import './ui.css';
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || '/api';
@@ -141,11 +142,13 @@ function Screen() {
     );
   }
 
-  const off = sum(shown.households_off, hour);
-  const deficit = sum(shown.unserved_mw, hour);
-  const demand = sum(shown.demand_mw, hour);
-  const cost = at(shown.cost_proxy_usd, hour);
-  const co2 = at(shown.co2_t, hour);
+  // KPIs move once per simulated hour (and glide), so they stay readable while the clock runs fast.
+  const step = Math.floor(hour);
+  const off = sum(shown.households_off, step);
+  const deficit = sum(shown.unserved_mw, step);
+  const demand = sum(shown.demand_mw, step);
+  const cost = at(shown.cost_proxy_usd, step);
+  const co2 = at(shown.co2_t, step);
   const sel = selected ? assets.find((a) => a.id === selected) ?? null : null;
   const selLine = selected ? catalog.lines.find((l) => l.id === selected) ?? null : null;
 
@@ -250,6 +253,7 @@ function Screen() {
             <span>{phase === 'analyzing' ? 'Analizando la falla' : phase === 'awaiting_operator' ? 'Propone dos caminos' : phase === 'executing' ? 'Ejecutando el plan' : phase === 'resolved' ? 'Plan aplicado' : 'Vigilando la red'}</span>
           </div>
         </div>
+        {shown && <SystemChart catalog={catalog} solution={shown} hour={hour} incidents={state.active_incidents} planFrom={applied ? Math.min(...applied.levers.map((l) => l.from_hour)) : null} />}
         <div className="gp-brain-feed">
           {state.thoughts.length === 0 && state.notes.length === 0 && (
             <p className="gp-idle">Sin incidentes. Vigilo {catalog.generators.length} centrales, {catalog.batteries.length} baterías, {catalog.lines.length} líneas troncales y {catalog.nodes.length} zonas, hora a hora.</p>
@@ -405,7 +409,7 @@ function Kpi({ label, value, hot }: { label: string; value: string; hot?: boolea
   return (
     <div className={`gp-kpi${hot ? ' is-hot' : ''}`}>
       <span>{label}</span>
-      <b>{value}</b>
+      <b key={value} className="gp-kpi-v">{value}</b>
     </div>
   );
 }

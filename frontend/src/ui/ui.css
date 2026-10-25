@@ -343,3 +343,27 @@
 .gp-attack .gp-attack-n { display: block; margin-top: 10px; font: 800 44px var(--mono); color: var(--red); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .gp-attack .gp-attack-u { font: 11px var(--mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: .1em; }
 @keyframes gp-attack { 0% { opacity: 0; transform: translate(-50%, -46%) scale(.94); } 6%, 82% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -54%) scale(.98); } }
+.gp-kpi-v { display: inline-block; animation: gp-kpi .45s cubic-bezier(.32,.72,0,1); }
+@keyframes gp-kpi { from { opacity: .2; transform: translateY(4px); } }
+.gp-chart { border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 6px; margin-bottom: 10px; background: #fff; }
+.gp-chart-head { display: flex; flex-direction: column; gap: 1px; margin-bottom: 2px; }
+.gp-chart-head b { font: 800 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.gp-chart-head span { font: 10px var(--mono); color: var(--ink-3); }
+.gp-chart-svg { width: 100%; height: auto; display: block; }
+.gp-chart-area { fill-opacity: .78; stroke: #fff; stroke-width: .5; transition: d .5s; }
+.gp-chart-demand { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.gp-chart-gap { fill: var(--red); fill-opacity: .55; stroke: var(--red); stroke-width: .8; }
+.gp-chart-fault { fill: var(--red); opacity: .08; }
+.gp-chart-fault-label { font: 700 8px var(--mono); fill: var(--red); }
+.gp-chart-plan { stroke: var(--green); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.gp-chart-now { stroke: var(--gem-b); stroke-width: 1.4; }
+.gp-chart-dot { fill: #fff; stroke: var(--gem-b); stroke-width: 1.6; }
+.gp-chart-future { fill: #f4f4f1; opacity: .7; }
+.gp-chart-grid { stroke: #ececea; stroke-width: .6; }
+.gp-chart-axis { font: 8.5px var(--mono); fill: var(--ink-3); }
+.gp-chart-key { display: flex; flex-wrap: wrap; gap: 4px 10px; font: 9.5px var(--mono); color: var(--ink-3); margin-top: 2px; }
+.gp-chart-key i { display: inline-block; width: 12px; height: 8px; margin-right: 4px; vertical-align: -1px; border-radius: 2px; }
+.gp-chart-key i.ln { height: 0; border-top: 2px solid var(--ink); border-radius: 0; vertical-align: 2px; }
+.gp-chart-key i.gap { background: var(--red); opacity: .6; }
+.gp-chart-key i.fault { background: var(--red); opacity: .15; }
+.gp-chart-unit { margin-left: auto; }
