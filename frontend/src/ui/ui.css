@@ -450,3 +450,58 @@
   .gp-only-pointer { display: none; }
   .gp-only-touch { display: inline; }
 }
+.gp-svg { cursor: grab; touch-action: none; }
+.gp-svg:active { cursor: grabbing; }
+.gp-alabel { cursor: pointer; }
+.gp-alabel-bg { fill: rgba(255,255,255,.92); stroke: #e4e4e0; stroke-width: .8; }
+.gp-alabel-name { font: 600 12.5px var(--mono); fill: var(--ink-3); }
+.gp-alabel-mw { font: 800 12.5px var(--mono); fill: var(--ink); }
+.gp-alabel-leader { stroke: #c4c4c8; stroke-width: .8; stroke-dasharray: 2 2; }
+.gp-alabel.is-tripped .gp-alabel-bg { stroke: var(--red); fill: #fff5f5; }
+.gp-alabel.is-tripped .gp-alabel-mw { fill: var(--red); }
+.gp-alabel.is-boost .gp-alabel-bg { stroke: var(--green); }
+.gp-alabel.is-boost .gp-alabel-mw { fill: var(--green); }
+.gp-alabel.is-selected .gp-alabel-bg { stroke: var(--ink); stroke-width: 1.2; }
+.gp-zlabel-name { font: 800 14px var(--mono); letter-spacing: .16em; fill: var(--ink); }
+.gp-zlabel-sub { font: 12.5px var(--mono); fill: var(--ink-3); }
+.gp-zlabel.is-dark .gp-zlabel-sub { fill: var(--red); font-weight: 700; }
+.gp-glabel-name { font: 800 15px var(--mono); letter-spacing: .08em; fill: var(--gem-b); }
+.gp-glabel-sub { font: 12.5px var(--mono); fill: var(--ink-3); }
+.gp-zoom { position: absolute; right: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 4px; z-index: 3; }
+.gp-zoom button { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--line); background: #fff; font: 700 15px ui-sans-serif, system-ui; color: var(--ink); cursor: pointer; box-shadow: 0 4px 12px -8px rgba(0,0,0,.4); }
+.gp-zoom button:disabled { opacity: .35; cursor: default; }
+.gp-scene { position: absolute; }
+
+/* decisions live in Gemini's panel on wide screens, so the maquette is never covered */
+@media (min-width: 901px) {
+  .gp.has-options { --scene-bottom: 92px; }
+  .gp-options.gp-options-panel { position: static; left: auto; right: auto; bottom: auto; order: 2; margin-bottom: 8px; }
+  .gp-options-panel .gp-options-head { flex-direction: column; gap: 2px; margin-bottom: 6px; }
+  .gp-options-panel .gp-options-head b { font-size: 15px; }
+  .gp-options-panel .gp-options-head span { font-size: 11.5px; }
+  .gp-options-panel .gp-options-row { grid-template-columns: 1fr; gap: 8px; }
+  .gp-options-panel .gp-option { padding: 10px 11px; box-shadow: none; }
+  .gp-options-panel .gp-option:hover { transform: none; }
+  .gp-options-panel .gp-option h3 { font-size: 13px; }
+  .gp-options-panel .gp-option p { font-size: 11.5px; }
+  .gp-options-panel .gp-option-foot { flex-direction: column; align-items: stretch; gap: 6px; }
+  .gp-options-panel .gp-option-foot dl { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .gp-options-panel .gp-option-foot dl div { padding: 4px 6px; }
+  .gp-options-panel .gp-option-foot dd { font-size: 11.5px; }
+  .gp-options-panel .gp-option-actions { justify-content: stretch; }
+  .gp-options-panel .gp-option-actions .gp-btn { flex: 1; }
+  .gp-options-panel .gp-levers li { font-size: 10.5px; }
+  .gp-options-panel .gp-model { margin-left: 0; }
+  .gp-brain { overflow-y: auto; }
+  .gp-brain-feed.is-compact { flex: none; max-height: 120px; }
+  .gp-brain-feed.is-compact .gp-tools, .gp-brain-feed.is-compact .gp-note { display: none; }
+  .gp.has-options .gp-zones { display: none; }
+}
+@media (min-width: 901px) {
+  .gp-brain-head { order: 0; } .gp-options-panel { order: 1; } .gp-zones { order: 1; } .gp-brain-feed { order: 2; } .gp-brain-foot { order: 3; }
+}
+.gp-wire-label, .gp-trunk-text { font-size: 11.5px; }
+@media (min-width: 901px) {
+  /* the maquette starts right of the legend column, so nothing hides under it */
+  .gp-scene { left: 202px !important; }
+}

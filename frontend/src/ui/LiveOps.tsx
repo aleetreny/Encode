@@ -113,6 +113,7 @@ function Screen() {
   }, [catalog, connectionMode]);
 
   const shown: Solution | null = hovered?.solution ?? solution;
+  const deciding = !!options && (phase === 'awaiting_operator' || !!countdown?.active);
   const assets = useMemo(() => (catalog ? buildAssets(catalog) : []), [catalog]);
 
   const boosted = useMemo(() => new Set((applied?.levers ?? []).map((l) => l.target_id)), [applied]);
@@ -161,7 +162,7 @@ function Screen() {
   };
 
   return (
-    <div className={`gp iso is-${state.grid_state}${options && (phase === 'awaiting_operator' || countdown?.active) ? ' has-options' : ''}`} data-theme="light">
+    <div className={`gp iso is-${state.grid_state}${deciding ? ' has-options' : ''}`} data-theme="light">
       <header className="gp-top">
         <div className="gp-brand">
           <AndesMark size={26} />
@@ -245,7 +246,61 @@ function Screen() {
           </div>
         </div>
         <ZoneStatus catalog={catalog} solution={shown} hour={step} incidents={state.active_incidents} />
-        <div className="gp-brain-feed">
+        {options && (phase === 'awaiting_operator' || countdown?.active) && (
+          <section className="gp-options gp-options-panel">
+            <div className="gp-options-head">
+              <b>¿Qué hacemos?</b>
+              <span>{countdown?.active ? `Modo autónomo: Gemini aplica su recomendación en ${countdown.seconds_left} s` : <><span className="gp-only-pointer">Elige un camino. Pasa el cursor para ver cómo quedaría la red.</span><span className="gp-only-touch">Elige un camino y toca «Aplicar».</span></>}</span>
+              {state.model_execution && <ModelBadge m={state.model_execution} />}
+            </div>
+            <div className="gp-options-row">
+              {options.map((o) => {
+                const rec = countdown?.candidate_id === o.option_id;
+                return (
+                  <article
+                    key={o.option_id}
+                    className={`gp-option${rec ? ' is-rec' : ''}`}
+                    onMouseEnter={() => setHovered(o)}
+                    onMouseLeave={() => setHovered(null)}
+                  >
+                    <div className="gp-option-tags">
+                      <span className="gp-tag">{TAG_LABEL[o.tradeoff_tag] ?? o.tradeoff_tag}</span>
+                      {rec && <span className="gp-tag is-rec">Recomendada por Gemini</span>}
+                      <span className={`gp-tag ${o.validation.passed ? 'is-ok' : 'is-bad'}`}>{o.validation.passed ? 'Validador ✓' : 'Validador ✗'}</span>
+                    </div>
+                    <h3>{o.title_es}</h3>
+                    <p title={o.rationale_es}>{o.rationale_es}</p>
+                    <ul className="gp-levers">
+                      {o.levers.map((l, i) => (
+                        <li key={i}>{LEVER_LABEL[l.type] ?? l.type} · <span>{leverTarget(l.target_id, assets, catalog.lines)}</span></li>
+                      ))}
+                    </ul>
+                    <div className="gp-option-foot">
+                    <dl>
+                      <div><dt>Reconecta</dt><dd className="is-good">+{fmt(o.metrics.households_reconnected)}</dd></div>
+                      <div><dt>Pierden luz</dt><dd className={o.metrics.households_newly_off > 0 ? 'is-bad' : ''}>{o.metrics.households_newly_off > 0 ? `−${fmt(o.metrics.households_newly_off)}` : '0'}</dd></div>
+                      <div><dt>Costo US$</dt><dd>{o.metrics.cost_delta_usd >= 0 ? '+' : '−'}{fmt(Math.abs(o.metrics.cost_delta_usd) / 1000)} mil</dd></div>
+                      <div><dt>CO₂</dt><dd>{o.metrics.co2_delta_t >= 0 ? '+' : '−'}{fmt(Math.abs(o.metrics.co2_delta_t))} t</dd></div>
+                      <div><dt>Carga máx. línea</dt><dd className={o.metrics.max_line_loading_pct >= 98 ? 'is-warn' : ''}>{fmt(o.metrics.max_line_loading_pct)} %</dd></div>
+                    </dl>
+                    <div className="gp-option-actions">
+                      {rec && countdown?.active ? (
+                        <>
+                          <div className="gp-count" style={{ ['--p' as string]: `${(countdown.seconds_left / 5) * 100}%` }}><span>{countdown.seconds_left}</span></div>
+                          <button className="gp-btn is-ghost" onClick={() => decide(o, 'veto')}>Vetar</button>
+                        </>
+                      ) : (
+                        <button className="gp-btn" onClick={() => decide(o, 'apply')}>Aplicar</button>
+                      )}
+                    </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
+        <div className={`gp-brain-feed${deciding ? ' is-compact' : ''}`}>
           {state.thoughts.length === 0 && state.notes.length === 0 && (
             <p className="gp-idle">Sin incidentes. Vigilo {catalog.generators.length} centrales, {catalog.batteries.length} baterías, {catalog.lines.length} líneas troncales y {catalog.nodes.length} zonas, hora a hora.</p>
           )}
@@ -270,60 +325,7 @@ function Screen() {
         <p className="gp-brain-foot">Gemini razona y propone. Cada número lo calcula el solver HiGHS y lo revisa un validador independiente.</p>
       </aside>
 
-      {options && (phase === 'awaiting_operator' || countdown?.active) && (
-        <section className="gp-options">
-          <div className="gp-options-head">
-            <b>¿Qué hacemos?</b>
-            <span>{countdown?.active ? `Modo autónomo: Gemini aplica su recomendación en ${countdown.seconds_left} s` : <><span className="gp-only-pointer">Elige un camino. Pasa el cursor para ver cómo quedaría la red.</span><span className="gp-only-touch">Elige un camino y toca «Aplicar».</span></>}</span>
-            {state.model_execution && <ModelBadge m={state.model_execution} />}
-          </div>
-          <div className="gp-options-row">
-            {options.map((o) => {
-              const rec = countdown?.candidate_id === o.option_id;
-              return (
-                <article
-                  key={o.option_id}
-                  className={`gp-option${rec ? ' is-rec' : ''}`}
-                  onMouseEnter={() => setHovered(o)}
-                  onMouseLeave={() => setHovered(null)}
-                >
-                  <div className="gp-option-tags">
-                    <span className="gp-tag">{TAG_LABEL[o.tradeoff_tag] ?? o.tradeoff_tag}</span>
-                    {rec && <span className="gp-tag is-rec">Recomendada por Gemini</span>}
-                    <span className={`gp-tag ${o.validation.passed ? 'is-ok' : 'is-bad'}`}>{o.validation.passed ? 'Validador ✓' : 'Validador ✗'}</span>
-                  </div>
-                  <h3>{o.title_es}</h3>
-                  <p title={o.rationale_es}>{o.rationale_es}</p>
-                  <ul className="gp-levers">
-                    {o.levers.map((l, i) => (
-                      <li key={i}>{LEVER_LABEL[l.type] ?? l.type} · <span>{leverTarget(l.target_id, assets, catalog.lines)}</span></li>
-                    ))}
-                  </ul>
-                  <div className="gp-option-foot">
-                  <dl>
-                    <div><dt>Reconecta</dt><dd className="is-good">+{fmt(o.metrics.households_reconnected)}</dd></div>
-                    <div><dt>Pierden luz</dt><dd className={o.metrics.households_newly_off > 0 ? 'is-bad' : ''}>{o.metrics.households_newly_off > 0 ? `−${fmt(o.metrics.households_newly_off)}` : '0'}</dd></div>
-                    <div><dt>Costo US$</dt><dd>{o.metrics.cost_delta_usd >= 0 ? '+' : '−'}{fmt(Math.abs(o.metrics.cost_delta_usd) / 1000)} mil</dd></div>
-                    <div><dt>CO₂</dt><dd>{o.metrics.co2_delta_t >= 0 ? '+' : '−'}{fmt(Math.abs(o.metrics.co2_delta_t))} t</dd></div>
-                    <div><dt>Carga máx. línea</dt><dd className={o.metrics.max_line_loading_pct >= 98 ? 'is-warn' : ''}>{fmt(o.metrics.max_line_loading_pct)} %</dd></div>
-                  </dl>
-                  <div className="gp-option-actions">
-                    {rec && countdown?.active ? (
-                      <>
-                        <div className="gp-count" style={{ ['--p' as string]: `${(countdown.seconds_left / 5) * 100}%` }}><span>{countdown.seconds_left}</span></div>
-                        <button className="gp-btn is-ghost" onClick={() => decide(o, 'veto')}>Vetar</button>
-                      </>
-                    ) : (
-                      <button className="gp-btn" onClick={() => decide(o, 'apply')}>Aplicar</button>
-                    )}
-                  </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-      )}
+
 
       {(sel || selLine) && (
         <div className="gp-sheet" onClick={(e) => e.stopPropagation()}>

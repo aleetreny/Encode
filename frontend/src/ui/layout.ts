@@ -17,7 +17,7 @@ export const uv = (u: number, v: number, base: [number, number] = [0, 0]): k.Poi
 
 // North → south runs left to right with a gentle slope, like a maquette of Chile lying on a
 // table. Each zone has a hub (substation) with its plants behind it and its neighbourhood in front.
-const hubAt = (i: number) => uv(-380 + i * 190, -70 + i * 48);
+const hubAt = (i: number) => uv(-400 + i * 200, -110 + i * 66);
 export const ZONES: Record<string, { hub: k.Point3; label: string; short: string }> = {
   n_norte_grande: { hub: hubAt(0), label: 'Norte Grande', short: 'NG' },
   n_norte_chico: { hub: hubAt(1), label: 'Norte Chico', short: 'NC' },
@@ -30,7 +30,7 @@ export const ZONES: Record<string, { hub: k.Point3; label: string; short: string
 // generators first, then batteries (operating before reserve), evenly spaced and staggered in
 // depth so neither the objects nor their labels overlap. Only the houses go in front, which keeps
 // the trunk line between hubs clear.
-const SPACING = 62;
+const SPACING = 72;
 const DEPTH: [number, number] = [-112, -150];
 
 export interface Placeable { id: string; nodeId: string; kind: 'generator' | 'battery'; capacity: number; standby?: boolean }
@@ -65,11 +65,11 @@ export const GEMINI: k.Point3 = [g[0], g[1], 70];
 const anchors: k.Point3[] = [];
 for (const z of Object.values(ZONES)) {
   const b: [number, number] = [z.hub[0], z.hub[1]];
-  anchors.push(uv(-110, -190, b), uv(110, -190, b), uv(-60, 105, b), uv(90, 95, b));
+  anchors.push(uv(-112, -178, b), uv(112, -178, b), uv(-50, 96, b), uv(70, 90, b));
 }
 anchors.push([GEMINI[0], GEMINI[1], GEMINI[2] + 40]);
 
-export const P = k.fitProjection(anchors, W, H, { pad: 40, azimuth: 54, elevation: 30 });
+export const P = k.fitProjection(anchors, W, H, { pad: 14, azimuth: 54, elevation: 30 });
 
 export const screen = (p: k.Point3): [number, number] => k.iso(p, P);
 export const pct = (p: k.Point3) => {
