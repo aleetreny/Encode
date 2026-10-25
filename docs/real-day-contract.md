@@ -36,8 +36,11 @@ does not replace the current demo.
   The synthetic scenario reports `method: "synthetic"`.
 - Provenance: demand and renewable shapes are `derived` from observed data; topology, line limits,
   capacities, costs, batteries and `households_per_mw` stay `synthetic`/`assumption`.
-- Selection: env `GRIDPILOT_SCENARIO=real-day` (default) | `synthetic`, resolved in
-  `backend/live/catalog.py`; every caller that today reads `FIXTURE_PATH` goes through it.
+- Selection: env `GRIDPILOT_SCENARIO=real-day` | `synthetic`, resolved in
+  `backend/live/catalog.py`; every live caller that today reads `FIXTURE_PATH` goes through it.
+  The default stays `synthetic` until the orchestrator re-records `demo-stream.jsonl` and the
+  incident library on the real day, then flips it to `real-day` in one commit. The native v2 API
+  (`backend/main.py`, `native_models.py`) is out of scope.
 
 ### Gates (tested in `tests/test_real_day_scenario.py`)
 
