@@ -214,6 +214,7 @@ def render_qr_svg(url: str) -> str:
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {dim} {dim}" width="{dim}" height="{dim}" data-url="{esc_url}" shape-rendering="crispEdges">',
+        "<title>Andes · Operación de la red eléctrica con IA</title>",
         f"<desc>{esc_url}</desc>",
         f'<rect width="{dim}" height="{dim}" fill="#ffffff"/>',
     ]

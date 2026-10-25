@@ -1,4 +1,4 @@
-# GridPilot Live Ops — Medición de Latencia Real con Gemini 4 Argon (Fase 2 / Criterio 2)
+# Andes · Operación de la red eléctrica con IA — Medición de Latencia Real con Gemini 4 Argon (Fase 2 / Criterio 2)
 
 - **Fecha de medición (UTC):** `2026-10-25T00:27:38Z`
 - **Modelo decisor ejecutado (`GRIDPILOT_MODEL_DECIDER`):** `gemini-4-argon` (`status=ok`)

@@ -469,7 +469,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
     >
       <header style={{ borderBottom: '1px solid #374151', paddingBottom: '12px', marginBottom: '20px' }}>
         <h1 style={{ margin: '0 0 8px 0', fontSize: '20px', color: '#60a5fa' }}>
-          GridPilot Live Ops — Developer Console (/dev)
+          Andes · Operación de la red eléctrica con IA — Developer Console (/dev)
         </h1>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div>
@@ -918,7 +918,7 @@ export function DevConsole({ sessionHook }: DevConsoleProps) {
       </section>
 
       <footer style={{ color: '#6b7280', fontSize: '12px' }}>
-        GridPilot Live Ops DevConsole • Sesión Activa: {sessionId} • Eventos registrados: {hook.state.lastSeq + 1}
+        Andes · Operación de la red eléctrica con IA DevConsole • Sesión Activa: {sessionId} • Eventos registrados: {hook.state.lastSeq + 1}
       </footer>
     </div>
   );

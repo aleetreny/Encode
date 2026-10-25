@@ -1,16 +1,16 @@
-# GridPilot — submission working copy
+# Andes · Operación de la red eléctrica con IA — submission working copy
 
 Status: **not submitted**. Public app, final integrated release and video are not yet available in this workstream. Fill the final fields only with verified results.
 
 ## Problem and user
 
-GridPilot helps electricity-system analysts investigate renewable curtailment and compare explainable, reproducible dispatch counterfactuals. Official CEN evidence provides historical context. A deliberately small synthetic network makes assumptions and numerical constraints visible.
+Andes helps electricity-system analysts investigate renewable curtailment and compare explainable, reproducible dispatch counterfactuals. Official CEN evidence provides historical context. A deliberately small synthetic network makes assumptions and numerical constraints visible.
 
 ## Implemented backend contribution
 
 The service includes versioned contracts, source preservation and provenance, a reproducible CEN extraction pipeline with quality findings, FastAPI routes, isolated job execution, persistent local run history, idempotency, independent acceptance checks, deterministic comparison metrics, downloadable audit reports and simulation-only approval/rejection. The integrated production HiGHS solver and independent validator supply honestly labelled replay fixtures and a synthetic fallback.
 
-The 1 August 2026 CEN evidence is complete for the extracted solar/wind records. Historical demand and actual generation have not been aligned to calibrate the synthetic model. GridPilot does not operate or reproduce Chile's actual dispatch and does not claim real cost or emissions savings.
+The 1 August 2026 CEN evidence is complete for the extracted solar/wind records. Historical demand and actual generation have not been aligned to calibrate the synthetic model. Andes does not operate or reproduce Chile's actual dispatch and does not claim real cost or emissions savings.
 
 ## Final team fields
 

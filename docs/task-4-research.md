@@ -12,7 +12,7 @@ The [CEN 2026 reductions archive](https://www.coordinador.cl/operacion/documento
 
 The workbook has nine sheets: monthly summary, daily/hourly wind, solar, run-of-river hydro and reservoir hydro, plus annual accumulations for those technologies. This implementation explicitly extracts solar and wind only. Each daily section has plant rows, hour labels 1–24, plant daily totals and a technology total row. The monthly summary identifies daily curtailment in MWh and the monthly overview in GWh.
 
-The chosen event is **1 August 2026**, selected as the first day in the downloaded monthly workbook, rather than for an attractive simulated effect. It has 77 solar and 56 wind plant rows. Aggregated solar reduction is 6,501.247783333333 MWh and wind reduction is 11,060.926558333333 MWh. These are historical source aggregates, not outcomes or savings from GridPilot. Coordinates are retained per plant row for auditability.
+The chosen event is **1 August 2026**, selected as the first day in the downloaded monthly workbook, rather than for an attractive simulated effect. It has 77 solar and 56 wind plant rows. Aggregated solar reduction is 6,501.247783333333 MWh and wind reduction is 11,060.926558333333 MWh. These are historical source aggregates, not outcomes or savings from Andes. Coordinates are retained per plant row for auditability.
 
 ## Source quality findings
 

@@ -632,7 +632,7 @@ class AgentToolkit:
                 llm_insight = f" {gemini_narrative['executive_note'].strip()}"
 
             summary = (
-                f"GridPilot (Gemini 4 Argon) SCED simulation for `{scenario.get('scenario_id')}`: "
+                f"Andes · Operación de la red eléctrica con IA (Gemini 4 Argon) SCED simulation for `{scenario.get('scenario_id')}`: "
                 f"Co-optimising grid-scale BESS under modelled Ley N° 21.505 and DS N° 32/2026 Art. 117 bis "
                 f"constraints reduces renewable curtailment from {b_curt:.1f} MWh to {c_curt:.1f} MWh "
                 f"(-{curt_red:.1f} MWh, -{curt_pct:.1f}%) and lowers dispatchable thermal generation cost "

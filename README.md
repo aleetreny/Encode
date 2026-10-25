@@ -1,4 +1,4 @@
-# GridPilot
+# Andes · Operación de la red eléctrica con IA
 ### An Autonomous AI Grid Coordinator for Chilean Renewable/Thermal Dispatch, Regulatory Compliance & Crisis Recovery Simulations
 
 ### Run the implemented backend
@@ -20,7 +20,7 @@ Read [backend operations](backend/README.md), [the native v2 contract](docs/cont
 
 **Encode London Hackathon · 24–25 October 2026 · Team of 4**
 
-> **Mission:** Emulate Chile's **Coordinador Eléctrico Nacional (CEN)** inside a verified digital-twin simulation. Powered by **Gemini 4 Argon** as the autonomous orchestrator and a deterministic **HiGHS LP solver + independent physics/regulatory validator**, GridPilot manages both **renewable** (solar, wind) and **non-renewable / dispatchable** (hydro, gas, coal, diesel, BESS) generation across Chile's north–south transmission backbone. It models selected requirements inspired by Chilean electricity regulation (**LGSE**, **Supreme Decree N° 32/2026 Art. 117 bis**, **NTSyCS**, and **Law N° 21.505**; see Section 2 for exactly what is and is not implemented), reduces renewable curtailment under normal operation, and **responds autonomously to sudden crisis scenarios** (such as a power plant or transmission line trip) by computing an emergency redispatch (batteries, ramp-limited thermal/hydro units, imports) to **reduce and restore unserved demand**.
+> **Mission:** Emulate Chile's **Coordinador Eléctrico Nacional (CEN)** inside a verified digital-twin simulation. Powered by **Gemini 4 Argon** as the autonomous orchestrator and a deterministic **HiGHS LP solver + independent physics/regulatory validator**, Andes manages both **renewable** (solar, wind) and **non-renewable / dispatchable** (hydro, gas, coal, diesel, BESS) generation across Chile's north–south transmission backbone. It models selected requirements inspired by Chilean electricity regulation (**LGSE**, **Supreme Decree N° 32/2026 Art. 117 bis**, **NTSyCS**, and **Law N° 21.505**; see Section 2 for exactly what is and is not implemented), reduces renewable curtailment under normal operation, and **responds autonomously to sudden crisis scenarios** (such as a power plant or transmission line trip) by computing an emergency redispatch (batteries, ramp-limited thermal/hydro units, imports) to **reduce and restore unserved demand**.
 >
 > **Scope / safety:** We do **not** operate Chile's live physical grid, send real SCADA commands to power plants, replace official CEN/distributor control systems, or claim that a reduced 5-node backbone reproduces every bus of Chile's >1,000-node grid. All autonomous dispatches and crisis reconnections occur **strictly inside an audited simulation** under explicitly documented model assumptions.
 >
@@ -45,15 +45,15 @@ Real-time dispatch in Chile already uses intraday scheduling and SCADA/AGC, but 
 
 **Primary user:** A CEN control-room operations engineer, system planner, or emergency coordinator evaluating automated dispatch and post-contingency household recovery plans.
 
-**One-sentence pitch:** *GridPilot is an autonomous AI grid coordinator for Chile's SEN that optimises renewable and thermal dispatch under rules inspired by Chilean regulation and automatically re-routes power after sudden plant or line outages to reconnect affected households — verified at every step by deterministic physics.*
+**One-sentence pitch:** *Andes is an autonomous AI grid coordinator for Chile's SEN that optimises renewable and thermal dispatch under rules inspired by Chilean regulation and automatically re-routes power after sudden plant or line outages to reconnect affected households — verified at every step by deterministic physics.*
 
 ---
 
 ## 2. Chilean Regulatory Framework Mapped to Code
 
-GridPilot does not treat regulation as decorative text: each row below names the **hard mathematical constraint or objective term** that represents it in the solver and validator, and what is deliberately **not** modelled. This is a simplified representation for a simulation, not a certified compliance check.
+Andes does not treat regulation as decorative text: each row below names the **hard mathematical constraint or objective term** that represents it in the solver and validator, and what is deliberately **not** modelled. This is a simplified representation for a simulation, not a certified compliance check.
 
-| Chilean Law / Standard | Legal Mandate in Chile | Deterministic Implementation in GridPilot |
+| Chilean Law / Standard | Legal Mandate in Chile | Deterministic Implementation in Andes |
 | --- | --- | --- |
 | **LGSE (DFL N° 4/2006, Art. 72°-1)**<br/>*Ley General de Servicios Eléctricos* | CEN must preserve overall system security while guaranteeing **minimum total operating cost** via **audited marginal-cost merit order** (generators do not submit free-market price bids; they declare audited fuel/variable costs). | Linear objective dispatches $0/MWh renewables (`solar`, `wind`) first, then lower-cost `hydro` / `coal` / `gas` ($25–$95/MWh in the demo), and the `diesel` peaker ($220/MWh in the demo) only when needed, all as an **assumed-cost proxy** (not audited CEN costs), with a dominant Value of Lost Load (`VoLL = $10,000/MWh`) penalising any unserved demand. |
 | **Supreme Decree N° 32/2026 (Art. 117 bis)**<br/>*Automatic Economic Dispatch (SCED)* | Mandates automated security-constrained economic dispatch co-optimising generation, transmission limits, and dynamic unit capabilities within a 36-month rollout. | Closed-loop autonomous agent workflow (`agent/` + `optimisation/`) that computes nodal generation setpoints (`generation_mw`) and line flows (`line_flow_mw`) while enforcing line limits and unit-specific **maximum ramp rates (`ramp_rate_mw_per_h`)**. *Not modelled:* preventive N-1 security constraints and reserve requirements. |
@@ -65,7 +65,7 @@ GridPilot does not treat regulation as decorative text: each row below names the
 
 ## 3. The One Demo We Must Ship (Normal Dispatch + Crisis Recovery)
 
-**Narrative:** GridPilot operates a 5-node Chilean backbone (`Norte Grande → Norte Chico → Centro → Centro-Sur → Sur`) anchored to Chilean generation technologies and demand profiles. The demo executes a **two-stage autonomous investigation**:
+**Narrative:** Andes operates a 5-node Chilean backbone (`Norte Grande → Norte Chico → Centro → Centro-Sur → Sur`) anchored to Chilean generation technologies and demand profiles. The demo executes a **two-stage autonomous investigation**:
 
 1. **Replay & Baseline Dispatch (Normal Operation):**
    - Load the Chilean scenario with visible **Observed** vs **Derived** vs **Synthetic** provenance labels.
@@ -237,7 +237,7 @@ GridPilot does not treat regulation as decorative text: each row below names the
    - *Our solution:* We model the grid down to nodal distribution substations and express load shedding (`unserved_mw`) and reconnection in **substation feeder blocks and, once implemented, equivalent households (via a sourced, labelled `households_per_mw` assumption per node)** — matching how **EDAC** disconnects and restores residential demand in real CEN operations.
 2. **Hourly/Multi-Step LP Transport Model vs. Sub-Second AC Electromechanical Transients:**
    - *Limitation:* In the first 0.1–5 seconds after a plant trip, grid survival depends on physical rotational inertia, primary frequency control (CPF), and automatic protection relays (50 Hz stability), not cloud LLM inference.
-   - *Our solution:* We explicitly scope GridPilot to **SCED and Post-Contingency Corrective Redispatch (minutes to 24 hours)** — the exact window where human coordinators currently calculate redispatches and issue recovery instructions.
+   - *Our solution:* We explicitly scope Andes to **SCED and Post-Contingency Corrective Redispatch (minutes to 24 hours)** — the exact window where human coordinators currently calculate redispatches and issue recovery instructions.
 3. **5-Node Reduced Equivalent vs. Full >1,000-Bus SEN Model:**
    - *Limitation:* Solving a full AC-OPF over 1,000+ Chilean buses is incompatible with a fast, interactive 3-minute live demo.
    - *Our solution:* A 5-node radial north–south corridor (`Norte Grande → Norte Chico → Centro → Centro-Sur → Sur`) where line flows are mathematically **exact DC-equivalent flows** and every constraint is independently verifiable in milliseconds.

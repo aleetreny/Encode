@@ -1,4 +1,4 @@
-"""GridPilot Live Ops - RIO Regulatory Session Report Generator.
+"""Andes · Operación de la red eléctrica con IA - RIO Regulatory Session Report Generator.
 
 Generates audit-grade operational reports in Markdown and printable HTML
 matching Chilean CEN (Coordinador Eléctrico Nacional) RIO
@@ -24,7 +24,7 @@ SLOGAN_NEURO_SYMBOLIC = (
 LEGAL_DISCLAIMER_STATUS = "legal_compliance_status = not_certified"
 LEGAL_DISCLAIMER_TEXT = (
     "Soporte de decisión en simulación; ninguna acción sobre SCADA real. "
-    "Este informe ha sido generado por el prototipo neuro-simbólico GridPilot Live Ops "
+    "Este informe ha sido generado por el prototipo neuro-simbólico Andes · Operación de la red eléctrica con IA "
     "con fines exclusivamente analíticos y demostrativos en entorno simulado. "
     "No constituye una orden de maniobra ni reemplaza los procedimientos oficiales de despacho "
     "del Coordinador Eléctrico Nacional (CEN)."
@@ -141,7 +141,7 @@ def _render_markdown(ctx: dict[str, Any]) -> str:
     lines: list[str] = []
 
     # 1. Encabezado Ejecutivo
-    lines.append("# REGISTRO DE INSTRUCCIONES OPERATIVAS (RIO)")
+    lines.append("# Andes · Operación de la red eléctrica con IA — REGISTRO DE INSTRUCCIONES OPERATIVAS (RIO)")
     lines.append("## Reporte de Auditoría y Despacho en Simulación — Sistema Eléctrico Nacional (SEN)\n")
     lines.append(f"> *{SLOGAN_NEURO_SYMBOLIC}*\n")
 
@@ -550,13 +550,13 @@ def _render_html(ctx: dict[str, Any]) -> str:
         "<html lang=\"es\">",
         "<head>",
         "  <meta charset=\"utf-8\">",
-        "  <title>RIO Reporte de Sesión - GridPilot Live Ops</title>",
+        "  <title>Andes · Operación de la red eléctrica con IA — Reporte RIO</title>",
         css,
         "</head>",
         "<body>",
         "<div class=\"container\">",
         "  <header>",
-        "    <h1>REGISTRO DE INSTRUCCIONES OPERATIVAS (RIO)</h1>",
+        "    <h1>Andes · Operación de la red eléctrica con IA — REGISTRO DE INSTRUCCIONES OPERATIVAS (RIO)</h1>",
         "    <h2>Sistema Eléctrico Nacional (SEN) — Coordinación de Seguridad y Despacho Económico</h2>",
         f"    <div class=\"slogan\">{html.escape(SLOGAN_NEURO_SYMBOLIC)}</div>",
         "  </header>",
@@ -727,7 +727,7 @@ def _render_html(ctx: dict[str, Any]) -> str:
     ])
 
     for k, v in ctx["provenance"].items():
-        out.append(f"        <tr><td><code>{html.escape(k)}</code></td><td><code>{html.escape(str(v))}</code></td><td>Catálogo SEN GridPilot</td></tr>")
+        out.append(f"        <tr><td><code>{html.escape(k)}</code></td><td><code>{html.escape(str(v))}</code></td><td>Catálogo SEN Andes</td></tr>")
 
     out.extend([
         "      </tbody>",

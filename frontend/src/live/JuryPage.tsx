@@ -624,7 +624,7 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
       {/* Header */}
       <header style={{ marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '12px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 6px 0' }}>
-          GridPilot Live Ops — Panel del Jurado
+          Andes · Operación de la red eléctrica con IA — Panel del Jurado
         </h1>
         <p style={{ margin: 0, color: '#4b5563', fontSize: '14px' }}>
           Desafía la red eléctrica en tiempo real. Gemini 4 Argon detecta, simula y propone mitigaciones.
@@ -858,7 +858,7 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
 
       {/* Footer */}
       <footer style={{ textAlign: 'center', fontSize: '12px', color: '#9ca3af', marginTop: '24px' }}>
-        GridPilot Live Ops • Modo: {hook.connectionMode.toUpperCase()} • Sesión: {hook.state.sessionId || 'demo'}
+        Andes · Operación de la red eléctrica con IA • Modo: {hook.connectionMode.toUpperCase()} • Sesión: {hook.state.sessionId || 'demo'}
       </footer>
     </div>
   );

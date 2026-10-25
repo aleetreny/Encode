@@ -1,4 +1,4 @@
-# GridPilot Agent Architecture (`agent/`) — Gemini 4 Argon (`gemini-4-argon`)
+# Andes · Operación de la red eléctrica con IA — Agent Architecture (`agent/`) — Gemini 4 Argon (`gemini-4-argon`)
 
 **Owner:** Person 2 (Agent Orchestration, Tooling, Crisis Self-Correction & Chilean Regulatory Audit)  
 **Branch:** `feature/agent`
@@ -7,7 +7,7 @@
 
 ## 1. Mission & Neuro-Symbolic Separation of Powers
 
-**GridPilot (`gemini-4-argon`)** emulates the operational decision loop of Chile's **Coordinador Eléctrico Nacional (CEN)** across the **Sistema Eléctrico Nacional (SEN)**:
+**Andes (`gemini-4-argon`)** emulates the operational decision loop of Chile's **Coordinador Eléctrico Nacional (CEN)** across the **Sistema Eléctrico Nacional (SEN)**:
 
 1. **Normal SCED Co-Optimisation:** Minimises renewable curtailment (solar PV in *Norte Grande / Norte Chico* and wind in *Norte Chico / Sur*) and thermal dispatch cost across congested transmission corridors (`L1`, `L2`, `L3`, `L4`).
 2. **Sudden N-1 Crisis Simulation & Household Reconnection:** Simulates unexpected power plant or transmission line failures (`mode="sudden"`, locking pre-outage dispatch and battery state of charge without hindsight), autonomously detects mathematical infeasibility under strict zero-shedding, activates **CNE NTSyCS EDAC** emergency load-shedding rules, and synthesises a new BESS + corridor dispatch plan to **reconnect affected Chilean households**.

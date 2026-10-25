@@ -1,4 +1,4 @@
-# GridPilot Live Ops — Progress Log
+# Andes · Operación de la red eléctrica con IA — Live Ops Progress Log
 
 ## Ola A · Fase 0: Rama, Merge, Contrato y `demo-stream.jsonl` inicial (`7c656c0`)
 - **Modelo**: Gemini 4 Argon · High (Orquestador)
@@ -78,5 +78,10 @@
 ## Etapa 2 — Endpoint `GET /api/live/sessions/{id}/impact_preview` para el Jurado
 - **Estado**: COMPLETADO
 - **Qué entró**: Endpoint `GET /api/live/sessions/{id}/impact_preview` en `backend/live/router.py` y método `LiveSession.get_impact_preview()` en `backend/live/engine.py` con evaluación paralela HiGHS (16 activos: generadores, baterías y líneas) desde `floor(hora actual)` por 4h con eventos activos incluidos, caché por `(session_id, int(hour), active_events)`, `absorbed: true` cuando `households_off_peak == 0`, esquemas `ImpactPreviewAsset` / `ImpactPreviewResponse` en `contracts/live.schema.json`, tipos y cliente en `frontend/src/live/`, registro en `docs/live-contract-changelog.md` y tests en `tests/test_live_api.py`.
+
+## Etapa 3 — Renombrado a "Andes · Operación de la red eléctrica con IA"
+- **Estado**: COMPLETADO
+- **Qué entró**: Cambio de "GridPilot" a **"Andes · Operación de la red eléctrica con IA"** / **"Andes"** en todo lo visible para una persona: título, encabezado y descargo legal del informe RIO (`backend/live/report.py`), prompts del agente (`backend/live/agent_loop.py`, `agent/gemini_client.py`, `agent/tools.py`), página de salud `/api/health` (`backend/main.py`), QR SVG (`backend/live/qr.py`), vistas de desarrollo `/jurado-dev` y `/dev` (`frontend/src/live/JuryPage.tsx`, `frontend/src/live/DevConsole.tsx`), `README.md`, `CLAUDE.md` y `docs/`.
+
 
 

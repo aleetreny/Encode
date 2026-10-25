@@ -124,7 +124,7 @@ def create_app(settings=None):
             with contextlib.suppress(asyncio.CancelledError):
                 await task
 
-    app = FastAPI(title="GridPilot API", version="2.0.0", lifespan=lifespan)
+    app = FastAPI(title="Andes · Operación de la red eléctrica con IA", version="2.0.0", lifespan=lifespan)
     app.state.store = store
     app.state.worker_task = None
     app.add_middleware(
@@ -244,6 +244,7 @@ def create_app(settings=None):
 
         return dict(
             status="ok",
+            app_name="Andes · Operación de la red eléctrica con IA",
             schema_version="2.0.0",
             scenarios=len(scenarios) + len(native_scenarios),
             default_scenario_id="chile-sen-5node-demo",

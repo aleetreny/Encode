@@ -4,7 +4,7 @@ Guidance for Claude (and humans) working in this repository.
 
 ## Project
 
-**GridPilot** — Encode London Hackathon, 24–25 Oct 2026 (deadline Sun 25 Oct 12:00 Europe/London).
+**Andes · Operación de la red eléctrica con IA** — Encode London Hackathon, 24–25 Oct 2026 (deadline Sun 25 Oct 12:00 Europe/London).
 An AI copilot that turns a Chilean renewable-curtailment episode into an audited, constraint-checked
 *what-if* study. Gemini investigates and explains; deterministic code optimises and validates; a human
 approves the plan **in simulation only**. Full proposal: `README.md`.
