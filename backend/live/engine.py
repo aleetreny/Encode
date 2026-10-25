@@ -7,7 +7,7 @@ Manages:
 - Asynchronous candidate + Gemini 4 Argon option generation (`options.ready`)
 - Autonomous countdown (`autonomy.countdown` 5->0) with operator `veto` cancellation
 - Event expiration (`event.ended` + `solution.updated` returning to `normal`)
-- Periodic `agent.note` every 3 simulated hours (digit-free)
+- Jimmy monitor `agent.note` every simulated hour and on severity rise (digit-free, `backend/live/monitor.py`)
 - `SessionManager`: multi-session registry with auto-creation for `"demo"` or any session ID
 """
 
@@ -17,17 +17,19 @@ import asyncio
 import concurrent.futures
 import copy
 import datetime as dt
+import logging
 import math
 import time
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
+from backend.live import monitor
 from backend.live.agent_loop import (
     ASSET_NAMES_ES,
     compute_grid_state,
     compute_incident_impact,
-    generate_periodic_note_es,
+    get_api_key,
     lever_to_solver_mod,
     moderate_jury_name,
     option_has_positive_improvement,
@@ -38,6 +40,18 @@ from backend.live.agent_loop import (
 )
 from backend.live.catalog import FIXTURE_PATH, build_catalog
 from optimisation import load_scenario, solve, validate
+
+
+logger = logging.getLogger(__name__)
+
+
+class _MonitorJob(NamedTuple):
+    """State captured when a monitor note falls due, so a slow model call words that moment, not a later one."""
+
+    assessment: monitor.MonitorAssessment
+    hour: float
+    grid_state: str
+    active_events: list[dict[str, Any]]
 
 
 class JuryRateLimitError(Exception):
@@ -85,8 +99,11 @@ class LiveSession:
         self.subscribers: set[asyncio.Queue[dict[str, Any]]] = set()
         self.jury_cooldowns: dict[str, float] = {}
         self._impact_preview_cache: dict[tuple[Any, ...], dict[str, Any]] = {}
-        self._last_note_hour_bucket: int = int(self.hour) // 3
-        self._last_note_ts: float = 0.0
+        self._monitor_bucket: int = int(self.hour) % 24
+        self._monitor_rank: int = 0
+        self._monitor_task: asyncio.Task[None] | None = None
+        self._monitor_pending: _MonitorJob | None = None
+        self._last_monitor_text: str | None = None
 
         self._clock_task: asyncio.Task[None] | None = None
         self._countdown_task: asyncio.Task[None] | None = None
@@ -101,6 +118,7 @@ class LiveSession:
         )
         self.solution = copy.deepcopy(self.baseline_solution)
         self.grid_state: str = "normal"
+        self._monitor_rank = monitor.SEVERITY_RANK[self._assess_monitor().severity]
 
         # Record initial session.snapshot as seq 0
         self.last_snapshot = self._emit(
@@ -222,10 +240,9 @@ class LiveSession:
         if speed_s_per_hour is not None:
             self.speed_s_per_hour = float(max(0.2, speed_s_per_hour))
         if action == "seek" and hour is not None:
-            old_hour = self.hour
             self.hour = float(max(0.0, min(23.99, hour)))
             await self._check_expired_events()
-            await self._maybe_emit_periodic_note(force=(int(self.hour) == 12 and int(old_hour) != 12))
+            self._maybe_emit_monitor_note()
         elif action == "play":
             self.running = True
             self._ensure_clock_task()
@@ -260,7 +277,7 @@ class LiveSession:
                 self.hour = (self.hour + dh) % 24.0
                 self._emit({"type": "clock.tick", "running": self.running})
                 await self._check_expired_events()
-                await self._maybe_emit_periodic_note()
+                self._maybe_emit_monitor_note()
         except asyncio.CancelledError:
             return
 
@@ -322,28 +339,62 @@ class LiveSession:
         )
         return expired_ids
 
-    async def _maybe_emit_periodic_note(self, force: bool = False) -> dict[str, Any] | None:
-        """Emit at most one `agent.note` every 3 simulated hours, with frequency rate limit."""
-        bucket = int(self.hour) // 3
-        now = time.monotonic()
-        if not force:
-            if bucket == self._last_note_hour_bucket:
-                return None
-            if now - self._last_note_ts < 2.0:
-                return None
-        self._last_note_hour_bucket = bucket
-        self._last_note_ts = now
-        text_es = generate_periodic_note_es(self.hour, self.grid_state, self.solution)
-        return self._emit({"type": "agent.note", "text_es": text_es})
+    def _assess_monitor(self) -> monitor.MonitorAssessment:
+        down = [ev["asset_id"] for ev in self.active_events if ev.get("type") == "battery_outage"]
+        return monitor.assess(self.scenario, self.solution, self.hour, outaged_battery_ids=down)
 
-    def emit_note(self, custom_text_es: str | None = None) -> dict[str, Any]:
-        """Emit an immediate digit-free `agent.note`."""
-        text = (
-            sanitize_no_digits(custom_text_es)
-            if custom_text_es
-            else generate_periodic_note_es(self.hour, self.grid_state, self.solution)
+    def _maybe_emit_monitor_note(self) -> None:
+        """Jimmy: one monitor note per simulated hour (bucket `int(hour)`), plus one when severity rises.
+
+        Never awaits the model: without a key the deterministic note is emitted here, otherwise the call runs
+        in a background task (at most one in flight; a note that falls due meanwhile waits, latest wins).
+        """
+        try:
+            assessment = self._assess_monitor()
+        except Exception:  # the 1 Hz clock must survive a monitor bug; no reading means no note, never an invented one
+            logger.exception("monitor: could not assess the current solution")
+            return
+        bucket = int(self.hour) % 24
+        rank = monitor.SEVERITY_RANK[assessment.severity]
+        due = bucket != self._monitor_bucket or rank > self._monitor_rank
+        self._monitor_bucket, self._monitor_rank = bucket, rank
+        if not due:
+            return
+
+        job = _MonitorJob(assessment, self.hour, self.grid_state, copy.deepcopy(self.active_events))
+        api_key = get_api_key() if self.allow_live_gemini else ""
+        if not api_key:
+            self._emit_monitor_payload(
+                monitor.deterministic_note(assessment, grid_state=job.grid_state, status="no_key")
+            )
+            return
+        if self._monitor_task is not None and not self._monitor_task.done():
+            self._monitor_pending = job
+            return
+        self._monitor_task = asyncio.get_running_loop().create_task(self._run_monitor(job, api_key))
+
+    async def _run_monitor(self, job: _MonitorJob | None, api_key: str) -> None:
+        while job is not None:
+            payload = await monitor.generate_monitor_note(
+                job.assessment,
+                hour=job.hour,
+                grid_state=job.grid_state,
+                active_events=job.active_events,
+                previous_text=self._last_monitor_text,
+                api_key=api_key,
+            )
+            self._emit_monitor_payload(payload)
+            job, self._monitor_pending = self._monitor_pending, None
+
+    def _emit_monitor_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
+        self._last_monitor_text = payload["text_es"]
+        return self._emit(payload)
+
+    def emit_note(self, custom_text_es: str) -> dict[str, Any]:
+        """Emit an immediate digit-free `agent.note` with the given text (periodic kind: not a monitor reading)."""
+        return self._emit(
+            {"type": "agent.note", "text_es": sanitize_no_digits(custom_text_es), "kind": "periodic"}
         )
-        return self._emit({"type": "agent.note", "text_es": text})
 
     def check_jury_limits(self, device_key: str) -> None:
         """Enforce Jury rules: max 2 active events in total, and 1 disruption per device every 30s."""
@@ -441,6 +492,7 @@ class LiveSession:
                     "grid_state": self.grid_state,
                 }
             )
+            self._maybe_emit_monitor_note()
 
             self.incident_records[incident_id] = {
                 "incident_id": incident_id,
@@ -778,6 +830,11 @@ class LiveSession:
         if self._clock_task and not self._clock_task.done():
             self._clock_task.cancel()
             self._clock_task = None
+        if self._monitor_task and not self._monitor_task.done():
+            self._monitor_task.cancel()
+        self._monitor_task = None
+        self._monitor_pending = None
+        self._last_monitor_text = None
 
         self.hour = float(max(0.0, min(23.99, start_hour)))
         self.active_events = []
@@ -790,6 +847,8 @@ class LiveSession:
         self._impact_preview_cache.clear()
         self.solution = copy.deepcopy(self.baseline_solution)
         self.grid_state = "normal"
+        self._monitor_bucket = int(self.hour) % 24
+        self._monitor_rank = monitor.SEVERITY_RANK[self._assess_monitor().severity]
 
         self._emit(
             {

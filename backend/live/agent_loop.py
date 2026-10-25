@@ -1907,41 +1907,6 @@ def run_incident_evaluation(
     }
 
 
-def generate_periodic_note_es(
-    hour: float,
-    grid_state: str,
-    solution: dict[str, Any],
-) -> str:
-    """Generate a brief digit-free Spanish operator note (`agent.note`) using the fast model or deterministic synthesis."""
-    h_int = int(hour) % 24
-    if grid_state == "normal" and 10 <= h_int <= 16:
-        default_note = (
-            "Excedente solar en el Norte Grande satura el corredor hacia la Zona Central; "
-            "el despacho económico aplica recorte renovable preventivo conforme al decreto de coordinación."
-        )
-    elif grid_state == "normal" and (18 <= h_int <= 22):
-        default_note = (
-            "Rampa vespertina metropolitana en curso con despacho térmico e hidroeléctrico "
-            "operando dentro de límites de seguridad."
-        )
-    elif grid_state == "recuperacion":
-        default_note = (
-            "Plan operativo de mitigación activo; los flujos troncales y el suministro residencial "
-            "se mantienen estabilizados bajo supervisión del coordinador."
-        )
-    elif grid_state == "emergencia":
-        default_note = (
-            "Estado de emergencia activo en el sistema; evaluando maniobras de reserva y "
-            "respuesta de demanda para restituir hogares afectados."
-        )
-    else:
-        default_note = (
-            "Sistema Eléctrico Nacional operando en equilibrio nodal con monitoreo continuo "
-            "de corredores troncales y reservas en baterías."
-        )
-    return sanitize_no_digits(default_note)
-
-
 OFFENSIVE_PATTERNS = re.compile(
     r"(puto|puta|mierda|weon|weón|culia|conchetumare|ctm|fuck|shit|bitch|nazi|hitler|penis|dick|asshole|maric)",
     re.IGNORECASE,
