@@ -95,7 +95,7 @@ JURY_NAMES = [
     "Dr. Carlos Muñoz",
     "Ing. Sofía Valdivia",
     "Dr. Andrés Pizarro",
-    "Jurado Londres",
+    "London juror",
 ]
 
 
