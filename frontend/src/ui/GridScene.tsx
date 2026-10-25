@@ -52,6 +52,8 @@ export const at = (series: number[] | undefined, hour: number) => {
 export const HOMES_PER_HOUSE = 200_000;
 
 const active = (d: Disruption, hour: number) => hour >= d.from_hour && hour < d.to_hour;
+// Who caused an outage, as it reads on the map: "Ana", "a juror", "operator".
+const culprit = (d?: Disruption) => (!d ? '' : d.jury_name ? d.jury_name : d.source === 'jury' ? 'a juror' : d.source === 'operator' ? 'operator' : '');
 
 interface Props {
   catalog: Catalog;
@@ -313,13 +315,14 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     const lineBoost = !isTripped && boosted.has(l.id);
     const hot = !isTripped && !lineBoost && Math.abs(mw) >= cap * 0.95;
     const who = incidents.find((d) => d.asset_id === l.id && active(d, hour));
+    const by = culprit(who);
     const label = isTripped
-      ? `✕ ${l.id} CUT${who?.jury_name ? ` · ${who.jury_name}` : who?.source === 'jury' ? ' · jury' : ''}`
+      ? `✕ ${l.id} CUT${by ? ` · by ${by}` : ''}`
       : lineBoost ? `⚡ ${l.id} EXTRA CAPACITY · ${Math.round((Math.abs(mw) / cap) * 100)} %`
       : `${l.id} · ${Math.round((Math.abs(mw) / cap) * 100)} %${hot ? ' ⚠' : ''}`;
     return (
       <g key={l.id} className="gp-asset" onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}>
-        <TrunkLine from={from} to={to} mw={mw} cap={cap} state={isTripped ? 'tripped' : lineBoost ? 'boost' : hot ? 'hot' : 'ok'} label={label} mini={isTripped ? `✕ ${l.id} cut` : `⚡ ${l.id} +`} />
+        <TrunkLine from={from} to={to} mw={mw} cap={cap} state={isTripped ? 'tripped' : lineBoost ? 'boost' : hot ? 'hot' : 'ok'} label={label} mini={isTripped ? `✕ ${l.id} cut${by ? ` · ${by}` : ''}` : `⚡ ${l.id} +`} />
       </g>
     );
   });
@@ -365,9 +368,10 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     const flowMw = `${Math.round(Math.abs(out))} MW${a.kind === 'battery' ? (out < -0.5 ? ' ↓' : out > 0.5 ? ' ↑' : '') : ''}`;
     // Something happened to this asset: a large callout that names it and says what happened.
     if (s === 'tripped' || s === 'boost') {
+      const by = culprit(incidents.find((d) => d.asset_id === a.id && active(d, hour)));
       const name = s === 'tripped' ? `✕ ${assetTitle(a)}` : `⚡ ${assetTitle(a)}`;
-      const mw = s === 'tripped' ? 'OFFLINE' : `${ACTION[boosted.get(a.id) ?? ''] ?? 'ON'} · ${flowMw}`;
-      const mini = s === 'tripped' ? '✕ OFF' : `⚡ ${ACTION[boosted.get(a.id) ?? ''] ?? 'ON'}`;
+      const mw = s === 'tripped' ? `OFFLINE${by ? ` · by ${by}` : ''}` : `${ACTION[boosted.get(a.id) ?? ''] ?? 'ON'} · ${flowMw}`;
+      const mini = s === 'tripped' ? `✕ OFF${by ? ` · ${by}` : ''}` : `⚡ ${ACTION[boosted.get(a.id) ?? ''] ?? 'ON'}`;
       labels.push({ id: a.id, x: ax, y: ay - 22, ax, ay, w: (name.length + mw.length) * 10.4 + 46, h: 36, name, mw, mini, color: TECH_COLOR[a.technology], state: s });
       continue;
     }
