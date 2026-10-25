@@ -741,6 +741,8 @@ class LiveSession:
                         self.emit_note(
                             "Autonomous mode on hold: no available operating move reduces the current residential shortfall, so no plan is applied automatically."
                         )
+        # The screen learns the mode from a snapshot; without one the toggle never moved.
+        self.build_snapshot_event(emit_to_history=True)
         return self.autonomy
 
     async def decide(
