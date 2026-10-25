@@ -36,7 +36,7 @@ from backend.live.agent_loop import (
     sanitize_no_digits,
     to_contract_solution,
 )
-from backend.live.catalog import FIXTURE_PATH, build_catalog
+from backend.live.catalog import build_catalog, scenario_path
 from optimisation import load_scenario, solve, validate
 
 
@@ -64,7 +64,7 @@ class LiveSession:
         countdown_step_s: float = 1.0,
     ) -> None:
         self.session_id = session_id
-        self.scenario = copy.deepcopy(scenario) if scenario is not None else load_scenario(FIXTURE_PATH)
+        self.scenario = copy.deepcopy(scenario) if scenario is not None else load_scenario(scenario_path())
         self.catalog = build_catalog(self.scenario)
         self.hour: float = float(max(0.0, min(23.99, start_hour)))
         self.running: bool = False
