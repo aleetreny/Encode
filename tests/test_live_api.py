@@ -275,3 +275,49 @@ def test_zero_improvement_guardrails_and_autonomy():
 
     asyncio.run(_run_autonomy_zero_check())
 
+
+def test_impact_preview_endpoint_and_cache():
+    session_id = "test_impact_preview_sess"
+    client.post("/api/live/sessions", json={"session_id": session_id, "start_hour": 18.4})
+
+    r1 = client.get(f"/api/live/sessions/{session_id}/impact_preview")
+    assert r1.status_code == 200
+    body = r1.json()
+    assert body["hour"] == 18
+    assert isinstance(body["assets"], list)
+    assert len(body["assets"]) >= 14
+
+    by_id = {item["asset_id"]: item for item in body["assets"]}
+    assert "gas_centro" in by_id
+    assert "L3" in by_id
+    assert "b_centro" in by_id
+
+    for item in body["assets"]:
+        assert isinstance(item["households_off_peak"], int)
+        assert isinstance(item["unserved_mw_peak"], (int, float))
+        assert item["absorbed"] is (item["households_off_peak"] == 0)
+
+    # At hour 18, gas_centro has a positive residential deficit and is not absorbed
+    assert by_id["gas_centro"]["households_off_peak"] > 0
+    assert by_id["gas_centro"]["absorbed"] is False
+
+    # Verify cache entry was stored for (session_id, 18, ())
+    from backend.live.engine import SESSION_MANAGER
+    ses = SESSION_MANAGER.get(session_id)
+    assert ses is not None
+    assert (session_id, 18, ()) in ses._impact_preview_cache
+
+    # Second call at same integer hour (e.g. 18.9) hits cache
+    client.post(f"/api/live/sessions/{session_id}/clock", json={"action": "seek", "hour": 18.9})
+    r2 = client.get(f"/api/live/sessions/{session_id}/impact_preview")
+    assert r2.status_code == 200
+    assert r2.json() == body
+    assert len(ses._impact_preview_cache) == 1
+
+    # Adding an active disruption changes the cache key and increases or updates stacked impact
+    client.post(f"/api/live/sessions/{session_id}/disrupt", json={"asset_id": "gas_centro", "duration_h": 4})
+    r3 = client.get(f"/api/live/sessions/{session_id}/impact_preview")
+    assert r3.status_code == 200
+    assert len(ses._impact_preview_cache) == 2
+
+

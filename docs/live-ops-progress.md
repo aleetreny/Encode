@@ -75,3 +75,8 @@
 - **Estado**: COMPLETADO
 - **Qué entró**: Merge de `feature/ui-live` desde `/Users/alonso/.t3/worktrees/Encode/t3-7744b100` preservando intacto `frontend/src/ui/` y las conductas de `store.ts` (`requestedMode`, reconexión por `?s=` sin reiniciar sesión, hora inicial `17:30`, `onError` post-apertura sin caída a offline, `last_incident`) y `client.ts` (`session_id` aditivo en `createLiveSession`), con `npm run build` y `pytest -q` (236 tests) en verde.
 
+## Etapa 2 — Endpoint `GET /api/live/sessions/{id}/impact_preview` para el Jurado
+- **Estado**: COMPLETADO
+- **Qué entró**: Endpoint `GET /api/live/sessions/{id}/impact_preview` en `backend/live/router.py` y método `LiveSession.get_impact_preview()` en `backend/live/engine.py` con evaluación paralela HiGHS (16 activos: generadores, baterías y líneas) desde `floor(hora actual)` por 4h con eventos activos incluidos, caché por `(session_id, int(hour), active_events)`, `absorbed: true` cuando `households_off_peak == 0`, esquemas `ImpactPreviewAsset` / `ImpactPreviewResponse` en `contracts/live.schema.json`, tipos y cliente en `frontend/src/live/`, registro en `docs/live-contract-changelog.md` y tests en `tests/test_live_api.py`.
+
+

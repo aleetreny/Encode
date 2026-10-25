@@ -14,6 +14,7 @@ Manages:
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import copy
 import datetime as dt
 import math
@@ -83,6 +84,7 @@ class LiveSession:
 
         self.subscribers: set[asyncio.Queue[dict[str, Any]]] = set()
         self.jury_cooldowns: dict[str, float] = {}
+        self._impact_preview_cache: dict[tuple[Any, ...], dict[str, Any]] = {}
         self._last_note_hour_bucket: int = int(self.hour) // 3
         self._last_note_ts: float = 0.0
 
@@ -785,6 +787,7 @@ class LiveSession:
         self.incident_records.clear()
         self.decision_log.clear()
         self.jury_cooldowns.clear()
+        self._impact_preview_cache.clear()
         self.solution = copy.deepcopy(self.baseline_solution)
         self.grid_state = "normal"
 
@@ -797,6 +800,104 @@ class LiveSession:
             }
         )
         return self.build_snapshot_event(emit_to_history=True)
+
+    def get_impact_preview(self) -> dict[str, Any]:
+        """Compute hypothetical sudden outage impact for each disruptable asset (generators, batteries, lines)
+        from `floor(self.hour)` for the default jury duration (4h), including currently active events.
+        Cached by `(session_id, hour_int, active_events_signature)`.
+        """
+        hour_int = max(0, min(23, int(math.floor(self.hour))))
+        fh = max(0, min(22, hour_int))
+        th = max(fh + 2, min(24, fh + 4))
+        active_sig = tuple(
+            sorted(
+                (
+                    str(ev.get("asset_id", "")),
+                    str(ev.get("type", "")),
+                    int(ev.get("from_hour", 0)),
+                    int(ev.get("to_hour", 0)),
+                )
+                for ev in self.active_events
+            )
+        )
+        cache_key = (self.session_id, hour_int, active_sig)
+        cached = self._impact_preview_cache.get(cache_key)
+        if cached is not None:
+            return copy.deepcopy(cached)
+
+        target_assets: list[tuple[str, str]] = []
+        for g in self.catalog.get("generators", []):
+            if g.get("disruptable", True):
+                target_assets.append(("generator_outage", str(g["id"])))
+        for b in self.catalog.get("batteries", []):
+            target_assets.append(("battery_outage", str(b["id"])))
+        for ln in self.catalog.get("lines", []):
+            if ln.get("disruptable", True):
+                target_assets.append(("line_outage", str(ln["id"])))
+
+        T = len(self.scenario.get("timestamps_utc", [])) or 24
+        nodes = [n["id"] for n in self.scenario.get("nodes", [])]
+        hh_per_mw = {
+            n["id"]: float(n.get("households_per_mw", 1000.0))
+            for n in self.scenario.get("nodes", [])
+        }
+
+        def _eval_asset(item: tuple[str, str]) -> dict[str, Any]:
+            dtype, asset_id = item
+            disruption = {
+                "event_id": f"preview_{asset_id}_{fh}",
+                "type": dtype,
+                "asset_id": asset_id,
+                "from_hour": fh,
+                "to_hour": th,
+                "source": "jury",
+            }
+            events_for_preview = [
+                e for e in self.active_events if e.get("asset_id") != asset_id
+            ] + [disruption]
+            scen_for_solve, solver_events = prepare_scenario_and_events(
+                self.scenario, events_for_preview
+            )
+            raw_sol = solve(
+                scen_for_solve,
+                candidate=None,
+                events=solver_events,
+                options={"allow_unserved": True},
+            )
+            ts = raw_sol.get("timeseries") or {}
+            raw_unserved = ts.get("unserved_mw") or {}
+            unserved_mw = {
+                nid: [round(float(x), 4) for x in raw_unserved.get(nid, [0.0] * T)]
+                for nid in nodes
+            }
+            households_off = {
+                nid: [round(unserved_mw[nid][h] * hh_per_mw[nid]) for h in range(T)]
+                for nid in nodes
+            }
+            unserved_by_h = [
+                sum(float(unserved_mw[n][h]) for n in nodes) for h in range(T)
+            ]
+            hh_by_h = [
+                sum(float(households_off[n][h]) for n in nodes) for h in range(T)
+            ]
+            unserved_peak = round(max(unserved_by_h, default=0.0), 2)
+            hh_peak = int(round(max(hh_by_h, default=0.0)))
+            return {
+                "asset_id": asset_id,
+                "households_off_peak": hh_peak,
+                "unserved_mw_peak": unserved_peak,
+                "absorbed": hh_peak == 0,
+            }
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+            assets_list = list(pool.map(_eval_asset, target_assets))
+
+        result = {
+            "hour": hour_int,
+            "assets": assets_list,
+        }
+        self._impact_preview_cache[cache_key] = copy.deepcopy(result)
+        return result
 
 
 class SessionManager:

@@ -34,6 +34,11 @@ def get_session(session_id: str):
     session = SESSION_MANAGER.get_or_create(session_id)
     return session.build_snapshot_event(emit_to_history=False)
 
+@router.get("/sessions/{session_id}/impact_preview")
+def get_impact_preview(session_id: str):
+    session = SESSION_MANAGER.get_or_create(session_id)
+    return session.get_impact_preview()
+
 @router.get("/sessions/{session_id}/stream")
 def stream_session(session_id: str, request: Request, max_events: Optional[int] = None):
     session = SESSION_MANAGER.get_or_create(session_id)

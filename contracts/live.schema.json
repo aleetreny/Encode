@@ -557,6 +557,29 @@
         }
       ]
     },
+    "ImpactPreviewAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset_id", "households_off_peak", "unserved_mw_peak", "absorbed"],
+      "properties": {
+        "asset_id": { "type": "string" },
+        "households_off_peak": { "type": "integer", "minimum": 0 },
+        "unserved_mw_peak": { "type": "number", "minimum": 0 },
+        "absorbed": { "type": "boolean" }
+      }
+    },
+    "ImpactPreviewResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hour", "assets"],
+      "properties": {
+        "hour": { "type": "integer", "minimum": 0, "maximum": 23 },
+        "assets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ImpactPreviewAsset" }
+        }
+      }
+    },
     "LiveEvent": {
       "oneOf": [
         { "$ref": "#/$defs/SessionSnapshotEvent" },

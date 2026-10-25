@@ -4,7 +4,8 @@ import {
   ClockCommandRequest, 
   DisruptCommandRequest as InjectEventRequest, 
   JuryDisruptCommandRequest as JuryCommandRequest, 
-  DecideCommandRequest as OperatorDecisionRequest
+  DecideCommandRequest as OperatorDecisionRequest,
+  ImpactPreviewResponse
 } from './types';
 import { LiveSessionState } from './store';
 
@@ -119,4 +120,10 @@ export async function postDecisionCommand(sessionId: string, cmd: OperatorDecisi
 
 export function getReportUrl(sessionId: string, format: 'md' | 'html' = 'html'): string {
   return `${API_BASE}/live/sessions/${encodeURIComponent(sessionId)}/report?format=${format}`;
+}
+
+export async function fetchImpactPreview(sessionId: string): Promise<ImpactPreviewResponse> {
+  const res = await fetch(`${API_BASE}/live/sessions/${encodeURIComponent(sessionId)}/impact_preview`);
+  if (!res.ok) throw new Error('Failed to fetch impact preview');
+  return res.json();
 }

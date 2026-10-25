@@ -284,6 +284,18 @@ export interface AutonomyCommandRequest {
   enabled: boolean;
 }
 
+export interface ImpactPreviewAsset {
+  asset_id: string;
+  households_off_peak: number;
+  unserved_mw_peak: number;
+  absorbed: boolean;
+}
+
+export interface ImpactPreviewResponse {
+  hour: number;
+  assets: ImpactPreviewAsset[];
+}
+
 export interface LiveSessionState {
   sessionId: string | null;
   lastSeq: number;
