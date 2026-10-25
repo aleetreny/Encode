@@ -19,6 +19,7 @@ import copy
 import datetime as dt
 import os
 import re
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -30,21 +31,23 @@ from agent.gemini_client import FORBIDDEN_ARGON_PARAMS, VALID_THINKING_LEVELS
 from optimisation import solve, validate
 from optimisation.scenario import ScenarioError, build_grid
 
-_ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
-if _ENV_PATH.is_file():
-    for _line in _ENV_PATH.read_text(encoding="utf-8").splitlines():
-        _s = _line.strip()
-        if not _s or _s.startswith("#") or "=" not in _s:
-            continue
-        _k, _v = _s.split("=", 1)
-        _k = _k.strip()
-        _v = _v.strip().strip('"').strip("'")
-        if _k and _v:
-            os.environ.setdefault(_k, _v)
+_ROOT_DIR = Path(__file__).resolve().parents[2]
+if "pytest" not in sys.modules and "PYTEST_CURRENT_TEST" not in os.environ:
+    for _env_file in (_ROOT_DIR / ".env.local", _ROOT_DIR / ".env"):
+        if _env_file.is_file():
+            for _line in _env_file.read_text(encoding="utf-8").splitlines():
+                _s = _line.strip()
+                if not _s or _s.startswith("#") or "=" not in _s:
+                    continue
+                _k, _v = _s.split("=", 1)
+                _k = _k.strip()
+                _v = _v.strip().strip('"').strip("'")
+                if _k and _v:
+                    os.environ.setdefault(_k, _v)
 
 DEFAULT_DECIDER_MODEL = "gemini-4-argon"
 DEFAULT_FAST_MODEL = "gemini-3.8-flash"
-DEFAULT_DECIDER_THINKING = "high"
+DEFAULT_DECIDER_THINKING = "medium"
 
 TRADEOFF_TAGS = ("max_hogares", "min_costo", "min_co2", "min_riesgo_red")
 OPERATIONAL_LEVER_TYPES = (
@@ -847,11 +850,14 @@ def compute_pareto_front(passed_candidates: list[dict[str, Any]]) -> list[dict[s
     - `co2_delta_t` (minimize)
     - `max_line_loading_pct` (minimize)
     """
+    positive = [c for c in passed_candidates if option_has_positive_improvement(c)]
+    source = positive if len(positive) >= 2 else passed_candidates
+
     front: list[dict[str, Any]] = []
-    for c in passed_candidates:
+    for c in source:
         m = c["metrics"]
         dominated = False
-        for other in passed_candidates:
+        for other in source:
             if other["candidate_id"] == c["candidate_id"]:
                 continue
             om = other["metrics"]
@@ -872,7 +878,7 @@ def compute_pareto_front(passed_candidates: list[dict[str, Any]]) -> list[dict[s
                 break
         if not dominated:
             front.append(c)
-    return front if front else list(passed_candidates)
+    return front if front else list(source)
 
 
 def is_tag_truthful(tag: str, m_self: dict[str, Any], m_other: dict[str, Any]) -> bool:
@@ -1230,6 +1236,33 @@ def build_default_diagnosis_es(
     return sanitize_no_digits(text)
 
 
+def build_default_thought_es(
+    active_disruptions: list[dict[str, Any]],
+    impact: dict[str, Any],
+    cand_a: dict[str, Any],
+    cand_b: dict[str, Any],
+) -> str:
+    """Build a concrete, asset-specific, digit-free Spanish thought."""
+    assets = [
+        ASSET_NAMES_ES.get(str(d.get("asset_id")), "activo del sistema")
+        for d in active_disruptions
+    ]
+    nodes = [
+        NODE_NAMES_ES.get(nid, "zona afectada")
+        for nid in impact.get("nodes_affected", [])
+    ]
+    asset_phrase = " y ".join(assets) if assets else "el activo afectado"
+    zone_phrase = ", ".join(nodes) if nodes else "el corredor troncal"
+    sum_a = summarize_levers_es(cand_a["levers"])
+    sum_b = summarize_levers_es(cand_b["levers"])
+    text = (
+        f"Ante la contingencia en {asset_phrase} con impacto sobre {zone_phrase}, "
+        f"se contrasta en el frente de Pareto la maniobra de {sum_a} frente a la alternativa de {sum_b} "
+        f"para equilibrar restitución residencial, holgura térmica y costo operativo."
+    )
+    return sanitize_no_digits(text)
+
+
 LIVE_DECIDER_TOOLS: list[dict[str, Any]] = [
     {
         "name": "inspect_node",
@@ -1276,7 +1309,7 @@ LIVE_DECIDER_TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "propose_options",
-        "description": "Propone las dos opciones finales verificadas al operador humano con diagnóstico y justificaciones en español SIN dígitos.",
+        "description": "Propone las dos opciones finales verificadas al operador humano con razonamiento técnico, diagnóstico y justificaciones en español SIN dígitos.",
         "parameters": {
             "type": "OBJECT",
             "properties": {
@@ -1289,30 +1322,35 @@ LIVE_DECIDER_TOOLS: list[dict[str, Any]] = [
                     "type": "STRING",
                     "description": "El candidate_id recomendado entre los dos elegidos.",
                 },
+                "thought_es": {
+                    "type": "STRING",
+                    "description": "Razonamiento técnico sobre la falla concreta en el activo o corredor afectado y el contraste entre las dos maniobras elegidas, en español y SIN ningún dígito.",
+                },
                 "diagnosis_es": {
                     "type": "STRING",
                     "description": "Diagnóstico breve en español SIN ningún dígito ni número.",
                 },
                 "title_a_es": {
                     "type": "STRING",
-                    "description": "Título corto para la primera opción en español SIN dígitos.",
+                    "description": "Título corto para la primera opción de option_ids en español SIN dígitos.",
                 },
                 "title_b_es": {
                     "type": "STRING",
-                    "description": "Título corto para la segunda opción en español SIN dígitos.",
+                    "description": "Título corto para la segunda opción de option_ids en español SIN dígitos.",
                 },
                 "rationale_a_es": {
                     "type": "STRING",
-                    "description": "Justificación de una o dos frases para la primera opción en español SIN dígitos.",
+                    "description": "Justificación de una o dos frases para la primera opción de option_ids en español SIN dígitos.",
                 },
                 "rationale_b_es": {
                     "type": "STRING",
-                    "description": "Justificación de una o dos frases para la segunda opción en español SIN dígitos.",
+                    "description": "Justificación de una o dos frases para la segunda opción de option_ids en español SIN dígitos.",
                 },
             },
             "required": [
                 "option_ids",
                 "recommended_id",
+                "thought_es",
                 "diagnosis_es",
                 "title_a_es",
                 "title_b_es",
@@ -1325,8 +1363,10 @@ LIVE_DECIDER_TOOLS: list[dict[str, Any]] = [
 
 LIVE_DECIDER_SYSTEM_PROMPT = """Eres Gemini (GridPilot), el copiloto autónomo del Coordinador Eléctrico Nacional de Chile (SEN).
 REGLA ABSOLUTA E INQUEBRANTABLE:
-- PROHIBIDO escribir dígitos (0, 1, 2, 3, 4, 5, 6, 7, 8, 9) en cualquiera de tus textos (`diagnosis_es`, `title_a_es`, `title_b_es`, `rationale_a_es`, `rationale_b_es` o tus pensamientos).
-- No escribas números ni en cifras ni en nombres de líneas como L1/L2/L3 (escribe "corredor norte", "corredor central", "corredor centro-sur"). Las cifras las muestra la interfaz directamente desde el solver HiGHS.
+- PROHIBIDO escribir dígitos (0, 1, 2, 3, 4, 5, 6, 7, 8, 9) en cualquiera de tus textos (`thought_es`, `diagnosis_es`, `title_a_es`, `title_b_es`, `rationale_a_es`, `rationale_b_es` o tus pensamientos).
+- No escribas números ni en cifras ni en nombres de líneas como L1/L2/L3 (escribe "corredor Norte Grande", "corredor Norte-Centro", "corredor Centro-Sur", "corredor Sur"). Las cifras las muestra la interfaz directamente desde el solver HiGHS.
+- En `thought_es`, razona específicamente sobre la falla concreta del activo o corredor afectado, las zonas impactadas y el dilema operativo entre las dos opciones seleccionadas, sin usar plantillas genéricas.
+- Sé conciso y directo para respuesta en tiempo real: títulos de cuatro a siete palabras, y una sola oración precisa en `thought_es`, `diagnosis_es`, `rationale_a_es` y `rationale_b_es`.
 - Elige dos opciones del frente de Pareto con un dilema real (por ejemplo, máxima reconexión de hogares o mínimas emisiones frente a mínimo costo o menor carga de red) y llama a `propose_options`."""
 
 
@@ -1338,11 +1378,14 @@ def _call_gemini_generate_content(
     system_instruction: str,
     thinking_level: str | None = None,
     tools: list[dict[str, Any]] | None = None,
+    tool_config: dict[str, Any] | None = None,
     timeout_s: float = 10.0,
 ) -> dict[str, Any]:
     """Perform a synchronous REST call to Gemini Generative Language v1beta."""
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-    gen_config: dict[str, Any] = {"maxOutputTokens": 600}
+    gen_config: dict[str, Any] = {"maxOutputTokens": 4096}
+    if thinking_level and thinking_level in VALID_THINKING_LEVELS:
+        gen_config["thinkingConfig"] = {"thinkingLevel": thinking_level}
     if "argon" in model.lower():
         for forbidden in FORBIDDEN_ARGON_PARAMS:
             gen_config.pop(forbidden, None)
@@ -1354,6 +1397,8 @@ def _call_gemini_generate_content(
     }
     if tools:
         payload["tools"] = [{"functionDeclarations": tools}]
+    if tool_config:
+        payload["toolConfig"] = tool_config
 
     with httpx.Client(timeout=timeout_s) as client:
         resp = client.post(url, params={"key": api_key}, json=payload)
@@ -1362,6 +1407,50 @@ def _call_gemini_generate_content(
     if not isinstance(data, dict):
         raise RuntimeError("Invalid Gemini JSON payload")
     return data
+
+
+def _filter_candidate_pool_for_incident(
+    passed_candidates: list[dict[str, Any]],
+    active_disruptions: list[dict[str, Any]],
+    exclude_candidate_ids: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Select the primary candidate pool, avoiding previously used option_ids in the same
+    session and prioritizing corridor/hydro operational levers on line outages when viable.
+    """
+    pool = list(passed_candidates)
+    has_pos = any(option_has_positive_improvement(c) for c in pool)
+
+    def _has_truthful_pair(cands: list[dict[str, Any]]) -> bool:
+        pos = [c for c in cands if option_has_positive_improvement(c)] if has_pos else cands
+        if len(pos) < 2:
+            return False
+        for i, ca in enumerate(pos):
+            for cb in pos[i + 1 :]:
+                if find_truthful_tag_pair(ca["metrics"], cb["metrics"]) is not None:
+                    return True
+                if find_truthful_tag_pair(cb["metrics"], ca["metrics"]) is not None:
+                    return True
+        return False
+
+    if exclude_candidate_ids:
+        non_excluded = [c for c in pool if c["candidate_id"] not in exclude_candidate_ids]
+        if _has_truthful_pair(non_excluded):
+            pool = non_excluded
+
+    latest_disruption = active_disruptions[-1] if active_disruptions else {}
+    if latest_disruption.get("type") == "line_outage":
+        corridor_or_hydro = [
+            c
+            for c in pool
+            if any(
+                lv.get("type") in ("emergency_rating", "hydro_reserve_release")
+                for lv in c.get("levers", [])
+            )
+        ]
+        if _has_truthful_pair(corridor_or_hydro):
+            pool = corridor_or_hydro
+
+    return pool
 
 
 def run_incident_evaluation(
@@ -1375,21 +1464,17 @@ def run_incident_evaluation(
     emit_thought: Callable[[str], None],
     emit_tool_call: Callable[[dict[str, Any]], None],
     allow_live_gemini: bool = True,
-    gemini_timeout_s: float = 12.0,
+    gemini_timeout_s: float | None = None,
+    exclude_candidate_ids: set[str] | None = None,
 ) -> dict[str, Any]:
     """Evaluate operational candidates in parallel, run Gemini 4 Argon decider loop,
     and return the `options.ready` payload fields.
     """
+    if gemini_timeout_s is None:
+        gemini_timeout_s = float(os.getenv("GRIDPILOT_GEMINI_TIMEOUT_S", "12.0"))
     t_start = time.perf_counter()
     scen_for_solve, solver_events = prepare_scenario_and_events(scenario, active_disruptions)
     impact = compute_incident_impact(base_sol)
-
-    # Initial thought (digit-free)
-    initial_thought = sanitize_no_digits(
-        "Contingencia detectada en el Sistema Eléctrico Nacional. "
-        "Evaluando en paralelo el menú de maniobras operativas sobre el modelo de flujo óptimo y el validador independiente."
-    )
-    emit_thought(initial_thought)
 
     # 1. Generate and evaluate candidates in parallel (< 1s)
     cand_specs = generate_operational_candidates(scenario, active_disruptions, from_hour, to_hour)
@@ -1423,7 +1508,10 @@ def run_incident_evaluation(
     batch_ms = round((time.perf_counter() - t_batch) * 1000.0, 2)
 
     passed_candidates = [c for c in evaluated if c.get("passed")]
-    pareto_front = compute_pareto_front(passed_candidates)
+    candidate_pool = _filter_candidate_pool_for_incident(
+        passed_candidates, active_disruptions, exclude_candidate_ids
+    )
+    pareto_front = compute_pareto_front(candidate_pool)
 
     emit_tool_call(
         {
@@ -1484,6 +1572,7 @@ def run_incident_evaluation(
                     ),
                 }
             )
+        candidate_pool = list(passed_candidates)
         pareto_front = list(passed_candidates)
 
     # 2. Run Gemini 4 Argon decider loop (if API key configured) with 12s timeout
@@ -1495,10 +1584,32 @@ def run_incident_evaluation(
     cached = False
     cached_at_utc: str | None = None
     proposal: dict[str, Any] | None = None
+    gemini_called_ok = False
+    emitted_thoughts: list[str] = []
+
+    def _emit_unique_thought(raw_text: str | None) -> None:
+        if not raw_text or not isinstance(raw_text, str):
+            return
+        cleaned = sanitize_no_digits(raw_text)
+        if cleaned and cleaned not in emitted_thoughts:
+            emitted_thoughts.append(cleaned)
+            emit_thought(cleaned)
 
     if allow_live_gemini and api_key:
+        disruption_descriptions = [
+            {
+                "type": d.get("type"),
+                "asset_id": d.get("asset_id"),
+                "asset_name_es": ASSET_NAMES_ES.get(str(d.get("asset_id")), str(d.get("asset_id"))),
+                "source": d.get("source"),
+            }
+            for d in active_disruptions
+        ]
         compact_facts = {
-            "active_disruptions": active_disruptions,
+            "active_disruptions": disruption_descriptions,
+            "affected_zones_es": [
+                NODE_NAMES_ES.get(nid, nid) for nid in impact.get("nodes_affected", [])
+            ],
             "impact": impact,
             "pareto_candidates": [
                 {
@@ -1507,7 +1618,7 @@ def run_incident_evaluation(
                     "summary_es": c["args_summary_es"],
                     "metrics": c["metrics"],
                 }
-                for c in pareto_front[:8]
+                for c in pareto_front[:10]
             ],
         }
         contents: list[dict[str, Any]] = [
@@ -1518,8 +1629,9 @@ def run_incident_evaluation(
                         "text": (
                             "Hechos verificados de la contingencia y frente de Pareto del solver HiGHS:\n"
                             + str(compact_facts)
-                            + "\nSelecciona dos opciones con trade-off distinto y llama a `propose_options`. "
-                            "Recuerda: CERO dígitos en los textos en español."
+                            + "\nAnaliza específicamente la falla en los activos indicados y selecciona dos opciones "
+                            "del listado `pareto_candidates` con trade-off distinto llamando a `propose_options`. "
+                            "Recuerda: CERO dígitos en todos los textos en español (`thought_es`, `diagnosis_es`, títulos y justificaciones)."
                         )
                     }
                 ],
@@ -1543,11 +1655,19 @@ def run_incident_evaluation(
                         system_instruction=LIVE_DECIDER_SYSTEM_PROMPT,
                         thinking_level=thinking_level,
                         tools=LIVE_DECIDER_TOOLS,
+                        tool_config={
+                            "functionCallingConfig": {
+                                "mode": "ANY",
+                                "allowedFunctionNames": ["propose_options"],
+                            }
+                        },
                         timeout_s=remaining_s,
                     )
                     resp_data = fut.result(timeout=remaining_s)
 
-                response_id = str(resp_data.get("responseId") or resp_data.get("id") or f"argon-{uuid.uuid4().hex[:8]}")
+                raw_rid = resp_data.get("responseId") or resp_data.get("id")
+                if raw_rid:
+                    response_id = str(raw_rid)
                 candidates_List = resp_data.get("candidates") or []
                 if not candidates_List:
                     break
@@ -1558,9 +1678,7 @@ def run_incident_evaluation(
                 fn_responses: list[dict[str, Any]] = []
                 for part in parts:
                     if part.get("text"):
-                        cleaned_thought = sanitize_no_digits(part["text"])
-                        if cleaned_thought:
-                            emit_thought(cleaned_thought)
+                        _emit_unique_thought(part["text"])
                     fc = part.get("functionCall")
                     if isinstance(fc, dict):
                         fn_name = fc.get("name")
@@ -1619,7 +1737,8 @@ def run_incident_evaluation(
                                 )
                                 if res.get("passed"):
                                     passed_candidates.append(res)
-                                    pareto_front = compute_pareto_front(passed_candidates)
+                                    candidate_pool.append(res)
+                                    pareto_front = compute_pareto_front(candidate_pool)
                                 emit_tool_call(
                                     {
                                         "call_id": f"call_sim_{extra_sim_calls}",
@@ -1647,57 +1766,74 @@ def run_incident_evaluation(
                                 )
                         elif fn_name == "propose_options":
                             proposal = fn_args
+                            if isinstance(proposal, dict) and proposal.get("thought_es"):
+                                _emit_unique_thought(str(proposal["thought_es"]))
+                            if response_id:
+                                gemini_called_ok = True
                             break
                 if proposal is not None or not fn_responses:
                     break
                 contents.append({"role": "user", "parts": fn_responses})
         except (TimeoutError, concurrent.futures.TimeoutError, httpx.TimeoutException):
             model_status = "timeout"
-            emit_thought(
-                sanitize_no_digits(
-                    "Tiempo máximo de consulta al modelo alcanzado. Aplicando selección determinista sobre el frente de Pareto validado."
-                )
-            )
         except Exception:
             model_status = "error"
-            emit_thought(
-                sanitize_no_digits(
-                    "Respaldo determinista activado sobre el frente de Pareto verificado por el validador físico."
-                )
-            )
-    else:
-        # Offline / no API key deterministic synthesis
-        cached = True
-        cached_at_utc = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        response_id = f"det-{incident_id}"
-        emit_thought(
-            sanitize_no_digits(
-                "Frente de Pareto evaluado. Seleccionando dos opciones verificadas con equilibrio entre reconexión residencial, emisiones y costo sistémico."
-            )
-        )
 
-    preferred_ids = None
+    preferred_ids: list[str] | None = None
     if isinstance(proposal, dict) and isinstance(proposal.get("option_ids"), list):
         preferred_ids = [str(x) for x in proposal["option_ids"]]
 
     cand_a, cand_b, tag_a, tag_b = select_distinct_pair_and_tags(
-        passed_candidates, pareto_front, preferred_ids
+        candidate_pool, pareto_front, preferred_ids
+    )
+
+    if not emitted_thoughts:
+        _emit_unique_thought(
+            build_default_thought_es(active_disruptions, impact, cand_a, cand_b)
+        )
+
+    # Map Gemini's titles and rationales by candidate_id so swapping cand_a/cand_b preserves the exact text for each option
+    title_by_cid: dict[str, str] = {}
+    rationale_by_cid: dict[str, str] = {}
+    if isinstance(proposal, dict) and preferred_ids:
+        if len(preferred_ids) >= 1:
+            if proposal.get("title_a_es"):
+                title_by_cid[preferred_ids[0]] = str(proposal["title_a_es"])
+            if proposal.get("rationale_a_es"):
+                rationale_by_cid[preferred_ids[0]] = str(proposal["rationale_a_es"])
+        if len(preferred_ids) >= 2:
+            if proposal.get("title_b_es"):
+                title_by_cid[preferred_ids[1]] = str(proposal["title_b_es"])
+            if proposal.get("rationale_b_es"):
+                rationale_by_cid[preferred_ids[1]] = str(proposal["rationale_b_es"])
+
+    raw_title_a = title_by_cid.get(cand_a["candidate_id"]) or (
+        proposal.get("title_a_es") if isinstance(proposal, dict) and not title_by_cid else None
+    )
+    raw_title_b = title_by_cid.get(cand_b["candidate_id"]) or (
+        proposal.get("title_b_es") if isinstance(proposal, dict) and not title_by_cid else None
+    )
+    raw_rat_a = rationale_by_cid.get(cand_a["candidate_id"]) or (
+        proposal.get("rationale_a_es") if isinstance(proposal, dict) and not rationale_by_cid else None
+    )
+    raw_rat_b = rationale_by_cid.get(cand_b["candidate_id"]) or (
+        proposal.get("rationale_b_es") if isinstance(proposal, dict) and not rationale_by_cid else None
     )
 
     title_a = sanitize_no_digits(
-        proposal.get("title_a_es") if isinstance(proposal, dict) else None,
+        raw_title_a,
         fallback=build_default_title_es(cand_a, tag_a),
     )
     title_b = sanitize_no_digits(
-        proposal.get("title_b_es") if isinstance(proposal, dict) else None,
+        raw_title_b,
         fallback=build_default_title_es(cand_b, tag_b),
     )
     rationale_a = sanitize_no_digits(
-        proposal.get("rationale_a_es") if isinstance(proposal, dict) else None,
+        raw_rat_a,
         fallback=build_default_rationale_es(cand_a, tag_a),
     )
     rationale_b = sanitize_no_digits(
-        proposal.get("rationale_b_es") if isinstance(proposal, dict) else None,
+        raw_rat_b,
         fallback=build_default_rationale_es(cand_b, tag_b),
     )
     diagnosis_es = sanitize_no_digits(
@@ -1740,15 +1876,23 @@ def run_incident_evaluation(
     )
 
     latency_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
+    if gemini_called_ok and response_id and not str(response_id).startswith("det-"):
+        used_model = decider_model
+        final_status = "ok"
+        final_response_id = str(response_id)
+    else:
+        used_model = "deterministic-planner"
+        final_status = model_status if model_status in ("timeout", "error") else "error"
+        final_response_id = f"det-{incident_id}"
+
     model_execution: dict[str, Any] = {
-        "model": decider_model,
+        "model": used_model,
         "role": "decider",
-        "status": model_status,
+        "status": final_status,
         "latency_ms": latency_ms,
         "cached": cached,
+        "response_id": final_response_id,
     }
-    if response_id:
-        model_execution["response_id"] = response_id
     if cached_at_utc:
         model_execution["cached_at_utc"] = cached_at_utc
 

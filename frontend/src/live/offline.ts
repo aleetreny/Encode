@@ -34,6 +34,7 @@ export class OfflineSessionController {
   private autonomy = false;
   private isVetoed = false;
   private lastOptions: Extract<LiveEvent, { type: 'options.ready' }> | null = null;
+  private lastCountdownEmitMs = 0;
 
   constructor(onEvent: (ev: LiveEvent) => void) {
     this.onEvent = onEvent;
@@ -112,6 +113,14 @@ export class OfflineSessionController {
         this.running = false;
         break;
       }
+      if (ev.type === 'autonomy.countdown' && !this.skipApplied) {
+        const now = Date.now();
+        if (this.lastCountdownEmitMs > 0 && now - this.lastCountdownEmitMs < 950) {
+          this.simHour = ev.hour;
+          break;
+        }
+        this.lastCountdownEmitMs = ev.seconds_left === 0 ? 0 : now;
+      }
       this.cursor++;
       if (ev.type === 'session.snapshot') continue;
       if (this.skipApplied && (ev.type === 'plan.applied' || ev.type === 'autonomy.countdown')) continue;
@@ -119,7 +128,10 @@ export class OfflineSessionController {
         this.skipApplied = false;
         continue;
       }
-      if (ev.type === 'options.ready') this.lastOptions = ev;
+      if (ev.type === 'options.ready') {
+        this.lastOptions = ev;
+        this.lastCountdownEmitMs = 0;
+      }
       this.onEvent({ ...ev, seq: ++this.currentSeq } as LiveEvent);
     }
 
@@ -141,6 +153,7 @@ export class OfflineSessionController {
     this.cursor = 0;
     this.holding = false;
     this.skipApplied = false;
+    this.lastCountdownEmitMs = 0;
     this.events = parseDemoStream();
     this.start();
   }

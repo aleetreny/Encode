@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-24T23:05:34Z",
+  "generated_at_utc": "2026-10-25T00:06:26Z",
   "hours": [
     9,
     12,
@@ -18,8 +18,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:36Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:01:11Z"
     },
     "solar_ng_12": {
       "file": "/incidents/solar_ng_12.jsonl",
@@ -28,8 +28,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:37Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
+      "cached_at_utc": "2026-10-25T00:01:10Z"
     },
     "solar_ng_13": {
       "file": "/incidents/solar_ng_13.jsonl",
@@ -38,8 +38,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:37Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
+      "cached_at_utc": "2026-10-25T00:01:10Z"
     },
     "solar_ng_18": {
       "file": "/incidents/solar_ng_18.jsonl",
@@ -49,7 +49,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:37Z"
+      "cached_at_utc": "2026-10-25T00:01:10Z"
     },
     "solar_ng_19": {
       "file": "/incidents/solar_ng_19.jsonl",
@@ -59,7 +59,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:37Z"
+      "cached_at_utc": "2026-10-25T00:01:12Z"
     },
     "solar_ng_20": {
       "file": "/incidents/solar_ng_20.jsonl",
@@ -69,7 +69,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:38Z"
+      "cached_at_utc": "2026-10-25T00:01:11Z"
     },
     "solar_nc_9": {
       "file": "/incidents/solar_nc_9.jsonl",
@@ -79,7 +79,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_ng_plus_er_L1",
-      "cached_at_utc": "2026-10-24T23:05:40Z"
+      "cached_at_utc": "2026-10-25T00:06:37Z"
     },
     "solar_nc_12": {
       "file": "/incidents/solar_nc_12.jsonl",
@@ -89,7 +89,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_ng_plus_er_L1",
-      "cached_at_utc": "2026-10-24T23:05:41Z"
+      "cached_at_utc": "2026-10-25T00:06:41Z"
     },
     "solar_nc_13": {
       "file": "/incidents/solar_nc_13.jsonl",
@@ -99,7 +99,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_ng_plus_er_L1",
-      "cached_at_utc": "2026-10-24T23:05:42Z"
+      "cached_at_utc": "2026-10-25T00:06:39Z"
     },
     "solar_nc_18": {
       "file": "/incidents/solar_nc_18.jsonl",
@@ -109,7 +109,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:42Z"
+      "cached_at_utc": "2026-10-25T00:06:36Z"
     },
     "solar_nc_19": {
       "file": "/incidents/solar_nc_19.jsonl",
@@ -119,7 +119,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:42Z"
+      "cached_at_utc": "2026-10-25T00:06:38Z"
     },
     "solar_nc_20": {
       "file": "/incidents/solar_nc_20.jsonl",
@@ -129,7 +129,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:43Z"
+      "cached_at_utc": "2026-10-25T00:06:39Z"
     },
     "wind_nc_9": {
       "file": "/incidents/wind_nc_9.jsonl",
@@ -139,7 +139,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:46Z"
+      "cached_at_utc": "2026-10-25T00:06:47Z"
     },
     "wind_nc_12": {
       "file": "/incidents/wind_nc_12.jsonl",
@@ -149,7 +149,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:47Z"
+      "cached_at_utc": "2026-10-25T00:06:48Z"
     },
     "wind_nc_13": {
       "file": "/incidents/wind_nc_13.jsonl",
@@ -159,7 +159,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_ng_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:48Z"
+      "cached_at_utc": "2026-10-25T00:06:46Z"
     },
     "wind_nc_18": {
       "file": "/incidents/wind_nc_18.jsonl",
@@ -168,8 +168,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 39.0,
       "households_off_peak": 39000,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:49Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:06:50Z"
     },
     "wind_nc_19": {
       "file": "/incidents/wind_nc_19.jsonl",
@@ -178,8 +178,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 39.0,
       "households_off_peak": 39000,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:48Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:06:50Z"
     },
     "wind_nc_20": {
       "file": "/incidents/wind_nc_20.jsonl",
@@ -189,7 +189,7 @@
       "unserved_mw_peak": 42.1,
       "households_off_peak": 42100,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:49Z"
+      "cached_at_utc": "2026-10-25T00:06:52Z"
     },
     "gas_ng_9": {
       "file": "/incidents/gas_ng_9.jsonl",
@@ -199,7 +199,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:49Z"
+      "cached_at_utc": "2026-10-25T00:06:56Z"
     },
     "gas_ng_12": {
       "file": "/incidents/gas_ng_12.jsonl",
@@ -209,7 +209,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:50Z"
+      "cached_at_utc": "2026-10-25T00:06:58Z"
     },
     "gas_ng_13": {
       "file": "/incidents/gas_ng_13.jsonl",
@@ -219,7 +219,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:51Z"
+      "cached_at_utc": "2026-10-25T00:06:59Z"
     },
     "gas_ng_18": {
       "file": "/incidents/gas_ng_18.jsonl",
@@ -229,7 +229,7 @@
       "unserved_mw_peak": 286.43,
       "households_off_peak": 286425,
       "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:51Z"
+      "cached_at_utc": "2026-10-25T00:06:59Z"
     },
     "gas_ng_19": {
       "file": "/incidents/gas_ng_19.jsonl",
@@ -239,7 +239,7 @@
       "unserved_mw_peak": 282.0,
       "households_off_peak": 282000,
       "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:51Z"
+      "cached_at_utc": "2026-10-25T00:07:01Z"
     },
     "gas_ng_20": {
       "file": "/incidents/gas_ng_20.jsonl",
@@ -249,7 +249,7 @@
       "unserved_mw_peak": 302.6,
       "households_off_peak": 302600,
       "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:51Z"
+      "cached_at_utc": "2026-10-25T00:07:04Z"
     },
     "gas_centro_9": {
       "file": "/incidents/gas_centro_9.jsonl",
@@ -259,7 +259,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:52Z"
+      "cached_at_utc": "2026-10-25T00:07:11Z"
     },
     "gas_centro_12": {
       "file": "/incidents/gas_centro_12.jsonl",
@@ -269,7 +269,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:52Z"
+      "cached_at_utc": "2026-10-25T00:07:12Z"
     },
     "gas_centro_13": {
       "file": "/incidents/gas_centro_13.jsonl",
@@ -279,7 +279,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:54Z"
+      "cached_at_utc": "2026-10-25T00:07:09Z"
     },
     "gas_centro_18": {
       "file": "/incidents/gas_centro_18.jsonl",
@@ -288,8 +288,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 552.6,
       "households_off_peak": 552600,
-      "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:54Z"
+      "recommended_id": "op_dr_n_centro_200",
+      "cached_at_utc": "2026-10-25T00:07:08Z"
     },
     "gas_centro_19": {
       "file": "/incidents/gas_centro_19.jsonl",
@@ -299,7 +299,7 @@
       "unserved_mw_peak": 562.0,
       "households_off_peak": 562000,
       "recommended_id": "op_hydro_150_plus_dr_n_centro_120",
-      "cached_at_utc": "2026-10-24T23:05:54Z"
+      "cached_at_utc": "2026-10-25T00:07:10Z"
     },
     "gas_centro_20": {
       "file": "/incidents/gas_centro_20.jsonl",
@@ -309,7 +309,7 @@
       "unserved_mw_peak": 562.0,
       "households_off_peak": 562000,
       "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:54Z"
+      "cached_at_utc": "2026-10-25T00:07:15Z"
     },
     "coal_cs_9": {
       "file": "/incidents/coal_cs_9.jsonl",
@@ -319,7 +319,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:54Z"
+      "cached_at_utc": "2026-10-25T00:07:16Z"
     },
     "coal_cs_12": {
       "file": "/incidents/coal_cs_12.jsonl",
@@ -329,7 +329,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:54Z"
+      "cached_at_utc": "2026-10-25T00:07:19Z"
     },
     "coal_cs_13": {
       "file": "/incidents/coal_cs_13.jsonl",
@@ -339,7 +339,7 @@
       "unserved_mw_peak": 42.0,
       "households_off_peak": 42000,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:56Z"
+      "cached_at_utc": "2026-10-25T00:07:19Z"
     },
     "coal_cs_18": {
       "file": "/incidents/coal_cs_18.jsonl",
@@ -348,8 +348,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 286.43,
       "households_off_peak": 286425,
-      "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:56Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_hydro_150",
+      "cached_at_utc": "2026-10-25T00:07:20Z"
     },
     "coal_cs_19": {
       "file": "/incidents/coal_cs_19.jsonl",
@@ -359,7 +359,7 @@
       "unserved_mw_peak": 286.43,
       "households_off_peak": 286425,
       "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:57Z"
+      "cached_at_utc": "2026-10-25T00:07:25Z"
     },
     "coal_cs_20": {
       "file": "/incidents/coal_cs_20.jsonl",
@@ -369,7 +369,7 @@
       "unserved_mw_peak": 302.6,
       "households_off_peak": 302600,
       "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:57Z"
+      "cached_at_utc": "2026-10-25T00:07:24Z"
     },
     "hydro_sur_9": {
       "file": "/incidents/hydro_sur_9.jsonl",
@@ -379,7 +379,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:57Z"
+      "cached_at_utc": "2026-10-25T00:07:27Z"
     },
     "hydro_sur_12": {
       "file": "/incidents/hydro_sur_12.jsonl",
@@ -389,7 +389,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:57Z"
+      "cached_at_utc": "2026-10-25T00:07:28Z"
     },
     "hydro_sur_13": {
       "file": "/incidents/hydro_sur_13.jsonl",
@@ -399,7 +399,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:57Z"
+      "cached_at_utc": "2026-10-25T00:07:29Z"
     },
     "hydro_sur_18": {
       "file": "/incidents/hydro_sur_18.jsonl",
@@ -409,7 +409,7 @@
       "unserved_mw_peak": 135.0,
       "households_off_peak": 135000,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:58Z"
+      "cached_at_utc": "2026-10-25T00:07:29Z"
     },
     "hydro_sur_19": {
       "file": "/incidents/hydro_sur_19.jsonl",
@@ -419,7 +419,7 @@
       "unserved_mw_peak": 136.43,
       "households_off_peak": 136425,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:59Z"
+      "cached_at_utc": "2026-10-25T00:07:35Z"
     },
     "hydro_sur_20": {
       "file": "/incidents/hydro_sur_20.jsonl",
@@ -429,7 +429,7 @@
       "unserved_mw_peak": 132.0,
       "households_off_peak": 132000,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:59Z"
+      "cached_at_utc": "2026-10-25T00:07:34Z"
     },
     "wind_sur_9": {
       "file": "/incidents/wind_sur_9.jsonl",
@@ -439,7 +439,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:59Z"
+      "cached_at_utc": "2026-10-25T00:07:37Z"
     },
     "wind_sur_12": {
       "file": "/incidents/wind_sur_12.jsonl",
@@ -449,7 +449,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:59Z"
+      "cached_at_utc": "2026-10-25T00:07:37Z"
     },
     "wind_sur_13": {
       "file": "/incidents/wind_sur_13.jsonl",
@@ -459,7 +459,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:00Z"
+      "cached_at_utc": "2026-10-25T00:07:42Z"
     },
     "wind_sur_18": {
       "file": "/incidents/wind_sur_18.jsonl",
@@ -468,8 +468,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:01Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:07:39Z"
     },
     "wind_sur_19": {
       "file": "/incidents/wind_sur_19.jsonl",
@@ -478,8 +478,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:01Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:07:42Z"
     },
     "wind_sur_20": {
       "file": "/incidents/wind_sur_20.jsonl",
@@ -489,7 +489,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:01Z"
+      "cached_at_utc": "2026-10-25T00:07:46Z"
     },
     "diesel_centro_9": {
       "file": "/incidents/diesel_centro_9.jsonl",
@@ -499,7 +499,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:01Z"
+      "cached_at_utc": "2026-10-25T00:07:47Z"
     },
     "diesel_centro_12": {
       "file": "/incidents/diesel_centro_12.jsonl",
@@ -509,7 +509,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:01Z"
+      "cached_at_utc": "2026-10-25T00:07:49Z"
     },
     "diesel_centro_13": {
       "file": "/incidents/diesel_centro_13.jsonl",
@@ -519,7 +519,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:02Z"
+      "cached_at_utc": "2026-10-25T00:07:46Z"
     },
     "diesel_centro_18": {
       "file": "/incidents/diesel_centro_18.jsonl",
@@ -529,7 +529,7 @@
       "unserved_mw_peak": 85.1,
       "households_off_peak": 85100,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:03Z"
+      "cached_at_utc": "2026-10-25T00:07:50Z"
     },
     "diesel_centro_19": {
       "file": "/incidents/diesel_centro_19.jsonl",
@@ -539,7 +539,7 @@
       "unserved_mw_peak": 82.0,
       "households_off_peak": 82000,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:04Z"
+      "cached_at_utc": "2026-10-25T00:07:52Z"
     },
     "diesel_centro_20": {
       "file": "/incidents/diesel_centro_20.jsonl",
@@ -549,7 +549,7 @@
       "unserved_mw_peak": 85.1,
       "households_off_peak": 85100,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:04Z"
+      "cached_at_utc": "2026-10-25T00:07:55Z"
     },
     "L1_9": {
       "file": "/incidents/L1_9.jsonl",
@@ -558,8 +558,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:04Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
+      "cached_at_utc": "2026-10-25T00:08:12Z"
     },
     "L1_12": {
       "file": "/incidents/L1_12.jsonl",
@@ -569,7 +569,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
-      "cached_at_utc": "2026-10-24T23:06:04Z"
+      "cached_at_utc": "2026-10-25T00:07:59Z"
     },
     "L1_13": {
       "file": "/incidents/L1_13.jsonl",
@@ -578,8 +578,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro",
-      "cached_at_utc": "2026-10-24T23:06:05Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
+      "cached_at_utc": "2026-10-25T00:08:00Z"
     },
     "L1_18": {
       "file": "/incidents/L1_18.jsonl",
@@ -589,7 +589,7 @@
       "unserved_mw_peak": 104.5,
       "households_off_peak": 104500,
       "recommended_id": "op_bess_b_reserve_centro_plus_hydro_150",
-      "cached_at_utc": "2026-10-24T23:06:06Z"
+      "cached_at_utc": "2026-10-25T00:08:00Z"
     },
     "L1_19": {
       "file": "/incidents/L1_19.jsonl",
@@ -599,7 +599,7 @@
       "unserved_mw_peak": 101.5,
       "households_off_peak": 101500,
       "recommended_id": "op_bess_b_reserve_centro_plus_hydro_150",
-      "cached_at_utc": "2026-10-24T23:06:06Z"
+      "cached_at_utc": "2026-10-25T00:08:05Z"
     },
     "L1_20": {
       "file": "/incidents/L1_20.jsonl",
@@ -609,7 +609,7 @@
       "unserved_mw_peak": 101.5,
       "households_off_peak": 101500,
       "recommended_id": "op_bess_b_reserve_centro_plus_hydro_150",
-      "cached_at_utc": "2026-10-24T23:06:06Z"
+      "cached_at_utc": "2026-10-25T00:08:10Z"
     },
     "L2_9": {
       "file": "/incidents/L2_9.jsonl",
@@ -618,8 +618,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:06Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
+      "cached_at_utc": "2026-10-25T00:08:12Z"
     },
     "L2_12": {
       "file": "/incidents/L2_12.jsonl",
@@ -628,8 +628,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 2.3,
       "households_off_peak": 2300,
-      "recommended_id": "op_peaker_diesel_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:06:06Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
+      "cached_at_utc": "2026-10-25T00:08:12Z"
     },
     "L2_13": {
       "file": "/incidents/L2_13.jsonl",
@@ -638,8 +638,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_peaker_diesel",
-      "cached_at_utc": "2026-10-24T23:06:07Z"
+      "recommended_id": "op_peaker_diesel_plus_er_L3",
+      "cached_at_utc": "2026-10-25T00:08:13Z"
     },
     "L2_18": {
       "file": "/incidents/L2_18.jsonl",
@@ -648,8 +648,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 69.0,
       "households_off_peak": 69000,
-      "recommended_id": "op_bess_b_reserve_centro_plus_hydro_150",
-      "cached_at_utc": "2026-10-24T23:06:08Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
+      "cached_at_utc": "2026-10-25T00:08:18Z"
     },
     "L2_19": {
       "file": "/incidents/L2_19.jsonl",
@@ -658,8 +658,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 69.0,
       "households_off_peak": 69000,
-      "recommended_id": "op_bess_b_reserve_centro_plus_hydro_150",
-      "cached_at_utc": "2026-10-24T23:06:08Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
+      "cached_at_utc": "2026-10-25T00:08:24Z"
     },
     "L2_20": {
       "file": "/incidents/L2_20.jsonl",
@@ -668,8 +668,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 72.1,
       "households_off_peak": 72100,
-      "recommended_id": "op_bess_b_reserve_centro_plus_hydro_150",
-      "cached_at_utc": "2026-10-24T23:06:08Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
+      "cached_at_utc": "2026-10-25T00:08:30Z"
     },
     "L3_9": {
       "file": "/incidents/L3_9.jsonl",
@@ -679,7 +679,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:09Z"
+      "cached_at_utc": "2026-10-25T00:08:35Z"
     },
     "L3_12": {
       "file": "/incidents/L3_12.jsonl",
@@ -689,7 +689,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:09Z"
+      "cached_at_utc": "2026-10-25T00:08:38Z"
     },
     "L3_13": {
       "file": "/incidents/L3_13.jsonl",
@@ -699,7 +699,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:09Z"
+      "cached_at_utc": "2026-10-25T00:08:30Z"
     },
     "L3_18": {
       "file": "/incidents/L3_18.jsonl",
@@ -708,8 +708,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 25.7,
       "households_off_peak": 25700,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:11Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
+      "cached_at_utc": "2026-10-25T00:08:34Z"
     },
     "L3_19": {
       "file": "/incidents/L3_19.jsonl",
@@ -718,8 +718,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 25.7,
       "households_off_peak": 25700,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:11Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
+      "cached_at_utc": "2026-10-25T00:08:35Z"
     },
     "L3_20": {
       "file": "/incidents/L3_20.jsonl",
@@ -728,8 +728,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 28.8,
       "households_off_peak": 28800,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:11Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
+      "cached_at_utc": "2026-10-25T00:08:40Z"
     },
     "L4_9": {
       "file": "/incidents/L4_9.jsonl",
@@ -739,7 +739,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:12Z"
+      "cached_at_utc": "2026-10-25T00:08:41Z"
     },
     "L4_12": {
       "file": "/incidents/L4_12.jsonl",
@@ -749,7 +749,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:12Z"
+      "cached_at_utc": "2026-10-25T00:08:44Z"
     },
     "L4_13": {
       "file": "/incidents/L4_13.jsonl",
@@ -759,7 +759,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:12Z"
+      "cached_at_utc": "2026-10-25T00:08:44Z"
     },
     "L4_18": {
       "file": "/incidents/L4_18.jsonl",
@@ -768,8 +768,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:14Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
+      "cached_at_utc": "2026-10-25T00:08:46Z"
     },
     "L4_19": {
       "file": "/incidents/L4_19.jsonl",
@@ -778,8 +778,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:14Z"
+      "recommended_id": "op_bess_b_reserve_ng_plus_er_L1",
+      "cached_at_utc": "2026-10-25T00:08:48Z"
     },
     "L4_20": {
       "file": "/incidents/L4_20.jsonl",
@@ -788,8 +788,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:14Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
+      "cached_at_utc": "2026-10-25T00:08:50Z"
     },
     "b_centro_9": {
       "file": "/incidents/b_centro_9.jsonl",
@@ -799,7 +799,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:14Z"
+      "cached_at_utc": "2026-10-25T00:08:50Z"
     },
     "b_centro_12": {
       "file": "/incidents/b_centro_12.jsonl",
@@ -809,7 +809,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:14Z"
+      "cached_at_utc": "2026-10-25T00:08:51Z"
     },
     "b_centro_13": {
       "file": "/incidents/b_centro_13.jsonl",
@@ -819,7 +819,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:14Z"
+      "cached_at_utc": "2026-10-25T00:08:50Z"
     },
     "b_centro_18": {
       "file": "/incidents/b_centro_18.jsonl",
@@ -828,8 +828,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:15Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:08:55Z"
     },
     "b_centro_19": {
       "file": "/incidents/b_centro_19.jsonl",
@@ -838,8 +838,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:15Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:08:56Z"
     },
     "b_centro_20": {
       "file": "/incidents/b_centro_20.jsonl",
@@ -848,8 +848,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:15Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
+      "cached_at_utc": "2026-10-25T00:08:58Z"
     },
     "wind_austral_9": {
       "file": "/incidents/wind_austral_9.jsonl",
@@ -859,7 +859,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:59Z"
+      "cached_at_utc": "2026-10-25T00:07:37Z"
     },
     "wind_austral_12": {
       "file": "/incidents/wind_austral_12.jsonl",
@@ -869,7 +869,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:59Z"
+      "cached_at_utc": "2026-10-25T00:07:37Z"
     },
     "wind_austral_13": {
       "file": "/incidents/wind_austral_13.jsonl",
@@ -879,7 +879,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:00Z"
+      "cached_at_utc": "2026-10-25T00:07:42Z"
     },
     "wind_austral_18": {
       "file": "/incidents/wind_austral_18.jsonl",
@@ -888,8 +888,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:01Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:07:39Z"
     },
     "wind_austral_19": {
       "file": "/incidents/wind_austral_19.jsonl",
@@ -898,8 +898,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:01Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:07:42Z"
     },
     "wind_austral_20": {
       "file": "/incidents/wind_austral_20.jsonl",
@@ -909,7 +909,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:01Z"
+      "cached_at_utc": "2026-10-25T00:07:46Z"
     },
     "coal_ng_9": {
       "file": "/incidents/coal_ng_9.jsonl",
@@ -919,7 +919,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:54Z"
+      "cached_at_utc": "2026-10-25T00:07:16Z"
     },
     "coal_ng_12": {
       "file": "/incidents/coal_ng_12.jsonl",
@@ -929,7 +929,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:54Z"
+      "cached_at_utc": "2026-10-25T00:07:19Z"
     },
     "coal_ng_13": {
       "file": "/incidents/coal_ng_13.jsonl",
@@ -939,7 +939,7 @@
       "unserved_mw_peak": 42.0,
       "households_off_peak": 42000,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:56Z"
+      "cached_at_utc": "2026-10-25T00:07:19Z"
     },
     "coal_ng_18": {
       "file": "/incidents/coal_ng_18.jsonl",
@@ -948,8 +948,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 286.43,
       "households_off_peak": 286425,
-      "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:56Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_hydro_150",
+      "cached_at_utc": "2026-10-25T00:07:20Z"
     },
     "coal_ng_19": {
       "file": "/incidents/coal_ng_19.jsonl",
@@ -959,7 +959,7 @@
       "unserved_mw_peak": 286.43,
       "households_off_peak": 286425,
       "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:57Z"
+      "cached_at_utc": "2026-10-25T00:07:25Z"
     },
     "coal_ng_20": {
       "file": "/incidents/coal_ng_20.jsonl",
@@ -969,7 +969,7 @@
       "unserved_mw_peak": 302.6,
       "households_off_peak": 302600,
       "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:05:57Z"
+      "cached_at_utc": "2026-10-25T00:07:24Z"
     },
     "wind_ng_9": {
       "file": "/incidents/wind_ng_9.jsonl",
@@ -979,7 +979,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:46Z"
+      "cached_at_utc": "2026-10-25T00:06:47Z"
     },
     "wind_ng_12": {
       "file": "/incidents/wind_ng_12.jsonl",
@@ -989,7 +989,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:47Z"
+      "cached_at_utc": "2026-10-25T00:06:48Z"
     },
     "wind_ng_13": {
       "file": "/incidents/wind_ng_13.jsonl",
@@ -999,7 +999,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_ng_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:05:48Z"
+      "cached_at_utc": "2026-10-25T00:06:46Z"
     },
     "wind_ng_18": {
       "file": "/incidents/wind_ng_18.jsonl",
@@ -1008,8 +1008,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 39.0,
       "households_off_peak": 39000,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:49Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:06:50Z"
     },
     "wind_ng_19": {
       "file": "/incidents/wind_ng_19.jsonl",
@@ -1018,8 +1018,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 39.0,
       "households_off_peak": 39000,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:48Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:06:50Z"
     },
     "wind_ng_20": {
       "file": "/incidents/wind_ng_20.jsonl",
@@ -1029,7 +1029,7 @@
       "unserved_mw_peak": 42.1,
       "households_off_peak": 42100,
       "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:05:49Z"
+      "cached_at_utc": "2026-10-25T00:06:52Z"
     },
     "b_ng_9": {
       "file": "/incidents/b_ng_9.jsonl",
@@ -1039,7 +1039,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:14Z"
+      "cached_at_utc": "2026-10-25T00:08:50Z"
     },
     "b_ng_12": {
       "file": "/incidents/b_ng_12.jsonl",
@@ -1049,7 +1049,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:14Z"
+      "cached_at_utc": "2026-10-25T00:08:51Z"
     },
     "b_ng_13": {
       "file": "/incidents/b_ng_13.jsonl",
@@ -1059,7 +1059,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L2",
-      "cached_at_utc": "2026-10-24T23:06:14Z"
+      "cached_at_utc": "2026-10-25T00:08:50Z"
     },
     "b_ng_18": {
       "file": "/incidents/b_ng_18.jsonl",
@@ -1068,8 +1068,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:15Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:08:55Z"
     },
     "b_ng_19": {
       "file": "/incidents/b_ng_19.jsonl",
@@ -1078,8 +1078,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:15Z"
+      "recommended_id": "op_bess_b_reserve_centro",
+      "cached_at_utc": "2026-10-25T00:08:56Z"
     },
     "b_ng_20": {
       "file": "/incidents/b_ng_20.jsonl",
@@ -1088,8 +1088,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
-      "recommended_id": "op_bess_b_reserve_centro_plus_bess_b_reserve_ng",
-      "cached_at_utc": "2026-10-24T23:06:15Z"
+      "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
+      "cached_at_utc": "2026-10-25T00:08:58Z"
     },
     "combo_gas_centro_L3_18": {
       "file": "/incidents/combo_gas_centro_L3_18.jsonl",
@@ -1101,8 +1101,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 655.7,
       "households_off_peak": 655700,
-      "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:06:16Z"
+      "recommended_id": "op_er_L2_plus_dr_n_centro_120",
+      "cached_at_utc": "2026-10-25T00:09:08Z"
     },
     "combo_L1_gas_ng_12": {
       "file": "/incidents/combo_L1_gas_ng_12.jsonl",
@@ -1115,7 +1115,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
-      "cached_at_utc": "2026-10-24T23:06:17Z"
+      "cached_at_utc": "2026-10-25T00:09:19Z"
     },
     "combo_L1_coal_ng_12": {
       "file": "/incidents/combo_L1_coal_ng_12.jsonl",
@@ -1128,7 +1128,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
-      "cached_at_utc": "2026-10-24T23:06:17Z"
+      "cached_at_utc": "2026-10-25T00:09:19Z"
     }
   },
   "combos": {
@@ -1142,8 +1142,8 @@
       "duration_h": 4,
       "unserved_mw_peak": 655.7,
       "households_off_peak": 655700,
-      "recommended_id": "op_bess_b_reserve_ng_plus_dr_n_centro_200",
-      "cached_at_utc": "2026-10-24T23:06:16Z"
+      "recommended_id": "op_er_L2_plus_dr_n_centro_120",
+      "cached_at_utc": "2026-10-25T00:09:08Z"
     },
     "combo_L1_gas_ng_12": {
       "file": "/incidents/combo_L1_gas_ng_12.jsonl",
@@ -1156,7 +1156,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
-      "cached_at_utc": "2026-10-24T23:06:17Z"
+      "cached_at_utc": "2026-10-25T00:09:19Z"
     },
     "combo_L1_coal_ng_12": {
       "file": "/incidents/combo_L1_coal_ng_12.jsonl",
@@ -1169,7 +1169,7 @@
       "unserved_mw_peak": 0.0,
       "households_off_peak": 0,
       "recommended_id": "op_bess_b_reserve_centro_plus_er_L3",
-      "cached_at_utc": "2026-10-24T23:06:17Z"
+      "cached_at_utc": "2026-10-25T00:09:19Z"
     }
   }
 }

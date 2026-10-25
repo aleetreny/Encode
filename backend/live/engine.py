@@ -79,6 +79,7 @@ class LiveSession:
         self.decision_log: list[dict[str, Any]] = []
         self.incident_records: dict[str, dict[str, Any]] = {}
         self.current_incident_id: str | None = None
+        self.previous_option_ids: set[str] = set()
 
         self.subscribers: set[asyncio.Queue[dict[str, Any]]] = set()
         self.jury_cooldowns: dict[str, float] = {}
@@ -475,9 +476,13 @@ class LiveSession:
 
         loop = asyncio.get_running_loop()
 
+        def _emit_agent_step(payload: dict[str, Any]) -> None:
+            self.hour = round(min(23.99, self.hour + 0.02), 2)
+            self._emit(payload)
+
         def emit_thought_cb(delta: str) -> None:
             loop.call_soon_threadsafe(
-                self._emit,
+                _emit_agent_step,
                 {
                     "type": "agent.thought",
                     "incident_id": incident_id,
@@ -487,7 +492,7 @@ class LiveSession:
 
         def emit_tool_cb(tool_payload: dict[str, Any]) -> None:
             loop.call_soon_threadsafe(
-                self._emit,
+                _emit_agent_step,
                 {
                     "type": "agent.tool_call",
                     "incident_id": incident_id,
@@ -506,6 +511,7 @@ class LiveSession:
             emit_thought=emit_thought_cb,
             emit_tool_call=emit_tool_cb,
             allow_live_gemini=self.allow_live_gemini,
+            exclude_candidate_ids=set(self.previous_option_ids),
         )
 
         # Allow any queued call_soon_threadsafe callbacks to flush before options.ready
@@ -515,7 +521,11 @@ class LiveSession:
         rec["recommended_id"] = res["recommended_id"]
         rec["diagnosis_es"] = res["diagnosis_es"]
         rec["model_execution"] = res["model_execution"]
+        for opt in res["options"]:
+            if opt.get("option_id"):
+                self.previous_option_ids.add(str(opt["option_id"]))
 
+        self.hour = round(min(23.99, self.hour + 0.02), 2)
         opt_event = self._emit(
             {
                 "type": "options.ready",
@@ -574,6 +584,9 @@ class LiveSession:
     async def _countdown_loop(self, incident_id: str, option_id: str) -> None:
         """Emit `autonomy.countdown` 5->0 and auto-apply if not vetoed."""
         try:
+            clock_active = self._clock_task is not None and not self._clock_task.done()
+            if not clock_active:
+                self.hour = round(min(23.99, self.hour + 0.02), 2)
             for secs in (5, 4, 3, 2, 1, 0):
                 rec = self.incident_records.get(incident_id)
                 if not rec or rec.get("decided") or not self.autonomy:
@@ -594,8 +607,15 @@ class LiveSession:
                 )
                 if secs > 0:
                     await asyncio.sleep(self.countdown_step_s)
+                    clock_active = self._clock_task is not None and not self._clock_task.done()
+                    if not clock_active:
+                        dh = 1.0 / max(0.2, self.speed_s_per_hour)
+                        self.hour = round(min(23.99, self.hour + dh), 2)
             rec = self.incident_records.get(incident_id)
             if rec and not rec.get("decided") and self.autonomy:
+                clock_active = self._clock_task is not None and not self._clock_task.done()
+                if not clock_active:
+                    self.hour = round(min(23.99, self.hour + 0.02), 2)
                 await self.decide(
                     incident_id=incident_id,
                     option_id=option_id,
@@ -761,6 +781,7 @@ class LiveSession:
         self.active_events = []
         self.applied_levers = []
         self.current_incident_id = None
+        self.previous_option_ids.clear()
         self.incident_records.clear()
         self.decision_log.clear()
         self.jury_cooldowns.clear()

@@ -116,19 +116,33 @@ def verify_stream(events: list[dict[str, Any]]) -> None:
     validator = jsonschema.Draft202012Validator(schema)
 
     options_ready_events = []
+    thought_events = []
+    countdown_events = []
     for idx, ev in enumerate(events):
         errs = list(validator.iter_errors(ev))
         assert not errs, f"Event #{idx} ({ev.get('type')}) failed schema validation: {errs[0].message}"
 
         etype = ev.get("type")
         if etype == "agent.thought":
+            thought_events.append(ev)
             assert not has_digits(ev["delta"]), f"Digit in agent.thought: {ev['delta']}"
+            assert "contingencia detectada en el sistema eléctrico nacional" not in ev["delta"].lower(), (
+                f"Generic boilerplate thought detected: {ev['delta']}"
+            )
         elif etype == "agent.note":
             assert not has_digits(ev["text_es"]), f"Digit in agent.note: {ev['text_es']}"
         elif etype == "agent.tool_call":
             assert not has_digits(ev["args_summary_es"]), f"Digit in tool_call: {ev['args_summary_es']}"
+        elif etype == "autonomy.countdown":
+            countdown_events.append(ev)
         elif etype == "options.ready":
             options_ready_events.append(ev)
+            me = ev["model_execution"]
+            assert me["model"] == "gemini-4-argon", f"Expected gemini-4-argon, got {me}"
+            assert me["status"] == "ok", f"Expected status ok, got {me}"
+            assert me.get("response_id") and not str(me["response_id"]).startswith("det-"), (
+                f"Expected real Gemini response_id, got {me}"
+            )
             assert not has_digits(ev["diagnosis_es"]), f"Digit in diagnosis_es: {ev['diagnosis_es']}"
             opts = ev["options"]
             assert len(opts) == 2, f"Expected 2 options, got {len(opts)}"
@@ -160,6 +174,30 @@ def verify_stream(events: list[dict[str, Any]]) -> None:
                 )
 
     assert len(options_ready_events) == 2, f"Expected 2 options.ready events, got {len(options_ready_events)}"
+    assert len(thought_events) >= 2, f"Expected >= 2 agent.thought events, got {len(thought_events)}"
+    inc1_thoughts = [e["delta"] for e in thought_events if e["incident_id"] == options_ready_events[0]["incident_id"]]
+    inc2_thoughts = [e["delta"] for e in thought_events if e["incident_id"] == options_ready_events[1]["incident_id"]]
+    assert inc1_thoughts and inc2_thoughts and set(inc1_thoughts) != set(inc2_thoughts), (
+        "Incident 1 and Incident 2 thoughts must be distinct and specific"
+    )
+
+    inc1_opt_ids = {o["option_id"] for o in options_ready_events[0]["options"]}
+    inc2_opt_ids = {o["option_id"] for o in options_ready_events[1]["options"]}
+    assert inc1_opt_ids != inc2_opt_ids, f"Incident 1 and 2 have identical options: {inc1_opt_ids}"
+    inc2_lever_types = {
+        lv["type"]
+        for o in options_ready_events[1]["options"]
+        for lv in o["levers"]
+    }
+    assert inc2_lever_types & {"emergency_rating", "hydro_reserve_release"}, (
+        f"Expected emergency_rating or hydro_reserve_release in Incident 2 (L3), got {inc2_lever_types}"
+    )
+
+    assert len(countdown_events) == 6, f"Expected 6 autonomy.countdown events, got {len(countdown_events)}"
+    cd_hours = [e["hour"] for e in countdown_events]
+    assert len(set(cd_hours)) == 6 and cd_hours == sorted(cd_hours), (
+        f"Expected strictly increasing countdown hours, got {cd_hours}"
+    )
 
 
 def main() -> None:

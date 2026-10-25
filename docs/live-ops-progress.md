@@ -67,3 +67,6 @@
   - `python3 scripts/verify_live_acceptance.py`
   - `pytest -q && pytest optimisation/tests -q && python3 -m optimisation.stress`
   - `cd frontend && npm run build && ./scripts/demo.sh --check-only`
+
+## Etapa 0 · Biblioteca y Grabación con Gemini Real, Etiquetas Honestas y Latencia (`high` vs `medium`)
+- **Qué entró**: Regeneración completa con `gemini-4-argon` real (`GEMINI_API_KEY` desde `.env.local` ignorado en git) de `frontend/src/live/fixtures/demo-stream.jsonl` y los 111 archivos de `frontend/public/incidents/*.jsonl` + `index.json`; etiquetas honestas (`model: "deterministic-planner"`, `status: "error" | "timeout"` cuando `response_id` empieza con `det-`); ritmo de eventos separado (`+0.02 h` por evento y cuenta regresiva a 1 tick/s en `offline.ts`); opciones distintas para la falla de `L3`; y medición de latencia real `high` vs `medium` en `docs/live-latency.md` (`DEFAULT_DECIDER_THINKING = "medium"`, `p50 = 7359.90 ms < 8 s`).

@@ -91,9 +91,10 @@ COMBOS = [
 
 
 def enforce_digit_free_and_cached(events: list[dict[str, Any]], asset_key: str, hour: int) -> None:
-    """Enforce cached model execution metadata and zero digits across all prose fields."""
+    """Enforce cached model execution metadata and zero digits across all prose fields.
+    Preserves honest `model`, `status`, and `response_id` from `run_incident_evaluation`.
+    """
     now_utc = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    decider_model = os.environ.get("GRIDPILOT_MODEL_DECIDER", "gemini-4-argon")
 
     for ev in events:
         etype = ev.get("type")
@@ -115,14 +116,17 @@ def enforce_digit_free_and_cached(events: list[dict[str, Any]], asset_key: str, 
                 ev["diagnosis_es"] = sanitize_no_digits(raw_diag)
             assert not has_digits(ev["diagnosis_es"]), f"Digit in diagnosis: {ev['diagnosis_es']}"
 
-            # Ensure model execution metadata matches requirements
+            # Mark pre-recorded library entry as cached while preserving honest model/status/response_id
             me = ev.setdefault("model_execution", {})
             me["cached"] = True
             if not me.get("cached_at_utc"):
                 me["cached_at_utc"] = now_utc
             if not me.get("response_id"):
-                me["response_id"] = f"resp-cached-{asset_key}-{hour}"
-            me["model"] = decider_model
+                me["response_id"] = f"det-{asset_key}-{hour}"
+            if str(me["response_id"]).startswith("det-") or me.get("status") != "ok":
+                me["model"] = "deterministic-planner"
+                if me.get("status") == "ok":
+                    me["status"] = "error"
 
             # Ensure options validation and digit-free prose
             opts = ev.get("options", [])
@@ -173,30 +177,45 @@ def generate_single_incident(
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Run in-memory LiveSession and record full event stream for single asset disruption."""
     async def _run() -> tuple[dict[str, Any], list[dict[str, Any]]]:
-        ses = LiveSession(
-            session_id=f"ses_{asset_id}_{hour}",
-            start_hour=float(hour),
-            allow_live_gemini=allow_live,
-        )
-        q = ses.subscribe()
-        disrupt_res = await ses.disrupt(
-            asset_id,
-            duration_h=DURATION_H,
-            from_hour_override=hour,
-            wait_for_options=True,
-        )
-
-        # Advance hour by 15 simulated minutes and apply recommended option
-        ses.hour = round(float(hour) + 0.25, 2)
-        await ses.decide(
-            incident_id=disrupt_res["incident_id"],
-            option_id=None,
-            decision="apply",
-        )
-
+        max_attempts = 3 if allow_live else 1
         events: list[dict[str, Any]] = []
-        while not q.empty():
-            events.append(q.get_nowait())
+        for attempt in range(max_attempts):
+            ses = LiveSession(
+                session_id=f"ses_{asset_id}_{hour}",
+                start_hour=float(hour),
+                allow_live_gemini=allow_live,
+            )
+            q = ses.subscribe()
+            disrupt_res = await ses.disrupt(
+                asset_id,
+                duration_h=DURATION_H,
+                from_hour_override=hour,
+                wait_for_options=True,
+            )
+
+            # Advance hour past agent events and apply recommended option
+            ses.hour = round(max(ses.hour + 0.05, float(hour) + 0.25), 2)
+            await ses.decide(
+                incident_id=disrupt_res["incident_id"],
+                option_id=None,
+                decision="apply",
+            )
+
+            events = []
+            while not q.empty():
+                events.append(q.get_nowait())
+
+            options_ev = next(e for e in events if e["type"] == "options.ready")
+            if not allow_live or options_ev["model_execution"].get("status") == "ok":
+                break
+            await asyncio.sleep(1.5 * (attempt + 1))
+
+        if allow_live:
+            options_ev = next(e for e in events if e["type"] == "options.ready")
+            me = options_ev["model_execution"]
+            assert me.get("status") == "ok" and me.get("model") == "gemini-4-argon" and not str(me.get("response_id", "")).startswith("det-"), (
+                f"Live Gemini required for {asset_id}_{hour}, got {me}"
+            )
 
         enforce_digit_free_and_cached(events, asset_id, hour)
 
@@ -230,42 +249,57 @@ def generate_combo_incident(
     hour = combo_spec["hour"]
 
     async def _run() -> tuple[dict[str, Any], list[dict[str, Any]]]:
-        ses = LiveSession(
-            session_id=f"ses_{combo_key}",
-            start_hour=float(hour),
-            allow_live_gemini=allow_live,
-        )
-        q = ses.subscribe()
-
-        # Stack disruptions
-        res1 = await ses.disrupt(
-            assets[0],
-            duration_h=DURATION_H,
-            from_hour_override=hour,
-            wait_for_options=False,
-        )
-        # Cancel any eval task from first disruption so only combined state is evaluated
-        for t in list(ses._eval_tasks):
-            t.cancel()
-        ses._eval_tasks.clear()
-
-        res2 = await ses.disrupt(
-            assets[1],
-            duration_h=DURATION_H,
-            from_hour_override=hour,
-            wait_for_options=True,
-        )
-
-        ses.hour = round(float(hour) + 0.25, 2)
-        await ses.decide(
-            incident_id=res2["incident_id"],
-            option_id=None,
-            decision="apply",
-        )
-
+        max_attempts = 3 if allow_live else 1
         events: list[dict[str, Any]] = []
-        while not q.empty():
-            events.append(q.get_nowait())
+        for attempt in range(max_attempts):
+            ses = LiveSession(
+                session_id=f"ses_{combo_key}",
+                start_hour=float(hour),
+                allow_live_gemini=allow_live,
+            )
+            q = ses.subscribe()
+
+            # Stack disruptions
+            res1 = await ses.disrupt(
+                assets[0],
+                duration_h=DURATION_H,
+                from_hour_override=hour,
+                wait_for_options=False,
+            )
+            # Cancel any eval task from first disruption so only combined state is evaluated
+            for t in list(ses._eval_tasks):
+                t.cancel()
+            ses._eval_tasks.clear()
+
+            res2 = await ses.disrupt(
+                assets[1],
+                duration_h=DURATION_H,
+                from_hour_override=hour,
+                wait_for_options=True,
+            )
+
+            ses.hour = round(max(ses.hour + 0.05, float(hour) + 0.25), 2)
+            await ses.decide(
+                incident_id=res2["incident_id"],
+                option_id=None,
+                decision="apply",
+            )
+
+            events = []
+            while not q.empty():
+                events.append(q.get_nowait())
+
+            options_ev = next(e for e in events if e["type"] == "options.ready")
+            if not allow_live or options_ev["model_execution"].get("status") == "ok":
+                break
+            await asyncio.sleep(1.5 * (attempt + 1))
+
+        if allow_live:
+            options_ev = next(e for e in events if e["type"] == "options.ready")
+            me = options_ev["model_execution"]
+            assert me.get("status") == "ok" and me.get("model") == "gemini-4-argon" and not str(me.get("response_id", "")).startswith("det-"), (
+                f"Live Gemini required for {combo_key}, got {me}"
+            )
 
         enforce_digit_free_and_cached(events, combo_key, hour)
 
@@ -322,19 +356,49 @@ def build_library(
             tasks_single.append((asset, h))
 
     print(f"Generating {len(tasks_single)} single-asset incidents ({len(CORE_ASSETS)} assets × {len(HOURS)} hours)...")
+    if live_all:
+        os.environ.setdefault("GRIDPILOT_GEMINI_TIMEOUT_S", "22.0")
 
     def _worker_single(item: tuple[str, int]) -> tuple[str, int, dict[str, Any], list[dict[str, Any]]]:
         asset, h = item
-        # If live_all is True and GEMINI_API_KEY is present, we could allow live Gemini
+        file_key = f"{asset}_{h}"
+        jsonl_path = out_dir / f"{file_key}.jsonl"
         allow_live = bool(live_all and os.getenv("GEMINI_API_KEY"))
+        if allow_live and jsonl_path.is_file():
+            try:
+                existing_evs = [json.loads(line) for line in jsonl_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+                opt_ev = next((e for e in existing_evs if e.get("type") == "options.ready"), None)
+                inc_ev = next((e for e in existing_evs if e.get("type") == "incident.detected"), None)
+                if opt_ev and inc_ev:
+                    me = opt_ev.get("model_execution", {})
+                    if (
+                        me.get("status") == "ok"
+                        and me.get("model") == "gemini-4-argon"
+                        and not str(me.get("response_id", "det-")).startswith("det-")
+                        and float(opt_ev.get("hour", 0)) > float(inc_ev.get("hour", 0))
+                    ):
+                        enforce_digit_free_and_cached(existing_evs, asset, h)
+                        impact = inc_ev.get("impact", {})
+                        meta = {
+                            "file": f"/incidents/{asset}_{h}.jsonl",
+                            "asset_id": asset,
+                            "hour": h,
+                            "duration_h": DURATION_H,
+                            "unserved_mw_peak": impact.get("unserved_mw_peak", 0.0),
+                            "households_off_peak": impact.get("households_off_peak", 0),
+                            "recommended_id": opt_ev.get("recommended_id", ""),
+                            "cached_at_utc": me["cached_at_utc"],
+                        }
+                        return asset, h, meta, existing_evs
+            except Exception:
+                pass
         meta, evs = generate_single_incident(asset, h, allow_live=allow_live)
+        write_jsonl(jsonl_path, evs)
         return asset, h, meta, evs
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         for asset, h, meta, evs in executor.map(_worker_single, tasks_single):
             file_key = f"{asset}_{h}"
-            jsonl_path = out_dir / f"{file_key}.jsonl"
-            write_jsonl(jsonl_path, evs)
             index_data["incidents"][file_key] = meta
 
     # Write alias files and index entries
