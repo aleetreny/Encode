@@ -6,10 +6,13 @@ All numbers come from optimisation/examples (real HiGHS solves, independently va
 the tour text pulls them from the embedded data, nothing is typed by hand.
 
     python -m optimisation.tour.build_tour      # writes optimisation/tour/andes-tour.html
+    python -m optimisation.tour.build_tour --scenario path/to/real_day_scenario.json --out andes-tour-real-day.html
+        # solves every case on that scenario (solve + validate + compare) instead of reading examples/
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
@@ -22,6 +25,10 @@ OUT = HERE / "andes-tour.html"
 def _case(situation: str, option: str, entry: dict) -> dict:
     sol = json.loads((EXAMPLES / entry["solution"]).read_text())
     val = json.loads((EXAMPLES / entry["validation"]).read_text())
+    return _pack(sol, val, entry.get("vs_baseline"))
+
+
+def _pack(sol: dict, val: dict, vs: dict | None) -> dict:
     ts = sol["timeseries"]
     T = len(sol["timestamps_utc"])
     added = [b for b in sol["assets"]["batteries"] if b.get("added_by_candidate")]
@@ -29,7 +36,7 @@ def _case(situation: str, option: str, entry: dict) -> dict:
     return {
         "metrics": {k: sol["metrics"][k] for k in (
             "curtailment_mwh", "unserved_mwh", "assumed_cost_proxy_usd", "battery_losses_mwh")},
-        "vs": entry.get("vs_baseline"),
+        "vs": vs,
         "valid": val["passed"],
         "checks": len(val["checks_run"]),
         "caps": {ln["id"]: ln["capacity_mw"] for ln in sol["assets"]["lines"]},
@@ -42,23 +49,59 @@ def _case(situation: str, option: str, entry: dict) -> dict:
     }
 
 
-def build() -> Path:
-    index = json.loads((EXAMPLES / "index.json").read_text())
-    scen = json.loads(FIXTURE.read_text())
+def _solve_cases(scen: dict) -> tuple[dict, dict, dict]:
+    """Solve, validate and compare every option in every situation on ``scen``."""
+    from optimisation import compare, solve, validate
+    from optimisation.demo import CANDIDATES, SITUATIONS
+
+    cases, sits = {}, {}
+    for sit, (desc, events) in SITUATIONS.items():
+        sits[sit] = desc
+        base = solve(scen, events=events)
+        base_v = validate(scen, base)
+        cases[sit] = {"baseline": _pack(base, base_v, None)}
+        for cand in CANDIDATES:
+            c = {k: v for k, v in cand.items() if k != "description"}
+            sol = solve(scen, c, events)
+            val = validate(scen, sol)
+            cmp = compare(base, sol, base_v, val)
+            cases[sit][cand["candidate_id"]] = _pack(sol, val, {k: cmp[k] for k in (
+                "curtailment_reduction_mwh", "unserved_reduction_mwh", "assumed_cost_delta_usd")})
+    options = {"baseline": "Grid as it is today", **{c["candidate_id"]: c["description"] for c in CANDIDATES}}
+    return cases, sits, options
+
+
+def build(scenario_path: Path | None = None, out: Path = OUT) -> Path:
+    if scenario_path is None:
+        index = json.loads((EXAMPLES / "index.json").read_text())
+        scen = json.loads(FIXTURE.read_text())
+        cases = {s: {o: _case(s, o, e) for o, e in v["options"].items()} for s, v in index["situations"].items()}
+        sits = {s: v["description"] for s, v in index["situations"].items()}
+        options = {o: e["description"] for o, e in index["situations"]["normal"]["options"].items()}
+        source = ("a synthetic, illustrative 5-node grid and day shaped like Chile (not Chile's real network). "
+                  "Results are the validated example outputs of the Andes optimiser")
+    else:
+        scen = json.loads(Path(scenario_path).read_text())
+        # reserve batteries flagged standby are not dispatchable unless an operator activates them
+        scen["batteries"] = [b for b in scen.get("batteries", []) if not b.get("standby")]
+        cases, sits, options = _solve_cases(scen)
+        source = ("real CEN demand and solar/wind shapes " + (f"for {scen['day_profile'].get('date')} " if isinstance(scen.get("day_profile"), dict) and scen["day_profile"].get("date") else "")
+                  + "scaled onto a synthetic, illustrative 5-node grid (not Chile's real network). "
+                  "Every case was solved by the Andes optimiser and checked by its independent validator")
     data = {
-        "scenario_id": index["scenario_id"],
+        "source": source,
+        "scenario_id": scen["scenario_id"],
         "nodes": [{"id": n["id"], "label": n["label"].replace(" (illustrative)", "")} for n in scen["nodes"]],
         "lines": [{"id": ln["id"], "from": ln["from"], "to": ln["to"]} for ln in scen["lines"]],
         "plants": {n["id"]: [f"{g['technology']} {g['capacity_mw']:g}" for g in scen["generators"]
                              if g["node_id"] == n["id"]] for n in scen["nodes"]},
-        "situations": {s: v["description"] for s, v in index["situations"].items()},
-        "options": {o: e["description"] for o, e in index["situations"]["normal"]["options"].items()},
-        "cases": {s: {o: _case(s, o, e) for o, e in v["options"].items()}
-                  for s, v in index["situations"].items()},
+        "situations": sits,
+        "options": options,
+        "cases": cases,
     }
     html = TEMPLATE.replace("/*DATA*/null", json.dumps(data, separators=(",", ":")))
-    OUT.write_text(html, encoding="utf-8")
-    return OUT
+    out.write_text(html, encoding="utf-8")
+    return out
 
 
 TEMPLATE = r"""<!doctype html>
@@ -132,7 +175,7 @@ background:var(--card);border:1px solid var(--line);border-radius:14px;box-shado
   <button id="reopen" class="primary">Resume tour</button>
 </header>
 <main>
-  <section class="card" id="map"><h2>Grid · north to south</h2><svg id="grid" viewBox="0 0 340 560" role="img" aria-label="Five-node grid schematic"></svg></section>
+  <section class="card" id="map"><h2>Grid · north to south</h2><svg id="grid" viewBox="0 0 370 560" role="img" aria-label="Five-node grid schematic"></svg></section>
   <div class="right">
     <section class="card controls" id="controls">
       <h2>What-if</h2>
@@ -162,7 +205,7 @@ const STEPS=[
   p:()=>"An optimiser computes what would happen, a validator checks it, and the AI explains it. A human decides. Use → or Space to continue."},
  {sit:"normal",opt:"baseline",h:13,hl:"map",k:"The problem",tags:["SIMULATED","MODEL"],t:"Solar is thrown away in the north",
   p:()=>`At midday the north makes more solar than line L2 can carry south. On this day ${fmt(C("normal","baseline").metrics.curtailment_mwh)} MWh of clean energy is wasted, while the centre burns gas. Watch L2 turn red.`},
- {sit:"normal",opt:"south_bess",h:13,hl:"kpis",k:"Wrong place",tags:["MODEL","VALIDATED"],t:"A battery in the south does nothing",
+ {sit:"normal",opt:"south_bess",h:13,hl:"kpis",k:"Wrong place",tags:["MODEL","VALIDATED"],get t(){return red("normal","south_bess","curtailment_mwh")<0.5?"A battery in the south does nothing":"A battery in the south barely helps"},
   p:()=>`The same battery placed south of the bottleneck reduces waste by ${fmt(red("normal","south_bess","curtailment_mwh"))} MWh: the surplus can't reach it.`},
  {sit:"normal",opt:"north_bess",h:13,hl:"kpis",k:"Right place",tags:["MODEL","VALIDATED"],t:"North of the bottleneck, it works",
   p:()=>`Placed in Norte Grande it soaks up midday solar and releases it in the evening: ${fmt(red("normal","north_bess","curtailment_mwh"))} MWh less waste. Drag the hour slider to watch it charge and discharge.`},
@@ -178,7 +221,7 @@ const STEPS=[
   p:()=>`An optimiser (HiGHS) computes each result; a separate validator re-checks it from scratch (${C("normal","north_bess").checks} checks: power balance, line limits, battery physics, no hindsight). The AI explains and proposes; it never invents a number. Now explore on your own.`},
 ];
 
-const TAGS={SIMULATED:"Synthetic, illustrative grid and day: not Chile's real network",MODEL:"Computed by the optimiser (HiGHS) under stated assumptions",VALIDATED:"Re-checked from scratch by the independent validator"};
+const TAGS={SIMULATED:"Simulation on an illustrative 5-node grid, not Chile's real network",MODEL:"Computed by the optimiser (HiGHS) under stated assumptions",VALIDATED:"Re-checked from scratch by the independent validator"};
 let S={step:0,sit:"normal",opt:"baseline",h:13,tour:true},timer=null;
 function readURL(){const q=new URLSearchParams(location.search);
   if(q.has("step")){S.step=Math.max(0,Math.min(STEPS.length-1,+q.get("step")||0));Object.assign(S,STEPS[S.step]);}
@@ -190,7 +233,7 @@ function writeURL(){const q=new URLSearchParams({sit:S.sit,opt:S.opt,h:S.h});
   if(S.tour)q.set("step",S.step);else q.set("tour","0");
   history.replaceState(null,"","?"+q.toString());}
 
-const NY=i=>60+i*110, NX=170;
+const NY=i=>60+i*110, NX=200;
 function drawMap(){const c=C(S.sit,S.opt),svg=document.getElementById("grid"),h=S.h;let s="";
   D.lines.forEach((ln,i)=>{const f=c.flow[ln.id][h],cap=c.caps[ln.id],u=cap?Math.abs(f)/cap:0;
     const col=u>=0.999?"var(--bad)":u>0.8?"var(--solar)":"var(--flow)";
@@ -258,7 +301,7 @@ document.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;con
   else if(["ArrowLeft","PageUp"].includes(e.key)){e.preventDefault();document.getElementById("tback").click();}
   else if(e.key==="Escape")document.getElementById("tclose").click();
   else if(e.key==="h"||e.key==="H")t.classList.toggle("hidden");});
-document.getElementById("foot").textContent=`Scenario ${D.scenario_id}: a synthetic, illustrative 5-node grid shaped like Chile (not Chile's real network). Results are pre-computed by the Andes optimiser and checked by its independent validator; money is an assumed-cost proxy, not CEN costs. Simulation only: nothing here controls a real grid.`;
+document.getElementById("foot").textContent=`Scenario ${D.scenario_id}: ${D.source}. Results are pre-computed; money is an assumed-cost proxy, not CEN costs. Simulation only: nothing here controls a real grid.`;
 readURL();render();
 </script>
 </body>
@@ -267,4 +310,8 @@ readURL();render();
 
 
 if __name__ == "__main__":
-    print(f"wrote {build()}")
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--scenario", type=Path, help="solve every case on this scenario instead of using examples/")
+    ap.add_argument("--out", type=Path, default=OUT)
+    a = ap.parse_args()
+    print(f"wrote {build(a.scenario, a.out)}")

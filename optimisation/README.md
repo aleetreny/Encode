@@ -236,6 +236,14 @@ Every view is in the URL (`?step=4`, or `?sit=sudden_outage&opt=north_bess&h=19&
 can be shared as a link. Keys: → / Space next, ← back, H hide card, Esc explore freely, T resume.
 Numbers are the validated example results embedded at build time; the text pulls them from the data.
 
+`optimisation/tour/andes-tour-real-day.html` is the same tour on the **real CEN day** (14 Aug 2026:
+real CEN demand and solar/wind shapes scaled onto the same 5-node grid; scenario
+`optimisation/fixtures/real_day_scenario.json` on `feature/live-ops`). Rebuild with
+`python -m optimisation.tour.build_tour --scenario <that file> --out optimisation/tour/andes-tour-real-day.html`;
+the builder then solves, validates and compares every case itself. Standby reserve batteries are left
+out (they only run if an operator activates them). Checked: this solver and the `feature/live-ops`
+solver give identical results on all 12 real-day cases.
+
 ```bash
 ```
 

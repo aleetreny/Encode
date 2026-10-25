@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Andes Live Tour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--ink:#14171c;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;
+--solar:#f59e0b;--bad:#dc2626;--ok:#16a34a;--flow:#94a3b8;--shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.05)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1115;--card:#171a21;--ink:#e8eaed;--muted:#9aa1ac;--line:#2a2f3a;--flow:#5b6475;--shadow:none}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#171a21;--ink:#e8eaed;--muted:#9aa1ac;--line:#2a2f3a;--flow:#5b6475;--shadow:none}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card)}
+header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em}
+header .tag{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 10px}
+header .sp{flex:1}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.4;cursor:default}
+main{display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:16px;padding:16px 20px;max-width:1200px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:14px}
+.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px;font-weight:600}
+#map svg{width:100%;height:auto;display:block}
+.right{display:flex;flex-direction:column;gap:16px;min-width:0}
+.controls{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font-size:13px;padding:5px 10px}
+.seg button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .d{font-size:12px;font-variant-numeric:tabular-nums}
+.d.good{color:var(--ok)}.d.bad{color:var(--bad)}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ok);font-weight:600}
+#chart svg{width:100%;height:150px;display:block}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.foot{font-size:12px;color:var(--muted);max-width:1200px;margin:0 auto;padding:0 20px 90px}
+.hl{outline:3px solid var(--accent);outline-offset:3px;border-radius:12px;transition:outline-color .2s}
+#tour{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);width:min(560px,calc(100% - 32px));
+background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.18);padding:16px 18px;z-index:10}
+#tour .k{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+#tour h3{margin:2px 0 6px;font-size:17px}
+#tour p{margin:0 0 12px;color:var(--ink)}
+#tour .nav{display:flex;align-items:center;gap:8px}
+#tour .dots{flex:1;display:flex;gap:5px}
+#tour .dots span{width:7px;height:7px;border-radius:50%;background:var(--line)}
+#tour .dots span.on{background:var(--accent)}
+#tour.closed{display:none}
+#tour .tags{display:flex;gap:6px;margin:0 0 10px}#tour .tags span{font-size:11px;font-weight:600;letter-spacing:.04em;border-radius:6px;padding:1px 7px;border:1px solid var(--line);color:var(--muted)}
+#tour .tags span.VALIDATED{color:var(--ok);border-color:var(--ok)}#tour .tags span.SIMULATED{color:var(--solar);border-color:var(--solar)}
+#tour.slide{top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(640px,calc(100% - 32px));padding:34px 32px;text-align:center}
+#tour.slide h3{font-size:28px;letter-spacing:-.02em}#tour.slide .tags{justify-content:center}
+#veil{position:fixed;inset:0;background:var(--bg);opacity:.86;z-index:9;display:none}#veil.on{display:block}
+#tour.hidden{display:none}
+#reopen{display:none}
+@media (max-width:760px){main{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr 1fr}.kpi .v{font-size:18px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Andes</h1><span class="tag">Live tour · simulation</span><span class="sp"></span>
+  <button id="share" title="Copy a link to exactly this view">Copy link</button>
+  <button id="reopen" class="primary">Resume tour</button>
+</header>
+<main>
+  <section class="card" id="map"><h2>Grid · north to south</h2><svg id="grid" viewBox="0 0 370 560" role="img" aria-label="Five-node grid schematic"></svg></section>
+  <div class="right">
+    <section class="card controls" id="controls">
+      <h2>What-if</h2>
+      <div class="seg" id="sit"></div>
+      <div class="seg" id="opt"></div>
+      <div class="row"><button id="play" aria-label="Play">▶</button><input id="hour" type="range" min="0" max="23" step="1"><b id="hlabel" style="min-width:92px;text-align:right;font-variant-numeric:tabular-nums"></b></div>
+    </section>
+    <section class="card" id="kpis"><h2>Result for the whole day <span class="badge" id="badge"></span></h2><div class="kpis" id="kpibox"></div></section>
+    <section class="card" id="chart"><h2>Hour by hour</h2><svg id="bars" viewBox="0 0 600 150" preserveAspectRatio="none"></svg>
+      <div class="legend"><span><i style="background:var(--solar)"></i>Solar/wind wasted (MW)</span><span><i style="background:var(--bad)"></i>Demand not served (MW)</span><span><i style="background:var(--accent)"></i>Selected hour</span></div></section>
+  </div>
+</main>
+<p class="foot" id="foot"></p>
+<div id="veil"></div><div id="tour" role="dialog" aria-live="polite"><div class="k" id="tk"></div><h3 id="tt"></h3><div class="tags" id="ttags"></div><p id="tp"></p>
+  <div class="nav"><div class="dots" id="tdots"></div><button id="tclose">Explore freely</button><button id="tback">Back</button><button id="tnext" class="primary">Next</button></div></div>
+<script>
+const D={"source":"real CEN demand and solar/wind shapes for 2026-08-14 scaled onto a synthetic, illustrative 5-node grid (not Chile's real network). Every case was solved by the Andes optimiser and checked by its independent validator","scenario_id":"chile-sen-5node-real-2026-08-14","nodes":[{"id":"n_norte_grande","label":"Norte Grande (Crucero)"},{"id":"n_norte_chico","label":"Norte Chico (Cardones)"},{"id":"n_centro","label":"Centro (Polpaico)"},{"id":"n_centro_sur","label":"Centro-Sur (Charr\u00faa)"},{"id":"n_sur","label":"Sur (Puerto Montt)"}],"lines":[{"id":"L1","from":"n_norte_grande","to":"n_norte_chico"},{"id":"L2","from":"n_norte_chico","to":"n_centro"},{"id":"L3","from":"n_centro","to":"n_centro_sur"},{"id":"L4","from":"n_centro_sur","to":"n_sur"}],"plants":{"n_norte_grande":["solar 700","gas 350"],"n_norte_chico":["solar 300","wind 200"],"n_centro":["gas 600","diesel 150"],"n_centro_sur":["coal 350"],"n_sur":["hydro 200","wind 200"]},"situations":{"normal":"Normal day, no outage","sudden_outage":"gas_centro trips suddenly at 18:00, back at 22:00 (ramp-limited)","planned_maintenance":"Same gas_centro outage, known from the start of the day"},"options":{"baseline":"Grid as it is today","north_bess":"Battery north of the L2 bottleneck","south_bess":"Same battery, south of the bottleneck","uprate_l2":"Raise the L2 limit by 50 %"},"cases":{"normal":{"baseline":{"metrics":{"curtailment_mwh":1466.12225,"unserved_mwh":0.0,"assumed_cost_proxy_usd":1931106.559965,"battery_losses_mwh":6.501197},"vs":null,"valid":true,"checks":16,"caps":{"L1":400.0,"L2":400.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,159.4,159.8,157.0,142.1,93.2,265.9,192.6,153.6,175.3,147.0,240.1,202.7,238.0,276.0,191.62225,131.62225,160.4,176.2,180.5,167.9,154.1],"L2":[80.8,213.2,239.0,205.3,153.3,133.1,150.9,110.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,194.32225,14.32225,30.8,48.0,56.5,40.5,30.2],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-180.5,-160.1,-128.0,-164.1,-187.9,-194.3,-195.2,-174.5,-172.9,-202.5,-234.4,-253.5,-248.4,-232.6,-211.3,-210.6],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-129.8,-122.1,-94.6,-130.7,-151.4,-157.3,-157.4,-134.3,-129.1,-150.5,-185.4,-206.3,-195.3,-171.9,-150.6,-143.0]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,199.5,284.5,290.1,238.6,150.4,169.2,116.5,17.322,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{},"battery":null,"outage":[]},"north_bess":{"metrics":{"curtailment_mwh":817.221053,"unserved_mwh":0.0,"assumed_cost_proxy_usd":1875213.0,"battery_losses_mwh":61.578947},"vs":{"curtailment_reduction_mwh":648.901197,"unserved_reduction_mwh":0.0,"assumed_cost_delta_usd":-55893.559965},"valid":true,"checks":16,"caps":{"L1":400.0,"L2":400.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,166.9,159.8,307.0,262.6,100.2,265.9,192.6,153.6,175.3,147.0,240.1,202.7,238.0,276.0,174.3,264.3,274.8,187.6,180.5,177.1,154.1],"L2":[80.8,213.2,239.0,212.8,153.3,283.1,271.4,117.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,177.0,147.0,145.2,59.4,56.5,49.7,30.2],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-180.5,-160.1,-128.0,-164.1,-187.9,-194.3,-195.2,-174.5,-172.9,-202.5,-234.4,-253.5,-248.4,-232.6,-211.3,-210.6],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-129.8,-122.1,-94.6,-130.7,-151.4,-157.3,-157.4,-134.3,-129.1,-150.5,-185.4,-206.3,-195.3,-171.9,-150.6,-143.0]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,199.5,219.421,290.1,88.6,0.4,19.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{},"battery":{"node":"n_norte_grande","energy":600.0,"soc":[300.0,300.0,300.0,292.105263,292.105263,134.210526,7.368421,0.0,0.0,0.0,61.825,61.825,204.325,346.825,489.325,600.0,600.0,600.0,442.105263,321.684211,309.684211,309.684211,300.0,300.0]},"outage":[]},"south_bess":{"metrics":{"curtailment_mwh":1448.8,"unserved_mwh":0.0,"assumed_cost_proxy_usd":1930158.39472,"battery_losses_mwh":8.372576},"vs":{"curtailment_reduction_mwh":17.32225,"unserved_reduction_mwh":0.0,"assumed_cost_delta_usd":-948.165245},"valid":true,"checks":16,"caps":{"L1":400.0,"L2":400.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,159.4,159.8,157.0,142.1,93.2,265.9,192.6,153.6,175.3,147.0,240.1,202.7,238.0,276.0,174.3,114.3,160.4,176.2,180.5,167.9,154.1],"L2":[80.8,213.2,239.0,205.3,153.3,133.1,150.9,110.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,177.0,-3.0,30.8,48.0,56.5,40.5,30.2],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-173.5,-160.1,-128.0,-164.1,-187.9,-194.3,-155.327424,-174.5,-172.9,-202.5,-271.5,-273.3,-259.8,-227.5,-220.5,-176.7],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-122.8,-122.1,-94.6,-130.7,-151.4,-157.3,-117.527424,-134.3,-129.1,-150.5,-222.5,-226.1,-206.7,-166.8,-159.8,-109.1]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,199.5,284.5,290.1,238.6,150.4,169.2,116.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{},"battery":{"node":"n_sur","energy":600.0,"soc":[300.0,300.0,300.0,300.0,300.0,300.0,300.0,300.0,306.65,306.65,306.65,306.65,306.65,306.65,344.528947,344.528947,344.528947,344.528947,305.476316,284.634211,272.634211,277.479211,267.795,300.0]},"outage":[]},"uprate_l2":{"metrics":{"curtailment_mwh":213.2,"unserved_mwh":0.0,"assumed_cost_proxy_usd":1807721.421085,"battery_losses_mwh":4.688643},"vs":{"curtailment_reduction_mwh":1252.92225,"unserved_reduction_mwh":0.0,"assumed_cost_delta_usd":-123385.13888},"valid":true,"checks":16,"caps":{"L1":400.0,"L2":600.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,159.4,159.8,157.0,142.1,145.6,318.3,392.6,353.6,375.3,347.0,400.0,400.0,400.0,400.0,298.3,148.4,160.4,176.2,180.5,167.9,154.1],"L2":[80.8,213.2,239.0,205.3,153.3,133.1,150.9,162.4,452.4,600.0,600.0,600.0,600.0,559.9,597.3,562.0,524.0,301.0,31.1,30.8,48.0,56.5,40.5,30.2],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-180.5,-160.1,-128.0,-164.1,-187.9,-194.3,-195.2,-174.5,-172.9,-202.5,-234.4,-253.5,-248.4,-232.6,-211.3,-210.6],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-129.8,-122.1,-94.6,-130.7,-151.4,-157.3,-157.4,-134.3,-129.1,-150.5,-185.4,-206.3,-195.3,-171.9,-150.6,-143.0]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,84.5,90.1,38.6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{},"battery":null,"outage":[]}},"sudden_outage":{"baseline":{"metrics":{"curtailment_mwh":1466.12225,"unserved_mwh":1999.50275,"assumed_cost_proxy_usd":1846869.059965,"battery_losses_mwh":6.003947},"vs":null,"valid":true,"checks":16,"caps":{"L1":400.0,"L2":400.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,159.4,159.8,157.0,142.1,93.2,265.9,192.6,153.6,175.3,147.0,240.1,202.7,238.0,276.0,191.62225,131.62225,160.4,176.2,180.5,167.9,154.1],"L2":[80.8,213.2,239.0,205.3,153.3,133.1,150.9,110.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,194.32225,14.32225,30.8,48.0,56.5,40.5,30.2],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-180.5,-160.1,-128.0,-164.1,-187.9,-194.3,-195.2,-174.5,-172.9,-202.5,-234.4,-253.5,-248.4,-232.6,-211.3,-210.6],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-129.8,-122.1,-94.6,-130.7,-151.4,-157.3,-157.4,-134.3,-129.1,-150.5,-185.4,-206.3,-195.3,-171.9,-150.6,-143.0]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,199.5,284.5,290.1,238.6,150.4,169.2,116.5,17.322,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{"n_centro":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,469.77775,469.8,431.4,444.9,183.625,0.0]},"battery":null,"outage":[[18,19,20,21]]},"north_bess":{"metrics":{"curtailment_mwh":817.221053,"unserved_mwh":1711.68025,"assumed_cost_proxy_usd":1825880.5,"battery_losses_mwh":69.759197},"vs":{"curtailment_reduction_mwh":648.901197,"unserved_reduction_mwh":287.8225,"assumed_cost_delta_usd":-20988.559965},"valid":true,"checks":16,"caps":{"L1":400.0,"L2":400.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,166.9,159.8,307.0,262.6,100.2,265.9,192.6,153.6,175.3,147.0,240.1,202.7,238.0,276.0,174.3,147.94475,160.4,326.2,180.5,317.9,100.2],"L2":[80.8,213.2,239.0,212.8,153.3,283.1,271.4,117.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,177.0,30.64475,30.8,198.0,56.5,190.5,-23.7],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-180.5,-160.1,-128.0,-164.1,-187.9,-194.3,-195.2,-174.5,-172.9,-202.5,-234.4,-253.5,-248.4,-232.6,-211.3,-210.6],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-129.8,-122.1,-94.6,-130.7,-151.4,-157.3,-157.4,-134.3,-129.1,-150.5,-185.4,-206.3,-195.3,-171.9,-150.6,-143.0]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,199.5,219.421,290.1,88.6,0.4,19.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{"n_centro":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,453.45525,469.8,311.4,444.9,32.125,0.0]},"battery":{"node":"n_norte_grande","energy":600.0,"soc":[300.0,300.0,300.0,292.105263,292.105263,134.210526,7.368421,0.0,0.0,0.0,61.825,61.825,204.325,346.825,489.325,600.0,600.0,600.0,564.584474,564.584474,406.689737,406.689737,248.795,300.0]},"outage":[[18,19,20,21]]},"south_bess":{"metrics":{"curtailment_mwh":1448.8,"unserved_mwh":1954.37775,"assumed_cost_proxy_usd":1857408.39472,"battery_losses_mwh":12.750326},"vs":{"curtailment_reduction_mwh":17.32225,"unserved_reduction_mwh":45.125,"assumed_cost_delta_usd":10539.334755},"valid":true,"checks":16,"caps":{"L1":400.0,"L2":400.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,159.4,159.8,157.0,142.1,93.2,265.9,192.6,153.6,175.3,147.0,240.1,202.7,238.0,276.0,174.3,114.3,160.4,176.2,180.5,167.9,154.1],"L2":[80.8,213.2,239.0,205.3,153.3,133.1,150.9,110.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,177.0,0.0,30.8,48.0,56.5,40.5,30.2],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-173.5,-160.1,-128.0,-164.1,-187.9,-194.3,-155.327424,-174.5,-172.9,-202.5,-349.0,-253.5,-248.4,-236.02225,-211.3,-126.7],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-122.8,-122.1,-94.6,-130.7,-151.4,-157.3,-117.527424,-134.3,-129.1,-150.5,-300.0,-206.3,-195.3,-175.32225,-150.6,-59.1]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,199.5,284.5,290.1,238.6,150.4,169.2,116.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{"n_norte_chico":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0],"n_centro":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,369.5,469.8,461.4,441.47775,209.2,0.0]},"battery":{"node":"n_sur","energy":600.0,"soc":[300.0,300.0,300.0,300.0,300.0,300.0,300.0,300.0,306.65,306.65,306.65,306.65,306.65,306.65,344.528947,344.528947,344.528947,344.528947,223.897368,223.897368,223.897368,220.295,220.295,300.0]},"outage":[[18,19,20,21]]},"uprate_l2":{"metrics":{"curtailment_mwh":213.2,"unserved_mwh":1992.092,"assumed_cost_proxy_usd":1724264.0,"battery_losses_mwh":4.992},"vs":{"curtailment_reduction_mwh":1252.92225,"unserved_reduction_mwh":7.41075,"assumed_cost_delta_usd":-122605.059965},"valid":true,"checks":16,"caps":{"L1":400.0,"L2":600.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,159.4,159.8,157.0,142.1,145.6,318.3,392.6,353.6,375.3,347.0,400.0,400.0,400.0,400.0,298.3,148.4,160.4,176.2,180.5,167.9,154.1],"L2":[80.8,213.2,239.0,205.3,153.3,133.1,150.9,162.4,452.4,600.0,600.0,600.0,600.0,559.9,597.3,562.0,524.0,301.0,31.1,30.8,48.0,56.5,40.5,30.2],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-180.5,-160.1,-128.0,-164.1,-187.9,-194.3,-195.2,-174.5,-172.9,-202.5,-234.4,-253.5,-248.4,-232.6,-211.3,-210.6],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-129.8,-122.1,-94.6,-130.7,-151.4,-157.3,-157.4,-134.3,-129.1,-150.5,-185.4,-206.3,-195.3,-171.9,-150.6,-143.0]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,84.5,90.1,38.6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{"n_centro":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,453.0,469.8,431.4,444.9,192.992,0.0]},"battery":null,"outage":[[18,19,20,21]]}},"planned_maintenance":{"baseline":{"metrics":{"curtailment_mwh":1482.9,"unserved_mwh":1982.725,"assumed_cost_proxy_usd":1849553.499965,"battery_losses_mwh":6.003947},"vs":null,"valid":true,"checks":16,"caps":{"L1":400.0,"L2":400.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,159.4,159.8,157.0,142.1,93.2,265.9,192.6,153.6,175.3,147.0,240.1,202.7,238.0,276.0,208.4,148.4,160.4,176.2,180.5,167.9,154.1],"L2":[80.8,213.2,239.0,205.3,153.3,133.1,150.9,110.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,211.1,31.1,30.8,48.0,56.5,40.5,30.2],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-180.5,-160.1,-128.0,-164.1,-187.9,-194.3,-195.2,-174.5,-172.9,-202.5,-234.4,-253.5,-248.4,-232.6,-211.3,-210.6],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-129.8,-122.1,-94.6,-130.7,-151.4,-157.3,-157.4,-134.3,-129.1,-150.5,-185.4,-206.3,-195.3,-171.9,-150.6,-143.0]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,199.5,284.5,290.1,238.6,150.4,169.2,116.5,34.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{"n_centro":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,453.0,444.225,461.4,414.9,209.2,0.0]},"battery":null,"outage":[[18,19,20,21]]},"north_bess":{"metrics":{"curtailment_mwh":851.321053,"unserved_mwh":1649.08025,"assumed_cost_proxy_usd":1834336.499965,"battery_losses_mwh":72.838145},"vs":{"curtailment_reduction_mwh":631.578947,"unserved_reduction_mwh":333.64475,"assumed_cost_delta_usd":-15217.0},"valid":true,"checks":16,"caps":{"L1":400.0,"L2":400.0,"L3":350.0,"L4":300.0},"flow":{"L1":[295.3,148.9,157.0,159.4,159.8,157.0,142.1,228.2,265.9,192.6,153.6,175.3,147.0,240.1,202.7,238.0,276.0,208.4,148.4,310.4,209.84475,330.5,167.9,100.2],"L2":[230.8,213.2,239.0,205.3,153.3,133.1,150.9,245.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,211.1,31.1,180.8,81.64475,206.5,40.5,-23.7],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-180.5,-160.1,-128.0,-164.1,-187.9,-194.3,-195.2,-174.5,-172.9,-202.5,-234.4,-253.5,-248.4,-232.6,-211.3,-210.6],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-129.8,-122.1,-94.6,-130.7,-151.4,-157.3,-157.4,-134.3,-129.1,-150.5,-185.4,-206.3,-195.3,-171.9,-150.6,-143.0]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,199.5,284.5,259.121,88.6,0.4,19.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{"n_centro":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,453.0,289.8,427.75525,269.325,209.2,0.0]},"battery":{"node":"n_norte_grande","energy":600.0,"soc":[142.105263,142.105263,142.105263,142.105263,142.105263,142.105263,142.105263,0.0,0.0,0.0,0.0,29.43,171.93,314.43,456.93,567.605,600.0,600.0,600.0,442.105263,406.689737,248.795,248.795,300.0]},"outage":[[18,19,20,21]]},"south_bess":{"metrics":{"curtailment_mwh":1482.9,"unserved_mwh":1649.08025,"assumed_cost_proxy_usd":1891411.499995,"battery_losses_mwh":42.048671},"vs":{"curtailment_reduction_mwh":0.0,"unserved_reduction_mwh":333.64475,"assumed_cost_delta_usd":41858.00003},"valid":true,"checks":16,"caps":{"L1":400.0,"L2":400.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,159.4,159.8,157.0,142.1,93.2,265.9,192.6,153.6,175.3,147.0,240.1,202.7,238.0,276.0,208.4,148.4,160.4,176.2,180.5,167.9,154.1],"L2":[80.8,213.2,239.0,205.3,153.3,133.1,150.9,110.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,400.0,211.1,31.1,30.8,48.0,56.5,40.5,30.2],"L3":[-206.3,-93.1,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-175.078947,-160.1,-128.0,-135.131579,-187.9,-194.3,-45.2,-174.5,-172.9,-202.5,-349.0,-347.2,-350.0,-283.41975,-211.3,-126.7],"L4":[-117.9,0.0,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-124.378947,-122.1,-94.6,-101.731579,-151.4,-157.3,-7.4,-134.3,-129.1,-150.5,-300.0,-300.0,-296.9,-222.71975,-150.6,-59.1]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,199.5,284.5,290.1,238.6,150.4,169.2,116.5,34.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{"n_centro":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,309.9,376.1,359.8,394.08025,209.2,0.0]},"battery":{"node":"n_sur","energy":600.0,"soc":[300.0,424.83,424.83,424.83,424.83,424.83,424.83,424.83,429.98,429.98,429.98,457.5,457.5,457.5,600.0,600.0,600.0,600.0,479.368421,380.736842,273.789474,220.295,220.295,300.0]},"outage":[[18,19,20,21]]},"uprate_l2":{"metrics":{"curtailment_mwh":213.2,"unserved_mwh":1982.725,"assumed_cost_proxy_usd":1725249.999965,"battery_losses_mwh":6.003947},"vs":{"curtailment_reduction_mwh":1269.7,"unserved_reduction_mwh":0.0,"assumed_cost_delta_usd":-124303.5},"valid":true,"checks":16,"caps":{"L1":400.0,"L2":600.0,"L3":350.0,"L4":300.0},"flow":{"L1":[145.3,148.9,157.0,159.4,159.8,157.0,142.1,145.6,318.3,392.6,353.6,375.3,347.0,400.0,400.0,400.0,400.0,298.3,148.4,160.4,176.2,180.5,167.9,154.1],"L2":[80.8,213.2,239.0,205.3,153.3,133.1,150.9,162.4,452.4,600.0,600.0,600.0,600.0,559.9,597.3,562.0,524.0,301.0,31.1,30.8,48.0,56.5,40.5,30.2],"L3":[-206.3,-224.5,-226.1,-230.2,-264.5,-277.3,-214.3,-176.8,-180.5,-160.1,-128.0,-164.1,-187.9,-194.3,-195.2,-174.5,-172.9,-202.5,-234.4,-253.5,-248.4,-232.6,-211.3,-210.6],"L4":[-117.9,-131.4,-122.7,-123.8,-157.6,-174.1,-131.5,-114.5,-129.8,-122.1,-94.6,-130.7,-151.4,-157.3,-157.4,-134.3,-129.1,-150.5,-185.4,-206.3,-195.3,-171.9,-150.6,-143.0]},"curt":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,84.5,90.1,38.6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"unserved":{"n_centro":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,453.0,444.225,461.4,414.9,209.2,0.0]},"battery":null,"outage":[[18,19,20,21]]}}}};
+const fmt=(x,d=0)=>Number(x).toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d});
+const C=(s,o)=>D.cases[s][o];
+const OPT_LABEL={baseline:"Today's grid",north_bess:"Battery north",south_bess:"Battery south",uprate_l2:"Upgrade line L2"};
+const SIT_LABEL={normal:"Normal day",sudden_outage:"Sudden crash",planned_maintenance:"Planned maintenance"};
+const loc=h=>String(h).padStart(2,"0")+":00 Chile time"; // hour index 0 = 00:00 Chile (03:00 UTC)
+const red=(s,o,k)=>C(s,"baseline").metrics[k]-C(s,o).metrics[k];
+
+const STEPS=[
+ {slide:true,sit:"normal",opt:"baseline",h:13,k:"Andes",t:"AI-assisted operation of Chile's grid",tags:["SIMULATED"],
+  p:()=>"An optimiser computes what would happen, a validator checks it, and the AI explains it. A human decides. Use → or Space to continue."},
+ {sit:"normal",opt:"baseline",h:13,hl:"map",k:"The problem",tags:["SIMULATED","MODEL"],t:"Solar is thrown away in the north",
+  p:()=>`At midday the north makes more solar than line L2 can carry south. On this day ${fmt(C("normal","baseline").metrics.curtailment_mwh)} MWh of clean energy is wasted, while the centre burns gas. Watch L2 turn red.`},
+ {sit:"normal",opt:"south_bess",h:13,hl:"kpis",k:"Wrong place",tags:["MODEL","VALIDATED"],get t(){return red("normal","south_bess","curtailment_mwh")<0.5?"A battery in the south does nothing":"A battery in the south barely helps"},
+  p:()=>`The same battery placed south of the bottleneck reduces waste by ${fmt(red("normal","south_bess","curtailment_mwh"))} MWh: the surplus can't reach it.`},
+ {sit:"normal",opt:"north_bess",h:13,hl:"kpis",k:"Right place",tags:["MODEL","VALIDATED"],t:"North of the bottleneck, it works",
+  p:()=>`Placed in Norte Grande it soaks up midday solar and releases it in the evening: ${fmt(red("normal","north_bess","curtailment_mwh"))} MWh less waste. Drag the hour slider to watch it charge and discharge.`},
+ {sit:"normal",opt:"uprate_l2",h:13,hl:"kpis",k:"Another option",tags:["MODEL","VALIDATED"],t:"Or upgrade the line itself",
+  p:()=>`Raising L2's limit by 50% cuts waste by ${fmt(red("normal","uprate_l2","curtailment_mwh"))} MWh, the best result on a normal day. (Building costs are not modelled.)`},
+ {sit:"sudden_outage",opt:"baseline",h:19,hl:"map",k:"Crisis",tags:["SIMULATED","MODEL"],t:"A 600 MW gas plant crashes at the evening peak",
+  p:()=>`Nobody saw it coming, so the hours before stay exactly as planned. The grid can't cover the gap: ${fmt(C("sudden_outage","baseline").metrics.unserved_mwh)} MWh of demand goes unserved in Centro.`},
+ {sit:"sudden_outage",opt:"north_bess",h:19,hl:"kpis",k:"Resilience",tags:["MODEL","VALIDATED"],t:"The north battery helps here too",
+  p:()=>`It cuts unserved demand by ${fmt(red("sudden_outage","north_bess","unserved_mwh"))} MWh. The line upgrade, best on a normal day, helps by ${fmt(red("sudden_outage","uprate_l2","unserved_mwh"))} MWh here. That trade-off is what the agent has to explain.`},
+ {sit:"planned_maintenance",opt:"south_bess",h:19,hl:"controls",k:"Planning ahead",tags:["MODEL","VALIDATED"],t:"Knowing in advance changes the answer",
+  p:()=>`If the same outage is planned maintenance, the south battery charges up beforehand: ${fmt(red("planned_maintenance","south_bess","unserved_mwh"))} MWh less unserved, versus ${fmt(red("sudden_outage","south_bess","unserved_mwh"))} MWh when it is a surprise.`},
+ {sit:"normal",opt:"north_bess",h:13,hl:"badge",k:"Why you can trust it",tags:["VALIDATED"],t:"Every number is computed, then checked",
+  p:()=>`An optimiser (HiGHS) computes each result; a separate validator re-checks it from scratch (${C("normal","north_bess").checks} checks: power balance, line limits, battery physics, no hindsight). The AI explains and proposes; it never invents a number. Now explore on your own.`},
+];
+
+const TAGS={SIMULATED:"Simulation on an illustrative 5-node grid, not Chile's real network",MODEL:"Computed by the optimiser (HiGHS) under stated assumptions",VALIDATED:"Re-checked from scratch by the independent validator"};
+let S={step:0,sit:"normal",opt:"baseline",h:13,tour:true},timer=null;
+function readURL(){const q=new URLSearchParams(location.search);
+  if(q.has("step")){S.step=Math.max(0,Math.min(STEPS.length-1,+q.get("step")||0));Object.assign(S,STEPS[S.step]);}
+  if(D.cases[q.get("sit")])S.sit=q.get("sit");
+  if(q.get("opt")&&D.cases[S.sit][q.get("opt")])S.opt=q.get("opt");
+  if(q.has("h"))S.h=Math.max(0,Math.min(23,+q.get("h")||0));
+  if(q.get("tour")==="0")S.tour=false;}
+function writeURL(){const q=new URLSearchParams({sit:S.sit,opt:S.opt,h:S.h});
+  if(S.tour)q.set("step",S.step);else q.set("tour","0");
+  history.replaceState(null,"","?"+q.toString());}
+
+const NY=i=>60+i*110, NX=200;
+function drawMap(){const c=C(S.sit,S.opt),svg=document.getElementById("grid"),h=S.h;let s="";
+  D.lines.forEach((ln,i)=>{const f=c.flow[ln.id][h],cap=c.caps[ln.id],u=cap?Math.abs(f)/cap:0;
+    const col=u>=0.999?"var(--bad)":u>0.8?"var(--solar)":"var(--flow)";
+    const y1=NY(i)+20,y2=NY(i+1)-20;
+    s+=`<line x1="${NX}" y1="${y1}" x2="${NX}" y2="${y2}" stroke="${col}" stroke-width="${3+7*u}" stroke-linecap="round"/>`;
+    s+=`<text x="${NX+18}" y="${(y1+y2)/2+4}" font-size="12" fill="var(--muted)">${ln.id} · ${fmt(Math.abs(f))}/${fmt(cap)} MW${u>=0.999?" · full":""}</text>`;});
+  D.nodes.forEach((n,i)=>{const un=(c.unserved[n.id]||[])[h]||0,y=NY(i);
+    if(un>1e-6)s+=`<circle cx="${NX}" cy="${y}" r="30" fill="var(--bad)" opacity=".18"/>`;
+    s+=`<circle cx="${NX}" cy="${y}" r="16" fill="var(--card)" stroke="${un>1e-6?"var(--bad)":"var(--ink)"}" stroke-width="2.5"/>`;
+    s+=`<text x="${NX-26}" y="${y-2}" font-size="13" font-weight="600" text-anchor="end" fill="var(--ink)">${n.label}</text>`;
+    s+=`<text x="${NX-26}" y="${y+14}" font-size="11" text-anchor="end" fill="var(--muted)">${D.plants[n.id].join(" · ")||"&nbsp;"}</text>`;
+    if(un>1e-6)s+=`<text x="${NX+26}" y="${y+4}" font-size="12" font-weight="600" fill="var(--bad)">${fmt(un)} MW cut</text>`;
+    if(c.battery&&c.battery.node===n.id){const soc=c.battery.soc[h]/c.battery.energy;
+      s+=`<g transform="translate(${NX+26},${y-26})"><rect width="36" height="16" rx="3" fill="none" stroke="var(--accent)" stroke-width="2"/><rect x="2" y="2" width="${32*soc}" height="12" rx="1.5" fill="var(--accent)"/><text x="42" y="12" font-size="11" fill="var(--accent)">battery ${fmt(100*soc)}%</text></g>`;}});
+  svg.innerHTML=s;}
+function drawKPIs(){const c=C(S.sit,S.opt),b=C(S.sit,"baseline"),m=c.metrics;
+  const row=(l,v,base,unit)=>{const d=v-base,cls=d<-0.05?"good":d>0.05?"bad":"";
+    const ds=S.opt==="baseline"?"&nbsp;":Math.abs(d)<0.5?"same as today":`${d<0?"−":"+"}${fmt(Math.abs(d))} ${unit} vs today`;
+    return `<div class="kpi"><div class="v">${fmt(v)}</div><div class="l">${l}</div><div class="d ${cls}">${ds}</div></div>`;};
+  document.getElementById("kpibox").innerHTML=row("MWh solar/wind wasted",m.curtailment_mwh,b.metrics.curtailment_mwh,"MWh")+
+    row("MWh demand not served",m.unserved_mwh,b.metrics.unserved_mwh,"MWh")+row("USD fuel cost (assumed)",m.assumed_cost_proxy_usd,b.metrics.assumed_cost_proxy_usd,"USD");
+  document.getElementById("badge").textContent=c.valid?`✓ validated · ${c.checks} checks`:"✗ failed validation";
+  document.getElementById("badge").style.color=c.valid?"var(--ok)":"var(--bad)";}
+function drawChart(){const c=C(S.sit,S.opt),T=24,W=600,H=150,bw=W/T;
+  const un=Array.from({length:T},(_,t)=>Object.values(c.unserved).reduce((a,v)=>a+v[t],0));
+  const mx=Math.max(1,...c.curt,...un);let s="";
+  (c.outage||[]).flat().forEach(t=>s+=`<rect x="${t*bw}" y="0" width="${bw}" height="${H}" fill="var(--bad)" opacity=".06"/>`);
+  for(let t=0;t<T;t++){const hc=H*c.curt[t]/mx,hu=H*un[t]/mx;
+    s+=`<rect x="${t*bw+2}" y="${H-hc}" width="${bw/2-2}" height="${hc}" fill="var(--solar)" rx="2"/>`;
+    s+=`<rect x="${t*bw+bw/2}" y="${H-hu}" width="${bw/2-2}" height="${hu}" fill="var(--bad)" rx="2"/>`;}
+  s+=`<rect x="${S.h*bw}" y="0" width="${bw}" height="${H}" fill="none" stroke="var(--accent)" stroke-width="2" rx="3"/>`;
+  document.getElementById("bars").innerHTML=s;}
+function drawControls(){const mk=(id,obj,labels,key)=>{document.getElementById(id).innerHTML=Object.keys(obj).map(k=>
+    `<button data-k="${k}" class="${S[key]===k?"on":""}">${labels[k]||k}</button>`).join("");};
+  mk("sit",D.situations,SIT_LABEL,"sit");mk("opt",D.options,OPT_LABEL,"opt");
+  document.getElementById("hour").value=S.h;document.getElementById("hlabel").textContent=loc(S.h);}
+function drawTour(){const t=document.getElementById("tour"),st=STEPS[S.step];
+  document.querySelectorAll(".hl").forEach(e=>e.classList.remove("hl"));
+  t.classList.toggle("closed",!S.tour);if(!S.tour)document.getElementById("veil").classList.remove("on");document.getElementById("reopen").style.display=S.tour?"none":"inline-block";
+  if(!S.tour)return;
+  document.getElementById("tk").textContent=`Step ${S.step+1} of ${STEPS.length} · ${st.k}`;
+  document.getElementById("tt").textContent=st.t;document.getElementById("tp").textContent=st.p();
+  document.getElementById("ttags").innerHTML=(st.tags||[]).map(x=>`<span class="${x}" title="${TAGS[x]}">${x}</span>`).join("");
+  t.classList.toggle("slide",!!st.slide);document.getElementById("veil").classList.toggle("on",!!st.slide);
+  document.getElementById("tdots").innerHTML=STEPS.map((_,i)=>`<span class="${i===S.step?"on":""}"></span>`).join("");
+  document.getElementById("tback").disabled=S.step===0;
+  document.getElementById("tnext").textContent=S.step===STEPS.length-1?"Finish":"Next";
+  const el=document.getElementById(st.hl);if(el)el.classList.add("hl");}
+function render(){drawControls();drawMap();drawKPIs();drawChart();drawTour();writeURL();}
+function go(i){S.step=i;Object.assign(S,{sit:STEPS[i].sit,opt:STEPS[i].opt,h:STEPS[i].h});render();}
+
+document.getElementById("sit").onclick=e=>{const k=e.target.dataset.k;if(k){S.sit=k;render();}};
+document.getElementById("opt").onclick=e=>{const k=e.target.dataset.k;if(k){S.opt=k;render();}};
+document.getElementById("hour").oninput=e=>{S.h=+e.target.value;render();};
+document.getElementById("play").onclick=e=>{if(timer){clearInterval(timer);timer=null;e.target.textContent="▶";return;}
+  e.target.textContent="❚❚";timer=setInterval(()=>{S.h=(S.h+1)%24;render();},600);};
+document.getElementById("tnext").onclick=()=>{if(S.step<STEPS.length-1)go(S.step+1);else{S.tour=false;render();}};
+document.getElementById("tback").onclick=()=>{if(S.step>0)go(S.step-1);};
+document.getElementById("tclose").onclick=()=>{S.tour=false;render();};
+document.getElementById("reopen").onclick=()=>{S.tour=true;go(S.step);};
+document.getElementById("share").onclick=async e=>{try{await navigator.clipboard.writeText(location.href);e.target.textContent="Link copied";}catch(_){e.target.textContent="Copy from address bar";}setTimeout(()=>e.target.textContent="Copy link",1500);};
+document.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;const t=document.getElementById("tour");
+  if(!S.tour){if(e.key==="t"||e.key==="T")document.getElementById("reopen").click();return;}
+  if(["ArrowRight"," ","Enter","PageDown"].includes(e.key)){e.preventDefault();document.getElementById("tnext").click();}
+  else if(["ArrowLeft","PageUp"].includes(e.key)){e.preventDefault();document.getElementById("tback").click();}
+  else if(e.key==="Escape")document.getElementById("tclose").click();
+  else if(e.key==="h"||e.key==="H")t.classList.toggle("hidden");});
+document.getElementById("foot").textContent=`Scenario ${D.scenario_id}: ${D.source}. Results are pre-computed; money is an assumed-cost proxy, not CEN costs. Simulation only: nothing here controls a real grid.`;
+readURL();render();
+</script>
+</body>
+</html>
