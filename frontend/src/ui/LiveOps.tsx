@@ -242,7 +242,7 @@ function Screen() {
         <div className="gp-brain-head">
           <span className={`gp-brain-dot is-${phase}`} />
           <div>
-            <b>Gemini 4 Argon</b>
+            <b>Gemini</b>
             <span>{phase === 'analyzing' ? 'Analizando la falla' : phase === 'awaiting_operator' ? 'Propone dos caminos' : phase === 'executing' ? 'Ejecutando el plan' : phase === 'resolved' ? 'Plan aplicado' : 'Vigilando la red'}</span>
           </div>
         </div>

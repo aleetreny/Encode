@@ -627,7 +627,7 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
           Andes · Operación de la red eléctrica con IA — Panel del Jurado
         </h1>
         <p style={{ margin: 0, color: '#4b5563', fontSize: '14px' }}>
-          Desafía la red eléctrica en tiempo real. Gemini 4 Argon detecta, simula y propone mitigaciones.
+          Desafía la red eléctrica en tiempo real. Gemini detecta, simula y propone mitigaciones.
         </p>
       </header>
 
@@ -825,7 +825,7 @@ export function JuryPage({ sessionHook }: JuryPageProps) {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#166534' }}>
-              Recomendación Gemini 4 Argon
+              Recomendación de Gemini
             </h3>
             <span style={{ fontSize: '11px', backgroundColor: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>
               Optimizador HiGHS Validado

@@ -399,7 +399,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
               const [x, y] = screen([GEMINI[0], GEMINI[1], GEMINI[2] + 44]);
               return (
                 <g className={`gp-glabel is-${phase}`}>
-                  <text x={x} y={y} textAnchor="middle" className="gp-glabel-name">Gemini 4 Argon</text>
+                  <text x={x} y={y} textAnchor="middle" className="gp-glabel-name">Gemini</text>
                   <text x={x} y={y + 17} textAnchor="middle" className="gp-glabel-sub">{phase === 'analyzing' ? 'analizando la red…' : phase === 'awaiting_operator' ? 'esperando tu decisión' : phase === 'executing' ? 'ejecutando el plan' : phase === 'resolved' ? 'plan aplicado · vigilando' : 'vigilando la red'}</text>
                 </g>
               );

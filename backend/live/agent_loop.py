@@ -5,7 +5,7 @@ Implements:
 - Operational lever candidate enumeration (<= 40 single + paired levers)
 - Parallel HiGHS LP solving + independent validation (`ThreadPoolExecutor`)
 - 4D Pareto frontier computation and distinct trade-off option selection
-- Gemini 4 Argon (`GRIDPILOT_MODEL_DECIDER`) function-calling loop with
+- Gemini decider (`GRIDPILOT_MODEL_DECIDER`, default gemini-3.8-flash) function-calling loop with
   `inspect_node`, `simulate_plan` (<= 3 extra calls), and `propose_options`,
   with 12-second timeout fallback
 - Gemini 3.8 Flash (`GRIDPILOT_MODEL_FAST`) helper for periodic operator notes
@@ -45,9 +45,12 @@ if "pytest" not in sys.modules and "PYTEST_CURRENT_TEST" not in os.environ:
                 if _k and _v:
                     os.environ.setdefault(_k, _v)
 
-DEFAULT_DECIDER_MODEL = "gemini-4-argon"
+# Live decider measured on the real day (25 Oct, 2 incidents each): gemini-3.8-flash with low thinking
+# answered in about 4.3 s with valid, distinct options; gemini-4-argon took 7-20 s and often hit the 12 s
+# timeout. The recorded fallback sessions stay labelled with the model that answered them.
+DEFAULT_DECIDER_MODEL = "gemini-3.8-flash"
 DEFAULT_FAST_MODEL = "gemini-3.8-flash"
-DEFAULT_DECIDER_THINKING = "medium"
+DEFAULT_DECIDER_THINKING = "low"
 
 TRADEOFF_TAGS = ("max_hogares", "min_costo", "min_co2", "min_riesgo_red")
 OPERATIONAL_LEVER_TYPES = (

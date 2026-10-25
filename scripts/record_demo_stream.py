@@ -148,7 +148,7 @@ def verify_stream(events: list[dict[str, Any]]) -> None:
         elif etype == "options.ready":
             options_ready_events.append(ev)
             me = ev["model_execution"]
-            assert me["model"] == "gemini-4-argon", f"Expected gemini-4-argon, got {me}"
+            assert me["model"] != "deterministic-planner", f"Expected a real Gemini decider, got {me}"
             assert me["status"] == "ok", f"Expected status ok, got {me}"
             assert me.get("response_id") and not str(me["response_id"]).startswith("det-"), (
                 f"Expected real Gemini response_id, got {me}"
