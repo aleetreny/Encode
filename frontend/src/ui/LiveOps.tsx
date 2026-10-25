@@ -71,19 +71,15 @@ function Screen() {
     if (state.active_incidents.length === 0) setApplied(null);
   }, [state.active_incidents.length]);
 
-  // Big announcement of each new fault: who did it, what fell, and the damage the engine computed.
-  const [attacks, setAttacks] = useState<{ who: string; what: string; homes: number; mw: number; key: string; jury: boolean }[]>([]);
+  // Which zones each fault left in the dark, as the engine computed it, so the map can aim the
+  // optimisation at them even after the plan brings the lights back.
+  const [hitZones, setHitZones] = useState<Record<string, string[]>>({});
   useEffect(() => {
     const ev = state.last_incident;
-    if (!catalog || !ev || seenIncidents.current.has(ev.incident_id)) return;
+    if (!ev || seenIncidents.current.has(ev.incident_id)) return;
     seenIncidents.current.add(ev.incident_id);
-    const d = ev.disruption;
-    const a = buildAssets(catalog).find((x) => x.id === d.asset_id);
-    const line = catalog.lines.find((l) => l.id === d.asset_id);
-    const what = line ? `cortó la línea ${line.id} (${ZONES[line.from]?.label} → ${ZONES[line.to]?.label})` : a ? `botó ${assetTitle(a)}` : `botó ${d.asset_id}`;
-    const who = d.source === 'jury' ? d.jury_name || 'Alguien del jurado' : d.source === 'operator' ? 'El operador' : 'Una falla repentina';
-    setAttacks((list) => [{ who, what, homes: ev.impact.households_off_peak, mw: ev.impact.unserved_mw_peak, key: ev.incident_id, jury: d.source === 'jury' }, ...list].slice(0, 4));
-  }, [state.last_incident, catalog]);
+    setHitZones((m) => ({ ...m, [ev.disruption.event_id]: ev.impact.nodes_affected }));
+  }, [state.last_incident]);
   useEffect(() => {
     if (countdown?.active) wasCountingDown.current = true;
   }, [countdown?.active]);
@@ -116,6 +112,19 @@ function Screen() {
   const deciding = !!options && (phase === 'awaiting_operator' || !!countdown?.active);
   const assets = useMemo(() => (catalog ? buildAssets(catalog) : []), [catalog]);
 
+  const affected = useMemo(() => {
+    const ids = new Set<string>();
+    state.active_incidents.forEach((d) => {
+      (hitZones[d.event_id] ?? []).forEach((n) => ids.add(n));
+      const a = assets.find((x) => x.id === d.asset_id);
+      if (a && !hitZones[d.event_id]?.length) ids.add(a.nodeId);
+    });
+    return [...ids];
+  }, [state.active_incidents, hitZones, assets]);
+  const proposed = useMemo(() => {
+    const o = hovered ?? options?.find((x) => x.option_id === countdown?.candidate_id) ?? null;
+    return new Set((o?.levers ?? []).map((l) => l.target_id));
+  }, [hovered, options, countdown?.candidate_id]);
   const boosted = useMemo(() => new Set((applied?.levers ?? []).map((l) => l.target_id)), [applied]);
   const focus = useMemo(() => {
     if (!shown) return [] as string[];
@@ -195,6 +204,8 @@ function Screen() {
         boosted={boosted}
         phase={phase}
         focus={focus}
+        affected={affected}
+        proposed={proposed}
         selected={selected}
         onSelect={setSelected}
       />
@@ -213,20 +224,6 @@ function Screen() {
         <div><i className="win is-dark" />Sin luz</div>
         <small className="gp-legend-note">1 casa = 200.000 hogares</small>
       </div>
-
-      {attacks.length > 0 && (
-        <aside className="gp-attacks">
-          <b className="gp-attacks-title">Ataques y fallas</b>
-          {attacks.map((a, i) => (
-            <div key={a.key} className={`gp-attack-card${i === 0 ? ' is-new' : ''}${a.jury ? ' is-jury' : ''}`}>
-              <small>{a.jury ? 'Jurado' : a.who === 'El operador' ? 'Operador' : 'Falla'}</small>
-              <p><b>{a.who}</b> {a.what}</p>
-              <span className={a.homes > 0 ? 'is-bad' : 'is-ok'}>{a.homes > 0 ? `−${fmt(a.homes)}` : 'la red lo absorbió'}</span>
-              {a.homes > 0 && <em>hogares sin luz en el peor momento · {fmt(a.mw)} MW</em>}
-            </div>
-          ))}
-        </aside>
-      )}
 
       {toast && (
         <div key={toast.key} className={`gp-toast is-${toast.kind}`}>

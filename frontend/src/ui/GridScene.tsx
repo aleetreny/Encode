@@ -61,6 +61,8 @@ interface Props {
   boosted: Set<string>;
   phase: string;
   focus: string[]; // asset ids Gemini is looking at
+  affected: string[]; // zones that lost supply because of the active incidents
+  proposed: Set<string>; // lever targets of the plan on the table (recommended or hovered)
   selected: string | null;
   onSelect: (id: string | null) => void;
 }
@@ -164,7 +166,26 @@ function TrunkLine({ from, to, mw, cap, state, label, lift = 26 }: {
   );
 }
 
-export const GridScene = memo(function GridScene({ catalog, solution, hour, incidents, boosted, phase, focus, selected, onSelect }: Props) {
+// An arc of power from a source to a zone in trouble. `probe` is the solver trying a path,
+// `proposed` is the plan on the table, `applied` is the plan running with energy flowing in.
+function RescueArc({ from, to, kind, delay = 0 }: { from: [number, number]; to: [number, number]; kind: 'probe' | 'proposed' | 'applied'; delay?: number }) {
+  const lift = Math.max(50, Math.hypot(to[0] - from[0], to[1] - from[1]) * 0.35);
+  const d = `M${from[0]},${from[1]} Q${(from[0] + to[0]) / 2},${Math.min(from[1], to[1]) - lift} ${to[0]},${to[1]}`;
+  return (
+    <g className={`gp-rescue is-${kind}`} style={{ ['--d' as string]: `${delay}s` }}>
+      {kind !== 'probe' && <path d={d} className="gp-rescue-glow" />}
+      <path d={d} className="gp-rescue-line" pathLength={1} />
+      {kind === 'applied' && [0, 1, 2, 3].map((i) => (
+        <circle key={i} r="3.2" className="gp-rescue-packet">
+          <animateMotion dur="1.8s" begin={`${-i * 0.45}s`} repeatCount="indefinite" path={d} />
+        </circle>
+      ))}
+      {kind !== 'probe' && <circle cx={to[0]} cy={to[1]} r="5" className="gp-rescue-land gp-spread" />}
+    </g>
+  );
+}
+
+export const GridScene = memo(function GridScene({ catalog, solution, hour, incidents, boosted, phase, focus, affected, proposed, selected, onSelect }: Props) {
   // Pan and zoom: drag to move, wheel or pinch to zoom around the pointer, double click to reset.
   const [view, setView] = useState({ x: 0, y: 0, s: 1 });
   const svgRef = useRef<SVGSVGElement>(null);
@@ -221,10 +242,16 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     drawables.push({
       y: screen(a.at)[1],
       node: (
-        <g key={a.id} className={`gp-asset${selected === a.id ? ' is-selected' : ''}${s === 'standby' ? ' is-standby' : ''}`} onClick={(e) => { e.stopPropagation(); onSelect(selected === a.id ? null : a.id); }}>
-          <path d={k.ring(a.at[0], a.at[1], a.technology === 'wind' ? 24 : 27, 0.1, P, 44)} className="gp-pad" style={{ fill: TECH_COLOR[a.technology], stroke: TECH_COLOR[a.technology] }} />
-          {body}
-          {s === 'tripped' && <TripMark at={a.at} />}
+        <g key={a.id} className={`gp-asset is-${s}${selected === a.id ? ' is-selected' : ''}`} onClick={(e) => { e.stopPropagation(); onSelect(selected === a.id ? null : a.id); }}>
+          <path d={k.ring(a.at[0], a.at[1], a.technology === 'wind' ? 24 : 27, 0.1, P, 44)} className="gp-pad" style={s === 'tripped' ? undefined : { fill: TECH_COLOR[a.technology], stroke: TECH_COLOR[a.technology] }} />
+          <g className="gp-asset-body">{body}</g>
+          {s === 'tripped' && (
+            <>
+              <path d={k.ring(a.at[0], a.at[1], 34, 0.2, P, 48)} className="gp-shock" />
+              <path d={k.ring(a.at[0], a.at[1], 34, 0.2, P, 48)} className="gp-shock is-late" />
+              <TripMark at={a.at} />
+            </>
+          )}
           {s === 'boost' && <BoostMark at={a.at} />}
         </g>
       ),
@@ -258,6 +285,11 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     return (
       <g key={l.id} className="gp-asset" onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}>
         <TrunkLine from={from} to={to} mw={mw} cap={cap} state={isTripped ? 'tripped' : hot ? 'hot' : 'ok'} label={label} />
+        {!isTripped && (boosted.has(l.id) || proposed.has(l.id)) && (() => {
+          const lift = 26;
+          const d = k.pathOf([k.iso([from[0], from[1], lift], P), k.iso([(from[0] + to[0]) / 2, (from[1] + to[1]) / 2, lift * 0.8], P), k.iso([to[0], to[1], lift], P)]);
+          return <path d={d} className={`gp-trunk-rescue${boosted.has(l.id) ? ' is-applied' : ''}`} />;
+        })()}
       </g>
     );
   });
@@ -287,6 +319,35 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     })() : null))
     .filter(Boolean) as k.Point3[];
 
+  // The optimisation, drawn on the map: while Gemini analyses, the solver probes every flexible
+  // source towards the zones in the dark; then the plan on the table shows as dashed arcs, and
+  // once applied, energy flows along them into the zone.
+  const zoneTargets = affected.map((n) => (ZONES[n] ? screen([...housesOf(n).slice(0, 2), 14] as k.Point3) : null)).filter(Boolean) as [number, number][];
+  const sourceOf = (id: string): [number, number] | null => {
+    const a = assets.find((x) => x.id === id);
+    if (a) return screen([a.at[0], a.at[1], 30]);
+    return null;
+  };
+  const rescues: React.ReactNode[] = [];
+  const nearest = (p: [number, number]) => zoneTargets.reduce((b, t) => (Math.hypot(t[0] - p[0], t[1] - p[1]) < Math.hypot(b[0] - p[0], b[1] - p[1]) ? t : b), zoneTargets[0]);
+  if (zoneTargets.length) {
+    if (phase === 'analyzing') {
+      const flexible = assets.filter((a) => !tripped.has(a.id) && (a.kind === 'battery' || ['gas', 'hydro', 'diesel', 'coal'].includes(a.technology)));
+      flexible.forEach((a, i) => {
+        const from = sourceOf(a.id)!;
+        rescues.push(<RescueArc key={`p-${a.id}`} from={from} to={nearest(from)} kind="probe" delay={i * 0.22} />);
+      });
+    }
+    const drawLevers = (ids: Set<string>, kind: 'proposed' | 'applied') => ids.forEach((id) => {
+      const from = sourceOf(id);
+      if (from) rescues.push(<RescueArc key={`${kind}-${id}`} from={from} to={nearest(from)} kind={kind} />);
+    });
+    if (phase === 'awaiting_operator') drawLevers(proposed, 'proposed');
+    if (phase === 'executing' || phase === 'resolved') drawLevers(boosted, 'applied');
+  }
+  // Demand response lands on the zone itself: its houses glow while load is being shed.
+  const easedZones = new Set([...(phase === 'awaiting_operator' ? proposed : []), ...(phase === 'executing' || phase === 'resolved' ? boosted : [])].filter((id) => ZONES[id]));
+
   // Labels live inside the drawing (so they zoom with it) and are spread out so none overlap:
   // each one starts right above its object and climbs until it is clear, keeping a thin leader.
   type Lbl = { id: string; x: number; y: number; ax: number; ay: number; w: number; name: string; mw: string; color: string; state: string };
@@ -298,8 +359,8 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     const top = a.technology === 'wind' ? 62 : a.technology === 'coal' ? 64 : a.technology === 'gas' || a.technology === 'diesel' ? 46 : 30;
     const [ax, ay] = screen([a.at[0], a.at[1], top]);
     const name = TECH_LABEL[a.technology] ?? a.technology;
-    const mw = s === 'tripped' ? 'FUERA' : `${Math.round(Math.abs(out))} MW${a.kind === 'battery' ? (out < -0.5 ? ' ↓' : out > 0.5 ? ' ↑' : '') : ''}`;
-    const w = (name.length + mw.length) * 7.4 + 34;
+    const mw = s === 'tripped' ? '' : `${Math.round(Math.abs(out))} MW${a.kind === 'battery' ? (out < -0.5 ? ' ↓' : out > 0.5 ? ' ↑' : '') : ''}`;
+    const w = (name.length + mw.length) * 7.4 + (mw ? 34 : 26);
     labels.push({ id: a.id, x: ax, y: ay - 10, ax, ay, w, name, mw, color: TECH_COLOR[a.technology], state: s });
   }
   labels.sort((p, q) => q.ay - p.ay); // lower objects first, so higher labels climb above them
@@ -355,6 +416,10 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
             <stop offset="0.55" stopColor="#9b72ff" />
             <stop offset="1" stopColor="#ff7ab6" />
           </linearGradient>
+          {/* Recolours a plant in shades of red while keeping its shading, for a tripped asset. */}
+          <filter id="gp-redden" colorInterpolationFilters="sRGB">
+            <feColorMatrix type="matrix" values="0.45 0.45 0.1 0 0.25  0.12 0.12 0.04 0 0.02  0.12 0.12 0.04 0 0.04  0 0 0 1 0" />
+          </filter>
           <radialGradient id="gp-gem-glow">
             <stop offset="0" stopColor="#8b7bff" stopOpacity="0.35" />
             <stop offset="1" stopColor="#8b7bff" stopOpacity="0" />
@@ -365,6 +430,13 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
           <g className="gp-feeders">{feeders}</g>
           <g>{drawables.map((d) => d.node)}</g>
           <g className="gp-trunk">{wires}</g>
+          <g className="gp-rescues">
+            {[...easedZones].map((id) => {
+              const h = housesOf(id);
+              return <path key={`dr-${id}`} d={k.ring(h[0] - 3, h[1] + 12, 48, 0.3, P, 48)} className={`gp-dr-ring${boosted.has(id) ? ' is-applied' : ''}`} />;
+            })}
+            {rescues}
+          </g>
           <g className="gp-beams">
             {targets.map((p, i) => {
               const [x, y] = screen([p[0], p[1], 10]);
