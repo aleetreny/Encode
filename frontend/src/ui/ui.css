@@ -380,39 +380,8 @@
 
 /* ---------- sabotage story: attack → impact → Gemini → options → result ---------- */
 .gp { --inc-h: 0px; --brain-w: 310px; }
-.gp.has-incident { --inc-h: 124px; --brain-w: 396px; }
+.gp.has-incident { --inc-h: 158px; --brain-w: 396px; }
 .gp.has-options { --brain-w: 396px; }
-
-.gp-incident {
-  position: absolute; top: 68px; left: 22px; right: 16px; z-index: 6; height: 108px;
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 1fr auto; column-gap: 28px; row-gap: 8px; align-items: center;
-  padding: 12px 20px 10px; background: #fff; border: 1px solid #f5b5b7; border-left: 8px solid var(--red); border-radius: 16px;
-  box-shadow: 0 18px 44px -26px rgba(229, 72, 77, 0.55); animation: gp-rise 0.4s cubic-bezier(.32,.72,0,1);
-}
-.gp-incident.is-restored { border-color: #bfe6d3; border-left-color: var(--green); box-shadow: 0 18px 44px -26px rgba(34, 160, 107, 0.5); }
-.gp-incident.is-absorbed { border-color: #bfe6d3; border-left-color: var(--green); }
-.gp-inc-main { display: flex; align-items: center; gap: 16px; min-width: 0; }
-.gp-inc-badge { flex: none; font: 800 12px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: #fff; background: var(--red); padding: 8px 12px; border-radius: 9px; animation: gp-blink 1s steps(2) 4; }
-.gp-incident.is-restored .gp-inc-badge, .gp-incident.is-absorbed .gp-inc-badge { background: var(--green); animation: none; }
-.gp-inc-text { min-width: 0; }
-.gp-inc-text h2 { margin: 0; font-size: 27px; line-height: 1.12; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gp-inc-text p { margin: 3px 0 0; font: 12.5px var(--mono); color: var(--ink-2); }
-.gp-inc-nums { display: flex; gap: 12px; }
-.gp-inc-nums div { text-align: right; padding: 0 0 0 14px; border-left: 1px solid #f0d0d1; }
-.gp-inc-nums div:first-child { border-left: 0; }
-.gp-inc-nums b { display: block; font: 800 38px/1 var(--mono); color: var(--red); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.gp-inc-nums span { font: 10.5px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); white-space: nowrap; }
-.gp-inc-nums .is-ok b { color: var(--green); font-size: 30px; }
-.gp-steps { grid-column: 1 / -1; list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 6px; }
-.gp-steps li { display: flex; align-items: center; gap: 7px; font: 700 12px var(--mono); color: var(--ink-3); padding: 4px 10px 4px 5px; border-radius: 999px; white-space: nowrap; }
-.gp-steps li + li::before { content: ""; width: 14px; height: 2px; background: var(--line); margin-right: 6px; margin-left: -16px; display: none; }
-.gp-steps i { font-style: normal; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; background: #f2f2ef; color: var(--ink-3); }
-.gp-steps li.is-done { color: var(--green); }
-.gp-steps li.is-done i { background: #eaf7f1; color: var(--green); }
-.gp-steps li.is-now { color: #fff; background: var(--ink); }
-.gp-steps li.is-now i { background: #fff; color: var(--ink); }
-.gp-incident.is-restored .gp-steps li.is-done:last-child { color: #fff; background: var(--green); }
-.gp-incident.is-restored .gp-steps li.is-done:last-child i { background: #fff; color: var(--green); }
 
 /* the story owns the screen: scene, side panel and sheets start below the banner */
 .gp-scene { top: calc(64px + var(--inc-h)); right: calc(var(--brain-w) + 30px); transition: top 0.5s cubic-bezier(.32,.72,0,1), right 0.4s cubic-bezier(.32,.72,0,1); }
@@ -430,26 +399,11 @@
 
 .gp.has-incident .gp-kpi:not(.is-hot) { opacity: 0.85; }
 
-@media (min-width: 1700px) {
-  /* projector: bigger type in the banner */
-  .gp-inc-text h2 { font-size: 32px; }
-  .gp-inc-nums b { font-size: 46px; }
-  .gp-steps li { font-size: 13.5px; }
-}
 @media (max-width: 900px) {
   .gp { --inc-h: 0px !important; }
   .gp > * { flex-shrink: 0; }
   .gp-brain { order: 1; }
   .gp.has-options .gp-scene { order: 2; }
-  .gp-incident { display: flex; flex-direction: column; align-items: stretch; height: auto !important; gap: 8px; padding: 12px; border-left-width: 6px; }
-  .gp-inc-main { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .gp-inc-text h2 { font-size: 19px; white-space: normal; }
-  .gp-inc-nums { justify-content: space-between; }
-  .gp-inc-nums div { text-align: left; padding-left: 10px; }
-  .gp-inc-nums b { font-size: 26px; }
-  .gp-inc-nums span { white-space: normal; font-size: 9.5px; }
-  .gp-steps { flex-wrap: wrap; gap: 4px; }
-  .gp-steps li { font-size: 10.5px; padding: 3px 8px 3px 4px; }
 
   .gp.has-incident .gp-legend { transform: none; }
   .gp-brain { width: auto !important; }
@@ -460,9 +414,6 @@
 .gp-clock b .gp-tz { font: 400 9.5px var(--mono); color: var(--ink-3); margin-left: 6px; letter-spacing: 0; }
 .gp.has-incident .gp-dayprofile { display: none; }
 
-.gp-incident.is-recovering { border-color: #f2d6a6; border-left-color: var(--amber); box-shadow: 0 18px 44px -26px rgba(224, 145, 27, 0.5); }
-.gp-incident.is-recovering .gp-inc-badge { background: var(--amber); animation: none; }
-.gp-incident.is-recovering .gp-inc-nums div { border-left-color: #f2d6a6; }
 /* QA pass: the side panel runs down to the controls' baseline and never clips its cards */
 @media (min-width: 901px) {
   .gp-brain { bottom: 18px; }
@@ -533,3 +484,125 @@
 .gp-pnl-src.is-warn { color: var(--amber); }
 .gp-sev { font: 700 10px var(--mono); letter-spacing: 0.04em; padding: 2px 8px; border-radius: 99px; color: var(--amber); background: #fcf1de; }
 .gp-sev.is-alert { color: #fff; background: var(--red); }
+
+/* ---------- top banner: the four steps, then one sentence for what is happening now ---------- */
+.gp-incident {
+  --c: var(--red); --c-soft: #f5b5b7; --c-glow: rgba(229, 72, 77, 0.16);
+  position: absolute; top: 68px; left: 22px; right: 16px; z-index: 6;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 32px; row-gap: 12px; align-items: center;
+  padding: 14px 26px 16px; background: #fff; border: 1px solid var(--c-soft); border-left: 10px solid var(--c); border-radius: 18px;
+  box-shadow: 0 0 0 4px var(--c-glow), 0 24px 60px -30px var(--c);
+  animation: gp-rise 0.4s cubic-bezier(.32,.72,0,1), gp-banner-glow 2.4s ease-in-out infinite;
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+.gp-incident.is-checks { --c: var(--gem-b); --c-soft: #ddd3ff; --c-glow: rgba(155, 114, 255, 0.18); }
+.gp-incident.is-choose { --c: var(--blue); --c-soft: #c9d4f6; --c-glow: rgba(62, 99, 221, 0.16); }
+.gp-incident.is-result { --c: var(--amber); --c-soft: #f2d6a6; --c-glow: rgba(224, 145, 27, 0.18); }
+.gp-incident.is-restored, .gp-incident.is-absorbed { --c: var(--green); --c-soft: #bfe6d3; --c-glow: rgba(34, 160, 107, 0.18); }
+@keyframes gp-banner-glow { 50% { box-shadow: 0 0 0 7px var(--c-glow), 0 24px 60px -24px var(--c); } }
+
+.gp-steps { grid-column: 1 / -1; list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 4px; }
+.gp-steps li { display: flex; align-items: center; gap: 10px; font: 600 16px ui-sans-serif, system-ui, sans-serif; color: var(--ink-3); white-space: nowrap; }
+.gp-steps li + li::before { content: "→"; margin: 0 14px 0 10px; color: #c4c4c8; font-weight: 400; }
+.gp-steps i { font: 700 13px var(--mono); font-style: normal; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid #d4d4d8; color: var(--ink-3); background: #fff; transition: all 0.3s; }
+.gp-steps li.is-done { color: var(--green); }
+.gp-steps li.is-done i { border-color: #9fd9bd; color: var(--green); background: #eefaf4; }
+.gp-steps li.is-now { color: var(--ink); font-weight: 800; }
+.gp-steps li.is-now i { border-color: var(--c); background: var(--c); color: #fff; box-shadow: 0 0 0 5px var(--c-glow), 0 0 18px var(--c); animation: gp-step-pulse 1.4s ease-in-out infinite; }
+@keyframes gp-step-pulse { 50% { box-shadow: 0 0 0 9px var(--c-glow), 0 0 26px var(--c); } }
+.gp-incident.is-restored .gp-steps li.is-done:last-child { color: var(--ink); font-weight: 800; }
+.gp-incident.is-restored .gp-steps li.is-done:last-child i { background: var(--green); color: #fff; border-color: var(--green); box-shadow: 0 0 0 5px var(--c-glow), 0 0 18px var(--green); }
+
+.gp-inc-main { display: flex; align-items: center; gap: 18px; min-width: 0; animation: gp-say 0.5s cubic-bezier(.32,.72,0,1); }
+@keyframes gp-say { from { opacity: 0; transform: translateX(-14px); } }
+.gp-inc-badge { flex: none; font: 800 14px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: #fff; background: var(--c); padding: 10px 14px; border-radius: 10px; box-shadow: 0 0 22px -2px var(--c); }
+.gp-incident.is-outage .gp-inc-badge { animation: gp-blink 1s steps(2) 4; }
+.gp-inc-text { min-width: 0; }
+.gp-inc-text h2 { margin: 0; font-size: 32px; line-height: 1.1; letter-spacing: -0.015em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-inc-text p { margin: 4px 0 0; font-size: 16px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-inc-nums { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+.gp-inc-nums b { font: 800 46px/1 var(--mono); color: var(--red); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: 0 0 24px rgba(229, 72, 77, 0.35); }
+.gp-inc-nums span { margin-top: 4px; font: 700 12px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); white-space: nowrap; }
+.gp-inc-nums small { font: 12px var(--mono); color: var(--ink-3); }
+.gp-incident.is-result .gp-inc-nums b { color: var(--amber); text-shadow: 0 0 24px rgba(224, 145, 27, 0.35); }
+
+/* ---------- map callouts: what just happened, on the thing it happened to ---------- */
+.gp-callout { cursor: pointer; }
+.gp-callout-bg { fill: var(--red); stroke: #fff; stroke-width: 2; }
+.gp-callout.is-boost .gp-callout-bg { fill: var(--green); }
+.gp-callout-name { font: 800 17px var(--mono); fill: #fff; letter-spacing: 0.02em; }
+.gp-callout-what { font: 800 17px var(--mono); fill: #fff; opacity: 0.92; }
+.gp-callout-leader { stroke: var(--red); stroke-width: 1.6; stroke-dasharray: 3 3; }
+.gp-callout.is-boost .gp-callout-leader { stroke: var(--green); }
+.gp-callout-glow { filter: drop-shadow(0 0 6px rgba(229, 72, 77, 0.75)); animation: gp-callout-red 1.6s ease-in-out infinite; }
+.gp-callout.is-boost .gp-callout-glow { filter: drop-shadow(0 0 6px rgba(34, 160, 107, 0.75)); animation-name: gp-callout-green; }
+@keyframes gp-callout-red { 50% { filter: drop-shadow(0 0 14px rgba(229, 72, 77, 0.95)); } }
+@keyframes gp-callout-green { 50% { filter: drop-shadow(0 0 14px rgba(34, 160, 107, 0.95)); } }
+.gp-trunk-line.is-tripped .gp-callout-glow { filter: drop-shadow(0 0 6px rgba(229, 72, 77, 0.75)); }
+.gp-trunk-line.is-boost .gp-callout-glow { filter: drop-shadow(0 0 6px rgba(34, 160, 107, 0.75)); animation-name: gp-callout-green; }
+.gp-trunk-line.is-tripped .gp-trunk-text, .gp-trunk-line.is-boost .gp-trunk-text { font: 800 17px var(--mono); fill: #fff; }
+.gp-trunk-line.is-boost .gp-trunk-glow, .gp-trunk-line.is-boost .gp-trunk-core { stroke: var(--green); }
+.gp-trunk-line.is-boost .gp-trunk-glow { opacity: 0.3; }
+.gp-trunk-line.is-boost .gp-trunk-packet { stroke: var(--green); }
+.gp-trunk-line.is-boost .gp-trunk-pill { fill: var(--green); stroke: #fff; }
+.gp-shock, .gp-burst { fill: none; stroke: var(--red); stroke-width: 3; transform-box: fill-box; transform-origin: center; animation: gp-shock 1.3s ease-out 3 forwards; }
+.gp-burst { stroke: var(--green); }
+@keyframes gp-shock { from { transform: scale(0.6); opacity: 1; } to { transform: scale(3.2); opacity: 0; } }
+.gp-boost-glow { fill: rgba(34, 160, 107, 0.22); stroke: var(--green); stroke-width: 1.4; animation: gp-pulse 1.4s ease-in-out infinite; }
+.gp-back { animation: gp-back 5.5s ease forwards; }
+@keyframes gp-back { 0% { opacity: 0; } 8%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---------- side panel: glows in the colour of the moment ---------- */
+.gp-brain { transition: box-shadow 0.4s; }
+.gp-brain.is-analyzing { box-shadow: 0 0 0 3px rgba(155, 114, 255, 0.22), 0 0 44px -8px rgba(155, 114, 255, 0.6); animation: gp-glow-purple 1.6s ease-in-out infinite; }
+.gp-brain.is-deciding { box-shadow: 0 0 0 3px rgba(62, 99, 221, 0.2), 0 0 44px -8px rgba(62, 99, 221, 0.55); }
+.gp-brain.is-executing, .gp-brain.is-resolved { box-shadow: 0 0 0 3px rgba(34, 160, 107, 0.2), 0 0 44px -8px rgba(34, 160, 107, 0.55); }
+@keyframes gp-glow-purple { 50% { box-shadow: 0 0 0 6px rgba(155, 114, 255, 0.28), 0 0 60px -6px rgba(155, 114, 255, 0.75); } }
+.gp-plan.is-pick .gp-plan-apply { background: var(--green); border-color: var(--green); box-shadow: 0 0 0 0 rgba(34, 160, 107, 0.5); animation: gp-apply-pulse 1.8s ease-in-out infinite; }
+.gp-plan.is-pick .gp-plan-apply:hover { background: #17834f; }
+@keyframes gp-apply-pulse { 50% { box-shadow: 0 0 0 8px rgba(34, 160, 107, 0), 0 0 22px rgba(34, 160, 107, 0.6); } }
+.gp-pnl-card.is-good { padding: 16px 18px; border-radius: 14px; background: #f1fbf6; border: 1px solid #bfe6d3; animation: gp-flash-green 1.2s ease-out; }
+@keyframes gp-flash-green { from { box-shadow: 0 0 0 10px rgba(34, 160, 107, 0.35), 0 0 50px rgba(34, 160, 107, 0.7); } }
+.gp-pnl-status { padding: 14px 16px; border-radius: 14px; background: #f1fbf6; border: 1px solid #d6f0e3; }
+.gp-pnl-status.is-bad { background: #fff3f3; border-color: #f7c9cb; box-shadow: 0 0 30px -10px rgba(229, 72, 77, 0.6); }
+.gp-pnl-status.is-bad i { box-shadow: 0 0 18px rgba(229, 72, 77, 0.7); }
+
+/* ---------- big-screen sizes: readable from the back of the room ---------- */
+@media (min-width: 901px) {
+  .gp.has-incident, .gp.has-options { --brain-w: 430px; }
+  .gp-btn { font-size: 15px; padding: 12px 20px; border-radius: 12px; }
+  .gp-switch { font-size: 15px; }
+  .gp-switch span { width: 42px; height: 24px; }
+  .gp-switch span::after { width: 20px; height: 20px; }
+  .gp-switch.is-on span::after { transform: translateX(18px); }
+  .gp-pnl-head b { font-size: 14px; }
+  .gp-pnl-head span:last-child { font-size: 14px; }
+  .gp-pnl-title { font-size: 28px; }
+  .gp-pnl-lead { font-size: 15px; }
+  .gp-pnl-note { font-size: 12.5px; }
+  .gp-plan-eyebrow { font-size: 12px; }
+  .gp-plan h3, .gp-pnl-card h3 { font-size: 30px; }
+  .gp-plan-recipe { font-size: 16px; }
+  .gp-plan-gain { font-size: 16px; }
+  .gp-plan-apply { font-size: 16px; padding: 13px 20px; }
+  .gp-pnl-status h2 { font-size: 23px; }
+  .gp-pnl-reading p { font-size: 15px; }
+  .gp-tests { font-size: 14px; }
+  .gp-tests-dots i { width: 13px; height: 13px; }
+  .gp-pnl-quote { font-size: 15px; }
+}
+
+/* phone: the banner stacks */
+@media (max-width: 900px) {
+  .gp-incident { display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 14px; border-left-width: 6px; }
+  .gp-steps { flex-wrap: wrap; gap: 6px 2px; }
+  .gp-steps li { font-size: 12px; gap: 6px; }
+  .gp-steps li + li::before { margin: 0 6px 0 4px; }
+  .gp-steps i { width: 22px; height: 22px; font-size: 11px; }
+  .gp-inc-main { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .gp-inc-badge { font-size: 11px; padding: 6px 10px; }
+  .gp-inc-text h2 { font-size: 20px; white-space: normal; }
+  .gp-inc-text p { font-size: 13px; white-space: normal; }
+  .gp-inc-nums { align-items: flex-start; text-align: left; }
+  .gp-inc-nums b { font-size: 30px; }
+}

@@ -5,6 +5,7 @@ import { GridScene, TECH_COLOR, TECH_LABEL, assetTitle, at, buildAssets } from '
 import { ZONES } from './layout';
 import { AndesMark } from './brand';
 import { GeminiPanel } from './GeminiPanel';
+import { planName, recipe } from './plain';
 import './ui.css';
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || '/api';
@@ -137,7 +138,7 @@ function Screen() {
   const holding = deciding && !state.clock.running && connectionMode === 'offline';
   const assets = useMemo(() => (catalog ? buildAssets(catalog) : []), [catalog]);
 
-  const boosted = useMemo(() => new Set((applied?.levers ?? []).map((l) => l.target_id)), [applied]);
+  const boosted = useMemo(() => new Map((applied?.levers ?? []).map((l) => [l.target_id, l.type] as const)), [applied]);
   const focus = useMemo(() => {
     if (!shown) return [] as string[];
     const ids = new Set<string>();
@@ -224,40 +225,63 @@ function Screen() {
         </div>
       </header>
 
-      {showBanner && attack && (
-        <section key={restored ? `r-${restored.key}` : attack.key} className={`gp-incident ${restored ? 'is-restored' : bannerHomes > 0 || bannerMw > 0 ? (planned ? 'is-recovering' : 'is-attack') : 'is-absorbed'}`} aria-live="polite">
-          <div className="gp-inc-main">
-            <span className="gp-inc-badge">{restored ? 'Restored' : planned ? 'Recovering' : attack.jury ? 'Jury attack' : 'Outage'}</span>
-            <div className="gp-inc-text">
-              <h2>{restored ? (restored.homes != null ? `Restored: ${fmt(restored.homes)} homes reconnected` : 'Restored: the grid is back to normal') : attack.headline}</h2>
-              <p>
-                {restored ? `${attack.headline} · cleared` : `${clock(attack.at)} Chile time`}
-                {!restored && planBy && planned && ` · ${planBy}`}
-                {!restored && state.active_incidents.length > 1 && ` · ${state.active_incidents.length} outages active`}
-              </p>
+      {showBanner && attack && (() => {
+        // One sentence for what is happening right now, coloured by stage.
+        const hit = bannerHomes > 0 || bannerMw > 0;
+        const tested = state.tool_calls.filter((c) => c.incident_id === state.last_incident?.incident_id && c.status !== 'running').length;
+        const more = state.active_incidents.length > 1 ? ` · ${state.active_incidents.length} outages active` : '';
+        let stage: string, chip: string, title: string, sub: string;
+        if (restored) {
+          stage = 'restored'; chip = '✓ Restored';
+          title = 'Power restored';
+          sub = `${restored.homes != null ? `${fmt(restored.homes)} homes reconnected · ` : ''}${attack.headline} · cleared`;
+        } else if (planned) {
+          stage = 'result'; chip = '⚡ Plan running';
+          title = applied ? `Plan applied: ${planName(applied)}` : 'Recovery plan running';
+          sub = [planBy, applied && recipe(applied), hit ? 'homes are coming back' : 'every home has power'].filter(Boolean).join(' · ') + more;
+        } else if (stepIdx === 2) {
+          stage = 'choose'; chip = '◆ Your decision';
+          title = countdown?.active ? `Gemini applies its pick in ${countdown.seconds_left} s` : 'Choose how to restore power';
+          sub = countdown?.active ? 'Veto it on the right if you disagree.' : 'Compare the two plans on the right, then apply one.';
+        } else if (stepIdx === 1) {
+          stage = 'checks'; chip = '◌ Gemini';
+          title = 'Gemini is finding a fix';
+          sub = `Testing recovery plans with the solver${tested ? ` · ${tested} tested so far` : '…'}${more}`;
+        } else if (!hit) {
+          stage = 'absorbed'; chip = '✓ Absorbed';
+          title = attack.headline;
+          sub = 'The grid absorbed it: nobody lost power.';
+        } else {
+          stage = 'outage'; chip = attack.jury ? '✕ Jury attack' : '✕ Outage';
+          title = attack.headline;
+          sub = `${fmt(attack.homes)} homes lost power at ${clock(attack.at)} Chile time${more}`;
+        }
+        return (
+          <section key={restored ? `r-${restored.key}` : attack.key} className={`gp-incident is-${stage}`} aria-live="polite">
+            <ol className="gp-steps">
+              {STEPS.map((label, i) => (
+                <li key={label} className={i < stepIdx ? 'is-done' : i === stepIdx ? 'is-now' : ''}>
+                  <i>{i < stepIdx ? '✓' : i + 1}</i>{i === STEPS.length - 1 && stepIdx >= STEPS.length ? 'Restored' : label}
+                </li>
+              ))}
+            </ol>
+            <div key={stage + title} className="gp-inc-main">
+              <span className="gp-inc-badge">{chip}</span>
+              <div className="gp-inc-text">
+                <h2>{title}</h2>
+                <p>{sub}</p>
+              </div>
             </div>
-          </div>
-          {!restored && (
-            <div className="gp-inc-nums">
-              {bannerHomes > 0 || bannerMw > 0 ? (
-                <>
-                  <div><b>{fmt(bannerHomes)}</b><span>homes without power · {planned ? 'now' : 'at worst'}</span></div>
-                  <div><b>{fmt(bannerMw)} MW</b><span>shortfall · {planned ? 'now' : 'at worst'}</span></div>
-                </>
-              ) : (
-                <div className="is-ok"><b>Absorbed</b><span>nobody lost power</span></div>
-              )}
-            </div>
-          )}
-          <ol className="gp-steps">
-            {STEPS.map((label, i) => (
-              <li key={label} className={i < stepIdx ? 'is-done' : i === stepIdx ? 'is-now' : ''}>
-                <i>{i < stepIdx ? '✓' : i + 1}</i>{i === STEPS.length - 1 && stepIdx >= STEPS.length ? 'Restored' : label}
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
+            {!restored && hit && (
+              <div className="gp-inc-nums">
+                <b>{fmt(bannerHomes)}</b>
+                <span>homes without power · {planned ? 'now' : 'at worst'}</span>
+                <small>{fmt(bannerMw)} MW short</small>
+              </div>
+            )}
+          </section>
+        );
+      })()}
 
       <GridScene
         catalog={catalog}
@@ -265,6 +289,7 @@ function Screen() {
         hour={hour}
         incidents={state.active_incidents}
         boosted={boosted}
+        preview={!!hovered}
         phase={phase}
         focus={focus}
         selected={selected}

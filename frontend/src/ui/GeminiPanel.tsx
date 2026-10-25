@@ -1,29 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import type { useLiveSession } from '../live/store';
 import type { Option } from '../live/types';
+import { fmtInt, planName, recipe } from './plain';
 
 // Gemini's side panel tells one thing at a time, in plain words: how the grid is, what Gemini is
 // doing, which plan to pick, or what the applied plan is restoring. Every number comes from the solver.
 
 type LiveState = ReturnType<typeof useLiveSession>['state'];
 
-const TAG_LABEL: Record<string, string> = {
-  max_hogares: 'Most homes', min_costo: 'Lowest cost', min_co2: 'Lowest CO₂', min_riesgo_red: 'Lowest grid risk',
-};
-// What each lever does, in words anyone in the room understands.
-const LEVER_PLAIN: Record<string, string> = {
-  emergency_rating: 'Line capacity',
-  demand_response: 'Flexible demand',
-  activate_reserve_bess: 'Battery reserves',
-  hydro_reserve_release: 'Hydro reserves',
-  start_peaker: 'Backup diesel',
-  add_battery: 'New battery',
-  uprate_line: 'Line upgrade',
-};
-
-const fmt = (n: number) => Math.round(n).toLocaleString('en-GB');
-const recipe = (o: Option) => [...new Set(o.levers.map((l) => LEVER_PLAIN[l.type] ?? l.type))].join(' + ');
-const planName = (o: Option) => TAG_LABEL[o.tradeoff_tag] ?? o.title_es;
+const fmt = fmtInt;
 
 interface Props {
   state: LiveState;

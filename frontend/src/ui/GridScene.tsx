@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useRef, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import * as k from '../iso/iso-kit';
 import type { Catalog, Disruption, Solution } from '../live/types';
 import { GEMINI, H, P, W, ZONES, housesOf, placeAssets, screen, uv } from './layout';
@@ -58,7 +58,8 @@ interface Props {
   solution: Solution;
   hour: number;
   incidents: Disruption[];
-  boosted: Set<string>;
+  boosted: Map<string, string>; // target id → lever type of the applied plan
+  preview: boolean; // the solution is a hovered plan, not what is happening
   phase: string;
   focus: string[]; // asset ids Gemini is looking at
   selected: string | null;
@@ -120,7 +121,7 @@ function PowerWire({ from, to, mw, cap, state, lift = 14, label }: {
 
 // Trunk lines ride above everything else: thick, coloured by state, with a pill label.
 function TrunkLine({ from, to, mw, cap, state, label, lift = 26 }: {
-  from: k.Point3; to: k.Point3; mw: number; cap: number; state: 'ok' | 'hot' | 'tripped'; label: string; lift?: number;
+  from: k.Point3; to: k.Point3; mw: number; cap: number; state: 'ok' | 'hot' | 'tripped' | 'boost'; label: string; lift?: number;
 }) {
   const mid: k.Point3 = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2, lift * 0.8];
   const pts = [k.iso([from[0], from[1], lift], P), k.iso(mid, P), k.iso([to[0], to[1], lift], P)];
@@ -130,7 +131,8 @@ function TrunkLine({ from, to, mw, cap, state, label, lift = 26 }: {
   const n = state === 'tripped' || Math.abs(mw) < 3 ? 0 : 3 + Math.round(load * 4);
   const dur = 4.6 - load * 3;
   const [lx, ly] = along(pts, 0.5);
-  const tw = label.length * 7.3 + 18;
+  const big = state === 'tripped' || state === 'boost';
+  const tw = label.length * (big ? 10.4 : 7.3) + 26;
   // A break in the middle of a cut line
   const [b0x, b0y] = along(pts, 0.46), [b1x, b1y] = along(pts, 0.54);
   return (
@@ -156,15 +158,15 @@ function TrunkLine({ from, to, mw, cap, state, label, lift = 26 }: {
           <animateMotion dur={`${dur}s`} begin={`${(-i * dur) / n}s`} repeatCount="indefinite" path={d} keyPoints={mw < 0 ? '1;0' : '0;1'} keyTimes="0;1" calcMode="linear" />
         </circle>
       ))}
-      <g transform={`translate(${lx},${ly - 16})`}>
-        <rect x={-tw / 2} y={-11} width={tw} height={20} rx={10} className="gp-trunk-pill" />
-        <text y={3.5} textAnchor="middle" className="gp-trunk-text">{label}</text>
+      <g transform={`translate(${lx},${ly - (big ? 24 : 16)})`} className={big ? 'gp-callout-glow' : undefined}>
+        <rect x={-tw / 2} y={big ? -18 : -11} width={tw} height={big ? 34 : 20} rx={big ? 17 : 10} className="gp-trunk-pill" />
+        <text y={big ? 6 : 3.5} textAnchor="middle" className="gp-trunk-text">{label}</text>
       </g>
     </g>
   );
 }
 
-export const GridScene = memo(function GridScene({ catalog, solution, hour, incidents, boosted, phase, focus, selected, onSelect }: Props) {
+export const GridScene = memo(function GridScene({ catalog, solution, hour, incidents, boosted, preview, phase, focus, selected, onSelect }: Props) {
   // Pan and zoom: drag to move, wheel or pinch to zoom around the pointer, double click to reset.
   const [view, setView] = useState({ x: 0, y: 0, s: 1 });
   const svgRef = useRef<SVGSVGElement>(null);
@@ -187,6 +189,27 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     return { s: v.s, x: Math.min(W * 0.2, Math.max(minX, v.x)), y: Math.min(H * 0.2, Math.max(minY, v.y)) };
   };
   const assets = useMemo(() => buildAssets(catalog), [catalog]);
+
+  // When a zone gets homes back, say so on the map for a few seconds: "+193,678 homes back on".
+  const step = Math.floor(hour);
+  const prevOff = useRef<Record<string, number>>({});
+  const [back, setBack] = useState<{ id: string; n: number; key: number }[]>([]);
+  useEffect(() => {
+    if (preview) return;
+    const gained: { id: string; n: number; key: number }[] = [];
+    for (const n of catalog.nodes) {
+      const off = at(solution.households_off[n.id], step);
+      const before = prevOff.current[n.id];
+      if (before != null && before - off >= 1000) gained.push({ id: n.id, n: before - off, key: Date.now() + Math.random() });
+      prevOff.current[n.id] = off;
+    }
+    if (gained.length) setBack((list) => [...list.filter((b) => !gained.some((g) => g.id === b.id)), ...gained]);
+  }, [solution, step, preview, catalog]);
+  useEffect(() => {
+    if (!back.length) return;
+    const id = window.setTimeout(() => setBack((list) => list.filter((b) => Date.now() - b.key < 5500)), 6000);
+    return () => window.clearTimeout(id);
+  }, [back]);
   const tripped = useMemo(() => new Set(incidents.filter((d) => active(d, hour)).map((d) => d.asset_id)), [incidents, hour]);
 
   const stateOf = (a: Asset): AssetState => {
@@ -224,6 +247,9 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
         <g key={a.id} className={`gp-asset${selected === a.id ? ' is-selected' : ''}${s === 'standby' ? ' is-standby' : ''}`} onClick={(e) => { e.stopPropagation(); onSelect(selected === a.id ? null : a.id); }}>
           <path d={k.ring(a.at[0], a.at[1], a.technology === 'wind' ? 24 : 27, 0.1, P, 44)} className="gp-pad" style={{ fill: TECH_COLOR[a.technology], stroke: TECH_COLOR[a.technology] }} />
           {body}
+          {s === 'tripped' && <path d={k.ring(a.at[0], a.at[1], 30, 0.2, P, 48)} className="gp-shock" />}
+          {s === 'boost' && <path d={k.ring(a.at[0], a.at[1], 34, 0.2, P, 48)} className="gp-boost-glow" />}
+          {s === 'boost' && <path d={k.ring(a.at[0], a.at[1], 30, 0.2, P, 48)} className="gp-burst" />}
           {s === 'tripped' && <TripMark at={a.at} />}
           {s === 'boost' && <BoostMark at={a.at} />}
         </g>
@@ -250,14 +276,16 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     const mw = at(solution.line_flow_mw[l.id], hour);
     const cap = at(solution.line_capacity_mw[l.id], hour) || l.capacity_mw;
     const isTripped = tripped.has(l.id);
-    const hot = !isTripped && Math.abs(mw) >= cap * 0.95;
+    const lineBoost = !isTripped && boosted.has(l.id);
+    const hot = !isTripped && !lineBoost && Math.abs(mw) >= cap * 0.95;
     const who = incidents.find((d) => d.asset_id === l.id && active(d, hour));
     const label = isTripped
-      ? `${l.id} CORTADA${who?.jury_name ? ` · ${who.jury_name}` : who?.source === 'jury' ? ' · jurado' : ''}`
+      ? `✕ ${l.id} CUT${who?.jury_name ? ` · ${who.jury_name}` : who?.source === 'jury' ? ' · jury' : ''}`
+      : lineBoost ? `⚡ ${l.id} EXTRA CAPACITY · ${Math.round((Math.abs(mw) / cap) * 100)} %`
       : `${l.id} · ${Math.round((Math.abs(mw) / cap) * 100)} %${hot ? ' ⚠' : ''}`;
     return (
       <g key={l.id} className="gp-asset" onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}>
-        <TrunkLine from={from} to={to} mw={mw} cap={cap} state={isTripped ? 'tripped' : hot ? 'hot' : 'ok'} label={label} />
+        <TrunkLine from={from} to={to} mw={mw} cap={cap} state={isTripped ? 'tripped' : lineBoost ? 'boost' : hot ? 'hot' : 'ok'} label={label} />
       </g>
     );
   });
@@ -289,7 +317,10 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
 
   // Labels live inside the drawing (so they zoom with it) and are spread out so none overlap:
   // each one starts right above its object and climbs until it is clear, keeping a thin leader.
-  type Lbl = { id: string; x: number; y: number; ax: number; ay: number; w: number; name: string; mw: string; color: string; state: string };
+  type Lbl = { id: string; x: number; y: number; ax: number; ay: number; w: number; h: number; name: string; mw: string; color: string; state: string };
+  const ACTION: Record<string, string> = {
+    activate_reserve_bess: 'ON', hydro_reserve_release: 'RELEASED', start_peaker: 'STARTED', add_battery: 'ADDED',
+  };
   const labels: Lbl[] = [];
   for (const a of assets) {
     const s = stateOf(a);
@@ -297,19 +328,32 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
     const out = output(a);
     const top = a.technology === 'wind' ? 62 : a.technology === 'coal' ? 64 : a.technology === 'gas' || a.technology === 'diesel' ? 46 : 30;
     const [ax, ay] = screen([a.at[0], a.at[1], top]);
+    const flowMw = `${Math.round(Math.abs(out))} MW${a.kind === 'battery' ? (out < -0.5 ? ' ↓' : out > 0.5 ? ' ↑' : '') : ''}`;
+    // Something happened to this asset: a large callout that names it and says what happened.
+    if (s === 'tripped' || s === 'boost') {
+      const name = s === 'tripped' ? `✕ ${assetTitle(a)}` : `⚡ ${assetTitle(a)}`;
+      const mw = s === 'tripped' ? 'OFFLINE' : `${ACTION[boosted.get(a.id) ?? ''] ?? 'ON'} · ${flowMw}`;
+      labels.push({ id: a.id, x: ax, y: ay - 22, ax, ay, w: (name.length + mw.length) * 10.4 + 46, h: 36, name, mw, color: TECH_COLOR[a.technology], state: s });
+      continue;
+    }
     const name = TECH_LABEL[a.technology] ?? a.technology;
-    const mw = s === 'tripped' ? 'OUT' : `${Math.round(Math.abs(out))} MW${a.kind === 'battery' ? (out < -0.5 ? ' ↓' : out > 0.5 ? ' ↑' : '') : ''}`;
-    const w = (name.length + mw.length) * 7.4 + 34;
-    labels.push({ id: a.id, x: ax, y: ay - 10, ax, ay, w, name, mw, color: TECH_COLOR[a.technology], state: s });
+    const w = (name.length + flowMw.length) * 7.4 + 34;
+    labels.push({ id: a.id, x: ax, y: ay - 10, ax, ay, w, h: 20, name, mw: flowMw, color: TECH_COLOR[a.technology], state: s });
+  }
+  // Flexible demand acts on a whole zone: the callout sits over its houses.
+  for (const [id, type] of boosted) {
+    if (!ZONES[id] || type !== 'demand_response') continue;
+    const [ax, ay] = screen([housesOf(id)[0], housesOf(id)[1], 22]);
+    const name = `⚡ Flexible demand · ${ZONES[id].label}`, mw = 'ON';
+    labels.push({ id: `dr-${id}`, x: ax, y: ay - 22, ax, ay, w: (name.length + mw.length) * 10.4 + 46, h: 36, name, mw, color: '#22a06b', state: 'boost' });
   }
   labels.sort((p, q) => q.ay - p.ay); // lower objects first, so higher labels climb above them
   const placed: Lbl[] = [];
-  const LH = 20;
   for (const l of labels) {
     for (let k2 = 0; k2 < 8; k2++) {
-      const hit = placed.find((o) => Math.abs(o.x - l.x) < (o.w + l.w) / 2 + 4 && Math.abs(o.y - l.y) < LH + 2);
+      const hit = placed.find((o) => Math.abs(o.x - l.x) < (o.w + l.w) / 2 + 4 && Math.abs(o.y - l.y) < (o.h + l.h) / 2 + 2);
       if (!hit) break;
-      l.y = hit.y - LH - 3;
+      l.y = hit.y - (hit.h + l.h) / 2 - 3;
     }
     placed.push(l);
   }
@@ -377,16 +421,34 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
               const n = catalog.nodes.find((x) => x.id === id);
               const off = at(solution.households_off[id], Math.floor(hour));
               const [x, y] = screen(uvAt(z.hub, -8, 128));
+              const darkText = `⚠ ${Math.round(off).toLocaleString('en-GB')} homes without power`;
+              const dw = darkText.length * 10.4 + 30;
               return (
                 <g key={id} className={`gp-zlabel${off > 1 ? ' is-dark' : ''}`}>
                   <text x={x} y={y} textAnchor="middle" className="gp-zlabel-name">{z.label.toUpperCase()}</text>
-                  <text x={x} y={y + 17} textAnchor="middle" className="gp-zlabel-sub">
-                    {off > 1 ? `${Math.round(off).toLocaleString('en-GB')} homes without power` : n ? `${(n.households_total / 1e6).toLocaleString('en-GB', { maximumFractionDigits: 2 })} M homes · powered` : ''}
-                  </text>
+                  {off > 1 ? (
+                    <g className="gp-callout is-tripped"><g className="gp-callout-glow">
+                      <rect x={x - dw / 2} y={y + 6} width={dw} height={36} rx={18} className="gp-callout-bg" />
+                      <text x={x} y={y + 30} textAnchor="middle" className="gp-callout-name">{darkText}</text>
+                    </g></g>
+                  ) : (
+                    <text x={x} y={y + 17} textAnchor="middle" className="gp-zlabel-sub">
+                      {n ? `${(n.households_total / 1e6).toLocaleString('en-GB', { maximumFractionDigits: 2 })} M homes · powered` : ''}
+                    </text>
+                  )}
                 </g>
               );
             })}
-            {placed.map((l) => (
+            {placed.map((l) => l.h > 20 ? (
+              <g key={l.id} className={`gp-callout is-${l.state}`} onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}>
+                <line x1={l.ax} y1={l.ay} x2={l.x} y2={l.y + 16} className="gp-callout-leader" />
+                <g className="gp-callout-glow">
+                  <rect x={l.x - l.w / 2} y={l.y - 18} width={l.w} height={36} rx={18} className="gp-callout-bg" />
+                  <text x={l.x - l.w / 2 + 17} y={l.y + 6} className="gp-callout-name">{l.name}</text>
+                  <text x={l.x + l.w / 2 - 17} y={l.y + 6} textAnchor="end" className="gp-callout-what">{l.mw}</text>
+                </g>
+              </g>
+            ) : (
               <g key={l.id} className={`gp-alabel is-${l.state}${selected === l.id ? ' is-selected' : ''}`} onClick={(e) => { e.stopPropagation(); onSelect(selected === l.id ? null : l.id); }}>
                 {l.ay - l.y > 16 && <line x1={l.ax} y1={l.ay} x2={l.x} y2={l.y + 8} className="gp-alabel-leader" />}
                 <rect x={l.x - l.w / 2} y={l.y - 12} width={l.w} height={20} rx={5} className="gp-alabel-bg" />
@@ -395,6 +457,22 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
                 <text x={l.x + l.w / 2 - 7} y={l.y + 2.5} textAnchor="end" className="gp-alabel-mw">{l.mw}</text>
               </g>
             ))}
+            {back.map((b) => {
+              const z = ZONES[b.id];
+              if (!z) return null;
+              const [x, y0] = screen(uvAt(z.hub, -8, 128));
+              const y = y0 + 64;
+              const text = `✓ +${Math.round(b.n).toLocaleString('en-GB')} homes back on`;
+              const w = text.length * 10.4 + 34;
+              return (
+                <g key={b.key} className="gp-back gp-callout is-boost" transform={`translate(${x},${y})`}>
+                  <g className="gp-callout-glow">
+                    <rect x={-w / 2} y={-18} width={w} height={36} rx={18} className="gp-callout-bg" />
+                    <text y={6} textAnchor="middle" className="gp-callout-name">{text}</text>
+                  </g>
+                </g>
+              );
+            })}
             {(() => {
               const [x, y] = screen([GEMINI[0], GEMINI[1], GEMINI[2] + 44]);
               return (
