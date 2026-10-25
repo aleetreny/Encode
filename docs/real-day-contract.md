@@ -28,6 +28,16 @@ does not replace the current demo.
     scenario `capacity_mw`.
   - Demand is multiplied by one `scale_factor` so the real day fits the 5-node network.
     It is written to `day_profile.scale_factor`.
+  - **Accepted deviations (orchestrator, 10:00):** the spec-literal build failed gates 2 and 3 at
+    every scale. (a) System demand is the sum of |`medida_kwh`| over all buses of
+    `demanda-real-estimada` (measured withdrawals): `gen_bruta − cons_propio` includes about 3 GW of
+    storage charging at midday and put the Santiago peak at 11:00. Hour 00 is incomplete in the
+    source and is rebuilt from hour 01. (b) Solar/wind keep the real hourly shape of each zone's
+    capacity factor, but the amplitude is normalised so the daily peak equals `capacity_mw`; real
+    winter peaks are about 0.6. Zone shares stay the synthetic ones (`assumption`) because the bus
+    table covers 78.2 % of the energy. `scale_factor = 0.18`; gates 1 and 4 leave a window of
+    about 0.17–0.19. The spec-literal build is kept behind
+    `--demand-source gen-bruta --renewable-amplitude capacity-factor`.
 - Region → zone: Arica y Parinacota, Tarapacá, Antofagasta → `n_norte_grande`; Atacama, Coquimbo →
   `n_norte_chico`; Valparaíso, Metropolitana, O'Higgins → `n_centro`; Maule, Ñuble, Biobío →
   `n_centro_sur`; La Araucanía, Los Ríos, Los Lagos, Aysén → `n_sur`. Magallanes is not in the SEN.
