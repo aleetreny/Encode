@@ -6,6 +6,7 @@ import { ZONES } from './layout';
 import { AndesMark } from './brand';
 import { GeminiPanel } from './GeminiPanel';
 import { planName, recipe } from './plain';
+import { Tour } from './Tour';
 import './ui.css';
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || '/api';
@@ -52,6 +53,8 @@ function Screen() {
   const phase = state.agent_status.phase;
   const [selected, setSelected] = useState<string | null>(null);
   const [invite, setInvite] = useState(false);
+  // `?tour` opens the guided tour on load.
+  const [tour, setTour] = useState(() => new URLSearchParams(window.location.search).has('tour'));
   const [hovered, setHovered] = useState<Option | null>(null);
   const [applied, setApplied] = useState<Option | null>(null);
   const lastCandidate = useRef<string | null>(null);
@@ -220,6 +223,7 @@ function Screen() {
           <Kpi label="Cost" value={`US$ ${fmt(cost / 1000, 1)}k/h`} />
           <Kpi label="CO₂" value={`${fmt(co2)} t/h`} />
         </div>
+        <button className="gp-tour" onClick={() => setTour(true)} title="Guided tour of the screen">Tour</button>
         <div className={`gp-conn is-${connectionMode}`} title={connectionMode === 'offline' ? 'No backend: replaying a recorded session from the real solver' : ''}>
           {connectionMode === 'live' ? '● Live' : connectionMode === 'offline' ? '● Recorded session' : '○ Connecting'}
         </div>
@@ -373,6 +377,8 @@ function Screen() {
           </div>
         </div>
       )}
+
+      {tour && <Tour onClose={() => setTour(false)} />}
 
       <footer className="gp-controls">
         <button
