@@ -17,7 +17,7 @@ export const uv = (u: number, v: number, base: [number, number] = [0, 0]): k.Poi
 
 // North → south runs left to right with a gentle slope, like a maquette of Chile lying on a
 // table. Each zone has a hub (substation) with its plants behind it and its neighbourhood in front.
-const hubAt = (i: number) => uv(-350 + i * 175, -70 + i * 48);
+const hubAt = (i: number) => uv(-380 + i * 190, -70 + i * 48);
 export const ZONES: Record<string, { hub: k.Point3; label: string; short: string }> = {
   n_norte_grande: { hub: hubAt(0), label: 'Norte Grande', short: 'NG' },
   n_norte_chico: { hub: hubAt(1), label: 'Norte Chico', short: 'NC' },
@@ -26,31 +26,30 @@ export const ZONES: Record<string, { hub: k.Point3; label: string; short: string
   n_sur: { hub: hubAt(4), label: 'Sur', short: 'S' },
 };
 
-// Where each modelled asset sits relative to its zone hub, as (u, v). Unknown ids get a free slot.
-const SLOTS: Record<string, [number, number]> = {
-  solar_ng: [-52, -122],
-  gas_ng: [36, -140],
-  b_reserve_ng: [70, 22],
-  solar_nc: [-48, -124],
-  wind_nc: [44, -142],
-  gas_centro: [-62, -130],
-  diesel_centro: [22, -152],
-  b_centro: [80, -104],
-  b_reserve_centro: [84, 24],
-  coal_cs: [-12, -140],
-  hydro_sur: [-46, -134],
-  wind_sur: [48, -148],
-};
-const FREE: [number, number][] = [[70, -70], [-80, -30], [80, 10]];
+// Everything that produces or stores sits behind its zone hub, in one tidy row: largest
+// generators first, then batteries (operating before reserve), evenly spaced and staggered in
+// depth so neither the objects nor their labels overlap. Only the houses go in front, which keeps
+// the trunk line between hubs clear.
+const SPACING = 62;
+const DEPTH: [number, number] = [-112, -150];
 
-export function slotOf(id: string, nodeId: string, used: Set<string>): k.Point3 {
-  const hub = ZONES[nodeId]?.hub ?? [0, 0, 0];
-  let off = SLOTS[id];
-  if (!off) {
-    off = FREE.find((f) => !used.has(`${nodeId}:${f}`)) ?? [0, -130];
-    used.add(`${nodeId}:${off}`);
+export interface Placeable { id: string; nodeId: string; kind: 'generator' | 'battery'; capacity: number; standby?: boolean }
+
+export function placeAssets(items: Placeable[]): Record<string, k.Point3> {
+  const out: Record<string, k.Point3> = {};
+  const byZone = new Map<string, Placeable[]>();
+  for (const it of items) byZone.set(it.nodeId, [...(byZone.get(it.nodeId) ?? []), it]);
+  for (const [nodeId, list] of byZone) {
+    const hub = ZONES[nodeId]?.hub ?? [0, 0, 0];
+    const rank = (p: Placeable) => (p.kind === 'generator' ? 0 : p.standby ? 2 : 1);
+    const row = [...list].sort((a, b) => rank(a) - rank(b) || b.capacity - a.capacity);
+    row.forEach((p, i) => {
+      const u = (i - (row.length - 1) / 2) * SPACING;
+      const v = row.length === 1 ? -126 : DEPTH[i % 2];
+      out[p.id] = uv(u, v, [hub[0], hub[1]]);
+    });
   }
-  return uv(off[0], off[1], [hub[0], hub[1]]);
+  return out;
 }
 
 // Neighbourhood sits in front of the hub.
@@ -66,7 +65,7 @@ export const GEMINI: k.Point3 = [g[0], g[1], 70];
 const anchors: k.Point3[] = [];
 for (const z of Object.values(ZONES)) {
   const b: [number, number] = [z.hub[0], z.hub[1]];
-  anchors.push(uv(-85, -185, b), uv(90, -185, b), uv(-60, 105, b), uv(90, 95, b));
+  anchors.push(uv(-110, -190, b), uv(110, -190, b), uv(-60, 105, b), uv(90, 95, b));
 }
 anchors.push([GEMINI[0], GEMINI[1], GEMINI[2] + 40]);
 

@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import * as k from '../iso/iso-kit';
 import type { Catalog, Disruption, Solution } from '../live/types';
-import { GEMINI, H, P, W, ZONES, housesOf, pct, screen, slotOf, uv } from './layout';
+import { GEMINI, H, P, W, ZONES, housesOf, pct, placeAssets, screen, uv } from './layout';
 
 const uvAt = (hub: k.Point3, u: number, v: number) => uv(u, v, [hub[0], hub[1]]);
 import { AssetState, Battery, BoostMark, CoalPlant, Diesel, GasPlant, GeminiCore, Hub, Hydro, Neighbourhood, Solar, TripMark, Wind } from './objects';
@@ -27,12 +27,15 @@ export const assetTitle = (a: Asset) =>
   a.kind === 'line' ? `Línea ${a.id}` : `${TECH_LABEL[a.technology] ?? a.technology} · ${ZONES[a.nodeId]?.label ?? a.nodeId}`;
 
 export function buildAssets(catalog: Catalog): Asset[] {
-  const used = new Set<string>();
+  const spots = placeAssets([
+    ...catalog.generators.map((g) => ({ id: g.id, nodeId: g.node_id, kind: 'generator' as const, capacity: g.capacity_mw })),
+    ...catalog.batteries.map((b) => ({ id: b.id, nodeId: b.node_id, kind: 'battery' as const, capacity: b.power_mw, standby: b.standby })),
+  ]);
   const gens: Asset[] = catalog.generators.map((g) => ({
-    id: g.id, kind: 'generator', name: g.name, nodeId: g.node_id, technology: g.technology, capacity: g.capacity_mw, at: slotOf(g.id, g.node_id, used),
+    id: g.id, kind: 'generator', name: g.name, nodeId: g.node_id, technology: g.technology, capacity: g.capacity_mw, at: spots[g.id],
   }));
   const bats: Asset[] = catalog.batteries.map((b) => ({
-    id: b.id, kind: 'battery', name: b.name, nodeId: b.node_id, technology: 'battery', capacity: b.power_mw, at: slotOf(b.id, b.node_id, used),
+    id: b.id, kind: 'battery', name: b.name, nodeId: b.node_id, technology: 'battery', capacity: b.power_mw, at: spots[b.id],
   }));
   return [...gens, ...bats];
 }
@@ -198,7 +201,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
       y: screen(a.at)[1],
       node: (
         <g key={a.id} className={`gp-asset${selected === a.id ? ' is-selected' : ''}${s === 'standby' ? ' is-standby' : ''}`} onClick={(e) => { e.stopPropagation(); onSelect(selected === a.id ? null : a.id); }}>
-          <path d={k.ring(a.at[0], a.at[1], a.technology === 'wind' ? 30 : 34, 0.1, P, 44)} className="gp-pad" style={{ fill: TECH_COLOR[a.technology], stroke: TECH_COLOR[a.technology] }} />
+          <path d={k.ring(a.at[0], a.at[1], a.technology === 'wind' ? 24 : 27, 0.1, P, 44)} className="gp-pad" style={{ fill: TECH_COLOR[a.technology], stroke: TECH_COLOR[a.technology] }} />
           {body}
           {s === 'tripped' && <TripMark at={a.at} />}
           {s === 'boost' && <BoostMark at={a.at} />}
