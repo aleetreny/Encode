@@ -4,6 +4,7 @@ import {
   ClockCommandRequest, DisruptCommandRequest, JuryDisruptCommandRequest, DecideCommandRequest 
 } from './types';
 import * as client from './client';
+import { PORTFOLIO_MODE } from '../portfolio';
 // offline.ts will be implemented later, we'll import it type-safe
 import { OfflineSessionController } from './offline';
 
@@ -242,7 +243,7 @@ export function LiveSessionProvider({ children }: { children: ReactNode }) {
   const offlineController = useRef<OfflineSessionController | null>(null);
   // What we want to be connected to. The effect below depends on this, not on connectionMode:
   // depending on connectionMode made every successful connection start a new one, forever.
-  const [requestedMode, setRequestedMode] = useState<'live' | 'offline'>('live');
+  const [requestedMode, setRequestedMode] = useState<'live' | 'offline'>(PORTFOLIO_MODE ? 'offline' : 'live');
 
   // Smooth interpolation
   const lastUpdateRef = useRef<number>(performance.now());
@@ -369,7 +370,7 @@ export function LiveSessionProvider({ children }: { children: ReactNode }) {
       if (state.sessionId) await client.postDecisionCommand(state.sessionId, cmd);
     },
     switchMode(mode) {
-      setRequestedMode(mode);
+      setRequestedMode(PORTFOLIO_MODE ? 'offline' : mode);
     },
     replayOfflineDemo() {
       setRequestedMode('offline');

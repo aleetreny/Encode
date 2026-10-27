@@ -15,3 +15,5 @@ dist/
 .vite/
 .env.local
 .env.*.local
+
+.wrangler/

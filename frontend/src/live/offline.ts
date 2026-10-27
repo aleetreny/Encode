@@ -159,6 +159,8 @@ export class OfflineSessionController {
     this.skipApplied = false;
     this.lastCountdownEmitMs = 0;
     this.events = parseDemoStream();
+    this.lastOptions = null;
+    this.isVetoed = false;
     this.start();
   }
 
@@ -193,6 +195,16 @@ export class OfflineSessionController {
       if (lines.length === 0) throw new Error('Empty incident library file');
       const libraryEvents = lines.map(l => JSON.parse(l) as LiveEvent);
 
+      // Each library item is an independent, solved four-hour contingency.
+      // Use its actual hour and discard the previous recording so it cannot overwrite the choice.
+      this.simHour = nearestHour;
+      this.events = [];
+      this.cursor = 0;
+      this.lastOptions = null;
+      const snapshot = libraryEvents.find(ev => ev.type === 'session.snapshot');
+      if (snapshot) {
+        this.onEvent({ ...snapshot, seq: ++this.currentSeq, session_id: 'offline', hour: nearestHour });
+      }
       this.cancelCountdown();
       this.isVetoed = false;
       this.holding = false;
@@ -306,10 +318,12 @@ export class OfflineSessionController {
   async postDecisionCommand(sessionId: string, cmd: DecideCommandRequest): Promise<void> {
     this.cancelCountdown();
     const base = { session_id: 'offline', hour: this.simHour, ts_utc: new Date().toISOString() };
-    const chosen =
-      this.lastOptions?.options.find((o) => o.option_id === cmd.option_id) ??
-      this.lastOptions?.options.find((o) => o.option_id === this.lastOptions?.recommended_id) ??
-      this.lastOptions?.options[0];
+    const chosen = this.lastOptions?.options.find((o) => o.option_id === cmd.option_id);
+
+    if (cmd.decision === 'apply' && (!chosen?.solution || !chosen.validation.passed)) {
+      this.onEvent({ ...base, seq: ++this.currentSeq, type: 'error', code: 'INVALID_PLAN', message_es: 'No validated recorded solution is available for this plan.' });
+      return;
+    }
 
     // Whatever the operator does, the recorded plan no longer applies.
     this.skipApplied = true;

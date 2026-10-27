@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import * as k from '../iso/iso-kit';
+import { PORTFOLIO_MODE } from '../portfolio';
 import type { Catalog, Disruption, Solution } from '../live/types';
 import { GEMINI, H, P, W, ZONES, housesOf, placeAssets, screen, uv } from './layout';
 
@@ -517,7 +518,7 @@ export const GridScene = memo(function GridScene({ catalog, solution, hour, inci
               const [x, y] = screen([GEMINI[0], GEMINI[1], GEMINI[2] + 44]);
               return (
                 <g className={`gp-glabel is-${phase}`}>
-                  <text x={x} y={y} textAnchor="middle" className="gp-glabel-name">Gemini</text>
+                  <text x={x} y={y} textAnchor="middle" className="gp-glabel-name">{PORTFOLIO_MODE ? 'Simulation' : 'Gemini'}</text>
                   <text x={x} y={y + 17} textAnchor="middle" className="gp-glabel-sub">{phase === 'analyzing' ? 'analysing the grid…' : phase === 'awaiting_operator' ? 'waiting for your decision' : phase === 'executing' ? 'executing the plan' : phase === 'resolved' ? 'plan applied · watching' : 'watching the grid'}</text>
                 </g>
               );

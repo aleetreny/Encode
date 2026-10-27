@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, type 
 import { createPortal } from 'react-dom';
 import { AndesMark } from './brand';
 import './tour.css';
+import { PORTFOLIO_MODE } from '../portfolio';
 
 /**
  * Guided tour of the main screen: a spotlight on one part of the real UI and a caption that explains it.
@@ -20,7 +21,7 @@ interface Step {
   slide?: boolean;             // full-screen card instead of a spotlight
 }
 
-const STEPS: Step[] = [
+const ORIGINAL_STEPS: Step[] = [
   {
     id: 'intro', title: 'Andes', slide: true,
     head: 'Andes',
@@ -84,6 +85,21 @@ const STEPS: Step[] = [
     body: <>Tap a plant, cut a line or invite the jury, and watch Gemini and the solver bring the grid back. You can reopen this tour from the “Tour” button.</>,
   },
 ];
+
+const PORTFOLIO_COPY: Record<string, string> = {
+  intro: 'An interactive replay of a Chilean grid simulation. Explore verified recovery plans without a Google API or backend. The original hackathon system used Gemini; its architecture is preserved in the case study.',
+  brain: 'This panel replays committed recovery options and grid readings. Results were calculated by HiGHS and independently validated. No model is answering now.',
+  break: 'Tap a plant or line to open a recorded four-hour outage. Each case is independent and replaces the previous one. The clock jumps to the nearest library hour: 09, 12, 13, 18, 19 or 20.',
+  incident: 'The banner shows the recorded impact. Compare two previously validated solutions, hover to preview one, then apply your choice. This changes the simulation only.',
+  controls: 'Pause or resume the walkthrough, or restart with Replay session. Live autonomy and the shared jury room belong to the original backend edition. About this project explains the data, architecture and limitations.',
+  conn: 'Demo · no API means a static replay of committed solver outputs. The browser does not run new optimisation or call Gemini. Modelled household equivalents are not measured real-world reconnections.',
+  end: 'Explore a recorded outage, compare the plans and watch your chosen solution on the map. Open About this project for the original Gemini architecture and source code.',
+};
+const STEPS: Step[] = ORIGINAL_STEPS.map(step => PORTFOLIO_MODE && PORTFOLIO_COPY[step.id]
+  ? { ...step, title: step.id === 'brain' ? 'Recovery replay' : step.title,
+      head: step.id === 'brain' ? 'Compare verified recovery plans' : step.id === 'controls' ? 'Explore at your own pace' : step.id === 'conn' ? 'A self-contained replay' : step.id === 'incident' ? 'From outage to recovery' : step.head,
+      body: PORTFOLIO_COPY[step.id], tags: step.tags?.filter(tag => tag !== 'MODEL') }
+  : step);
 
 const TAG_LABEL: Record<Tag, string> = {
   SIMULATED: 'Simulated', SOLVER: 'Computed by solver', VALIDATED: 'Independently validated', MODEL: 'Gemini', HUMAN: 'Human decides',

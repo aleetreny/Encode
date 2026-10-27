@@ -1,4 +1,7 @@
 # Andes · Operación de la red eléctrica con IA
+
+**Portfolio edition:** the default frontend runs an interactive, API-free replay of independently validated solver results. Open `/about` for project context. See [portfolio setup and limitations](docs/portfolio.md). The original Gemini/backend integration remains available with `npm run build:live`.
+
 ### An Autonomous AI Grid Coordinator for Chilean Renewable/Thermal Dispatch, Regulatory Compliance & Crisis Recovery Simulations
 
 ### Run the implemented backend
