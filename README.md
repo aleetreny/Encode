@@ -4,6 +4,8 @@
 
 ### An Autonomous AI Grid Coordinator for Chilean Renewable/Thermal Dispatch, Regulatory Compliance & Crisis Recovery Simulations
 
+**▶ Video demo:** watch the walkthrough on YouTube: https://www.youtube.com/watch?v=KGHDk-cEdeM
+
 ### Run the implemented backend
 
 Python 3.13 is the tested runtime. No provider credentials are needed for the explicitly labelled offline replay.
