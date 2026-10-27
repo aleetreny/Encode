@@ -1,6 +1,8 @@
 # GridPilot
 ### An Autonomous AI Grid Coordinator for Chilean Renewable/Thermal Dispatch, Regulatory Compliance & Crisis Recovery Simulations
 
+**▶ Video demo:** watch the walkthrough on YouTube: https://www.youtube.com/watch?v=KGHDk-cEdeM
+
 **Encode London Hackathon · 24–25 October 2026 · Team of 4**
 
 > **Mission:** Emulate Chile's **Coordinador Eléctrico Nacional (CEN)** inside a verified digital-twin simulation. Powered by **Gemini 4 Argon** as the autonomous orchestrator and a deterministic **HiGHS LP solver + independent physics/regulatory validator**, GridPilot manages both **renewable** (solar, wind) and **non-renewable / dispatchable** (hydro, gas, coal, diesel, BESS) generation across Chile's north–south transmission backbone. It models selected requirements inspired by Chilean electricity regulation (**LGSE**, **Supreme Decree N° 32/2026 Art. 117 bis**, **NTSyCS**, and **Law N° 21.505**; see Section 2 for exactly what is and is not implemented), reduces renewable curtailment under normal operation, and **responds autonomously to sudden crisis scenarios** (such as a power plant or transmission line trip) by computing an emergency redispatch (batteries, ramp-limited thermal/hydro units, imports) to **reduce and restore unserved demand**.
