@@ -1,12 +1,29 @@
 # Andes · Operación de la red eléctrica con IA
 
-**Portfolio edition:** the default frontend runs an interactive, API-free replay of independently validated solver results. Open `/about` for project context. See [portfolio setup and limitations](docs/portfolio.md). The original Gemini/backend integration remains available with `npm run build:live`.
-
 ### An Autonomous AI Grid Coordinator for Chilean Renewable/Thermal Dispatch, Regulatory Compliance & Crisis Recovery Simulations
 
-**▶ Video demo:** watch the walkthrough on YouTube: https://www.youtube.com/watch?v=KGHDk-cEdeM
+**Encode London Hackathon · 24–25 October 2026 · Team of 4**
 
-### Run the implemented backend
+**▶ Video demo:** https://www.youtube.com/watch?v=KGHDk-cEdeM
+
+> **`main` is the up-to-date branch.** It contains all merged work from the team (frontend, agent, optimisation, backend and data, plus the API-free portfolio edition). Download it with **Code → Download ZIP** on GitHub. The `feature/*` and `t3/*` branches are kept for history only.
+
+## Quick start
+
+### 1. Interactive demo (no API keys, no backend)
+
+The default frontend is the **portfolio edition**: an interactive replay of solver results that were independently validated and committed to the repo. Node 20+ is required (CI uses Node 22).
+
+```bash
+cd frontend
+npm ci
+npm run dev                 # open the printed URL; /about has project context
+npm run build:portfolio     # static build in frontend/dist
+```
+
+See [portfolio setup and limitations](docs/portfolio.md) for what the replay can and cannot do.
+
+### 2. Backend, solver and live mode
 
 Python 3.13 is the tested runtime. No provider credentials are needed for the explicitly labelled offline replay.
 
@@ -14,22 +31,23 @@ Python 3.13 is the tested runtime. No provider credentials are needed for the ex
 python3.13 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
+python -m pytest -q                                   # automated checks
 python -m uvicorn backend.main:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
-Open [API documentation](http://127.0.0.1:8000/docs). In another terminal, run `python scripts/smoke.py` for two complete HTTP investigations with validation, simulated approval and report export. Use `python -m pytest -q` for the automated checks. This branch contains Person 4's backend/data/integration work; Person 3's production HiGHS solver and validator are integrated on this branch. The latest agent and frontend sources are integrated for compatibility testing. They do not yet form a live demo: the frontend runs a local JavaScript sandbox without API wiring; the agent now returns native v2, but genuine Gemini tool calling and provider credentials remain unverified. See [demo integration handoff](docs/demo-integration-handoff.md) for verified status and exact remaining changes.
+Open the [API documentation](http://127.0.0.1:8000/docs). In another terminal, `python scripts/smoke.py` runs two complete HTTP investigations with validation, simulated approval and report export; `python scripts/smoke.py --mode deterministic` runs the two-stage workflow on the real solver without claiming a Gemini call. To connect the frontend to the backend and Gemini, build it with `npm run build:live` and follow the [release runbook](docs/release-runbook.md). The Gemini key lives only in backend environment variables.
 
-The numerical owner's exact example-equality test differs on macOS ARM for one degenerate south-battery crisis result; both dispatches pass independent checks with identical metrics/objective. See [verification](docs/verification.md) and current Linux PR checks.
+### Further reading
 
-Read [backend operations](backend/README.md), [the native v2 contract](docs/contracts-v2.md), [research and source findings](docs/task-4-research.md), [104 detailed subtasks](docs/task-4-work-breakdown.md), and [the release runbook](docs/release-runbook.md). The default five-node scenario runs normal dispatch, bounded interventions and sudden-outage recovery. `python scripts/smoke.py --mode deterministic` computes the two-stage workflow using the actual solver without claiming a Gemini invocation. Historical source evidence and synthetic simulation inputs are kept separate. A cached replay is never labelled as a live Gemini run.
+- [Optimisation guide](optimisation/README.md): solver, validator and developer guide
+- [Backend operations](backend/README.md) and [the native v2 contract](docs/contracts-v2.md)
+- [Verification](docs/verification.md), [research and source findings](docs/task-4-research.md), [demo script](docs/demo-script.md)
 
-**Encode London Hackathon · 24–25 October 2026 · Team of 4**
+The default five-node scenario is **synthetic**. It runs normal dispatch, bounded interventions and sudden-outage recovery. Historical CEN source evidence is kept separate and labelled, and a cached replay is never presented as a live Gemini run.
 
 > **Mission:** Emulate Chile's **Coordinador Eléctrico Nacional (CEN)** inside a verified digital-twin simulation. Powered by **Gemini 4 Argon** as the autonomous orchestrator and a deterministic **HiGHS LP solver + independent physics/regulatory validator**, Andes manages both **renewable** (solar, wind) and **non-renewable / dispatchable** (hydro, gas, coal, diesel, BESS) generation across Chile's north–south transmission backbone. It models selected requirements inspired by Chilean electricity regulation (**LGSE**, **Supreme Decree N° 32/2026 Art. 117 bis**, **NTSyCS**, and **Law N° 21.505**; see Section 2 for exactly what is and is not implemented), reduces renewable curtailment under normal operation, and **responds autonomously to sudden crisis scenarios** (such as a power plant or transmission line trip) by computing an emergency redispatch (batteries, ramp-limited thermal/hydro units, imports) to **reduce and restore unserved demand**.
 >
 > **Scope / safety:** We do **not** operate Chile's live physical grid, send real SCADA commands to power plants, replace official CEN/distributor control systems, or claim that a reduced 5-node backbone reproduces every bus of Chile's >1,000-node grid. All autonomous dispatches and crisis reconnections occur **strictly inside an audited simulation** under explicitly documented model assumptions.
->
-> **Implementation status (24 Oct):** `optimisation/` (solver, validator, comparison, outages) is built, tested and verified against the backend bridge; `backend/`, `data/`, `contracts/` are on `feature/data-backend`; `agent/` and `frontend/` are imported but require the integration fixes documented in [the demo handoff](docs/demo-integration-handoff.md). The 5-node demo scenario is **synthetic**; CEN evidence is kept as separate, labelled context.
 
 ---
 
@@ -282,7 +300,10 @@ Encode/
 │   ├── examples/              # Pre-computed validated JSON outputs for P1, P2, P4
 │   └── tests/                 # 114 deterministic pytest tests
 ├── backend/                   # Person 4 — FastAPI routes & service integration
-└── data/                      # Person 4 — CEN historical datasets & provenance
+├── data/                      # Person 4 — CEN historical datasets & provenance
+├── scripts/                   # Smoke tests and data/report helpers
+├── tests/                     # Backend & integration pytest suite
+└── docs/                      # Portfolio notes, contracts, verification, runbooks
 ```
 
 ### Demo Presentation Storyboard (3 Minutes)
