@@ -8,6 +8,7 @@ import { GeminiPanel } from './GeminiPanel';
 import { planName, recipe } from './plain';
 import { Tour } from './Tour';
 import './ui.css';
+import { PORTFOLIO_MODE } from '../portfolio';
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || '/api';
 
@@ -35,7 +36,7 @@ function describeFault(d: Disruption, catalog: Catalog) {
   return { who, target, jury, headline: who ? `${who} knocked out ${target}` : `Sudden outage: ${target}` };
 }
 
-const STEPS = ['Outage', 'Gemini checks', 'Choose a plan', 'See the result'] as const;
+const STEPS = ['Outage', PORTFOLIO_MODE ? 'Verified results' : 'Gemini checks', 'Choose a plan', 'See the result'] as const;
 
 export function LiveOps() {
   return (
@@ -93,7 +94,7 @@ function Screen() {
     if (phase !== 'executing') return;
     const byGemini = state.applied_by ? state.applied_by === 'gemini_autonomous' : wasCountingDown.current;
     wasCountingDown.current = false;
-    setPlanBy(byGemini ? 'Gemini applied the plan on its own' : 'Plan applied by the operator');
+    setPlanBy(byGemini ? (PORTFOLIO_MODE ? 'Recorded autonomous plan applied' : 'Gemini applied the plan on its own') : 'Plan applied by the operator');
   }, [phase]);
 
   // A preview must not outlive the options it belongs to (the panel unmounts without a mouseleave).
@@ -208,7 +209,7 @@ function Screen() {
         <div className="gp-brand">
           <AndesMark size={26} />
           <span className="gp-logo">Andes</span>
-          <span className="gp-sub">Coordinator · Chile SEN · digital twin</span>
+          <span className="gp-sub">{PORTFOLIO_MODE ? 'Interactive portfolio · Chile grid simulation' : 'Coordinator · Chile SEN · digital twin'}</span>
         </div>
         <div className={`gp-state is-${state.grid_state}`}>{STATE_LABEL[state.grid_state] ?? state.grid_state}</div>
         <div className="gp-clock">
@@ -225,7 +226,7 @@ function Screen() {
         </div>
         <button className="gp-tour" onClick={() => setTour(true)} title="Guided tour of the screen">Tour</button>
         <div className={`gp-conn is-${connectionMode}`} title={connectionMode === 'offline' ? 'No backend: replaying a recorded session from the real solver' : ''}>
-          {connectionMode === 'live' ? '● Live' : connectionMode === 'offline' ? '● Recorded session' : '○ Connecting'}
+          {connectionMode === 'live' ? '● Live' : connectionMode === 'offline' ? (PORTFOLIO_MODE ? '● Demo · no API' : '● Recorded session') : '○ Connecting'}
         </div>
       </header>
 
@@ -245,11 +246,11 @@ function Screen() {
           sub = [planBy, applied && recipe(applied), hit ? 'homes are coming back' : 'every home has power'].filter(Boolean).join(' · ') + more;
         } else if (stepIdx === 2) {
           stage = 'choose'; chip = '◆ Your decision';
-          title = countdown?.active ? `Gemini applies its pick in ${countdown.seconds_left} s` : 'Choose how to restore power';
+          title = countdown?.active ? `${PORTFOLIO_MODE ? 'Recorded autonomy' : 'Gemini applies its pick'} in ${countdown.seconds_left} s` : 'Choose how to restore power';
           sub = countdown?.active ? 'Veto it on the right if you disagree.' : 'Compare the two plans on the right, then apply one.';
         } else if (stepIdx === 1) {
-          stage = 'checks'; chip = '◌ Gemini';
-          title = 'Gemini is finding a fix';
+          stage = 'checks'; chip = PORTFOLIO_MODE ? '◌ Replay' : '◌ Gemini';
+          title = PORTFOLIO_MODE ? 'Reviewing recorded recovery plans' : 'Gemini is finding a fix';
           sub = `Testing recovery plans with the solver${tested ? ` · ${tested} tested so far` : '…'}${more}`;
         } else if (!hit) {
           stage = 'absorbed'; chip = '✓ Absorbed';
@@ -348,7 +349,7 @@ function Screen() {
                 <div><dt>Capacity</dt><dd>{fmt(sel.capacity)} MW</dd></div>
               </dl>
               <p className="gp-prov">Aggregate asset of the 5-zone scenario (synthetic, Chile-shaped). Stands for the real plants of this technology in the zone.</p>
-              <button className="gp-btn is-danger" onClick={() => { actions.injectEvent({ asset_id: sel.id, duration_h: 4, source: 'operator' }); setSelected(null); }}>Trigger a sudden outage (4 h)</button>
+              <button className="gp-btn is-danger" onClick={() => { actions.injectEvent({ asset_id: sel.id, duration_h: 4, source: 'operator' }); setSelected(null); }}>{PORTFOLIO_MODE ? 'Explore recorded outage (4 h)' : 'Trigger a sudden outage (4 h)'}</button>
             </>
           )}
           {selLine && (
@@ -360,7 +361,7 @@ function Screen() {
                 <div><dt>Flow now</dt><dd>{fmt(Math.abs(at(shown.line_flow_mw[selLine.id], hour)))} MW</dd></div>
                 <div><dt>Capacity</dt><dd>{fmt(at(shown.line_capacity_mw[selLine.id], hour) || selLine.capacity_mw)} MW</dd></div>
               </dl>
-              <button className="gp-btn is-danger" onClick={() => { actions.injectEvent({ asset_id: selLine.id, duration_h: 4, source: 'operator' }); setSelected(null); }}>Cut line (4 h)</button>
+              <button className="gp-btn is-danger" onClick={() => { actions.injectEvent({ asset_id: selLine.id, duration_h: 4, source: 'operator' }); setSelected(null); }}>{PORTFOLIO_MODE ? 'Explore recorded line outage (4 h)' : 'Cut line (4 h)'}</button>
             </>
           )}
         </div>
@@ -398,7 +399,7 @@ function Screen() {
           <span /> Autonomous mode
         </label>
         {connectionMode === 'offline' && <button className="gp-btn is-ghost" onClick={() => actions.replayOfflineDemo()}>Replay session</button>}
-        <button className="gp-btn is-ghost" onClick={() => setInvite(true)}>Invite the jury</button>
+        {PORTFOLIO_MODE ? <a className="gp-btn is-ghost" href="/about">About this project</a> : <button className="gp-btn is-ghost" onClick={() => setInvite(true)}>Invite the jury</button>}
         <span className="gp-hint">Tap a plant or a line for details or to trigger an outage.</span>
       </footer>
     </div>

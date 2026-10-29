@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:portfolio": "tsc && vite build --mode portfolio",
+    "build:live": "tsc && vite build --mode live",
+    "verify:portfolio": "node scripts/verify-portfolio.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.460.0",

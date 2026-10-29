@@ -4,6 +4,8 @@ import { JuryPage } from './live/JuryPage';
 import { DevConsole } from './live/DevConsole';
 import { LiveOps } from './ui/LiveOps';
 import { Jury } from './ui/Jury';
+import { About } from './ui/About';
+import { PORTFOLIO_MODE } from './portfolio';
 
 export function App() {
   const [pathname, setPathname] = useState<string>(() => {
@@ -22,6 +24,8 @@ export function App() {
   }, []);
 
   const normalizedPath = pathname.replace(/\/+$/, '') || '/';
+
+  if (normalizedPath === '/about' || (PORTFOLIO_MODE && normalizedPath !== '/')) return <About />;
 
   if (normalizedPath === '/jurado') {
     return <Jury />;

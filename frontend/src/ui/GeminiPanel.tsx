@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { useLiveSession } from '../live/store';
 import type { Option } from '../live/types';
 import { fmtInt, planName, recipe } from './plain';
+import { PORTFOLIO_MODE } from '../portfolio';
 
 // Gemini's side panel tells one thing at a time, in plain words: how the grid is, what Gemini is
 // doing, which plan to pick, or what the applied plan is restoring. Every number comes from the solver.
@@ -34,9 +35,10 @@ export function GeminiPanel({ state, deciding, applied, planBy, homesOff, onHove
     <aside className={`gp-brain is-${deciding ? 'deciding' : phase}`}>
       <header className="gp-pnl-head">
         <span className={`gp-brain-dot is-${phase}`} />
-        <b>Gemini</b>
+        <b>{PORTFOLIO_MODE ? 'Recovery replay' : 'Gemini'}</b>
         <span>{status}</span>
       </header>
+      {PORTFOLIO_MODE && <p className="gp-pnl-note">Precomputed solver results · no Google API. Each outage opens a separate four-hour case at the nearest recorded hour. <a href="/about">How this demo works</a></p>}
       <div key={deciding ? 'choose' : phase} className="gp-pnl-body">{body}</div>
     </aside>
   );
@@ -51,7 +53,7 @@ function Choose({ state, onHover, onDecide }: { state: LiveState; onHover: Props
       <h2 className="gp-pnl-title">Choose a recovery plan</h2>
       <p className="gp-pnl-lead">
         {countdown?.active
-          ? `Gemini applies its pick in ${countdown.seconds_left} s unless you veto it.`
+          ? `${PORTFOLIO_MODE ? 'Recorded autonomy applies the plan' : 'Gemini applies its pick'} in ${countdown.seconds_left} s unless you veto it.`
           : <><span className="gp-only-pointer">Hover a plan to preview it on the map.</span><span className="gp-only-touch">Compare the two plans, then apply one.</span></>}
       </p>
       <div className="gp-plans">
@@ -65,7 +67,7 @@ function Choose({ state, onHover, onDecide }: { state: LiveState; onHover: Props
               onMouseEnter={() => onHover(o)}
               onMouseLeave={() => onHover(null)}
             >
-              <small className="gp-plan-eyebrow">{rec ? 'Gemini’s pick' : pick ? 'Alternative' : `Plan ${n === 0 ? 'A' : 'B'}`}</small>
+              <small className="gp-plan-eyebrow">{rec ? (PORTFOLIO_MODE ? 'Recorded recommendation' : 'Gemini’s pick') : pick ? 'Alternative' : `Plan ${n === 0 ? 'A' : 'B'}`}</small>
               <h3>{planName(o)}</h3>
               <p className="gp-plan-recipe">{recipe(o)}</p>
               {m.households_newly_off > 0 && <p className="gp-plan-warn">But {fmt(m.households_newly_off)} other homes lose power</p>}
@@ -102,7 +104,7 @@ function Thinking({ state }: { state: LiveState }) {
   return (
     <>
       <h2 className="gp-pnl-title">Finding the best fix</h2>
-      <p className="gp-pnl-lead">Gemini proposes recovery plans and the solver tests each one on the grid.</p>
+      <p className="gp-pnl-lead">{PORTFOLIO_MODE ? 'Replaying recovery plans calculated by the solver and independently validated.' : 'Gemini proposes recovery plans and the solver tests each one on the grid.'}</p>
       <div className="gp-tests">
         <div className="gp-tests-dots">
           {calls.slice(-8).map((c, i) => <i key={`${c.call_id}-${i}`} className={`is-${c.status}`} />)}
@@ -142,13 +144,13 @@ function Calm({ state, homesOff }: { state: LiveState; homesOff: number }) {
         <i>{dark ? '!' : '✓'}</i>
         <div>
           <h2>{dark ? `${fmt(homesOff)} homes without power` : 'All homes have power'}</h2>
-          <p>{dark ? 'Gemini is getting ready to help.' : 'The grid is stable right now.'}</p>
+          <p>{dark ? (PORTFOLIO_MODE ? 'Select a plant or line to explore a recorded recovery case.' : 'Gemini is getting ready to help.') : 'The grid is stable right now.'}</p>
         </div>
       </div>
       {note && (
         <div className="gp-pnl-reading">
           <small>
-            Gemini’s reading
+            {PORTFOLIO_MODE ? 'Recorded grid reading' : 'Gemini’s reading'}
             {sev !== 'info' && <span className={`gp-sev is-${sev}`}>{SEVERITY_LABEL[sev]}</span>}
           </small>
           <p>{note.text_es}</p>
@@ -162,7 +164,7 @@ function Calm({ state, homesOff }: { state: LiveState; homesOff: number }) {
 // Who actually answered. A deterministic fallback or a cached answer must never pass for a live call.
 function Who({ m }: { m: NonNullable<LiveState['model_execution']> }) {
   const deterministic = (m.response_id ?? '').startsWith('det-');
-  const label = m.status === 'timeout' ? `${m.model} did not answer in time · solver ranking`
+  const label = PORTFOLIO_MODE ? 'Recorded solver results · no live model call' : m.status === 'timeout' ? `${m.model} did not answer in time · solver ranking`
     : m.status === 'error' ? `${m.model} error · solver ranking`
     : deterministic ? 'Deterministic planner · no Gemini call'
     : `Proposed by ${m.model} in ${(m.latency_ms / 1000).toLocaleString('en-GB', { maximumFractionDigits: 1 })} s${m.cached ? ' · cached answer' : ''}`;

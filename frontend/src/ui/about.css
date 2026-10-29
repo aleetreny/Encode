@@ -1,0 +1,11 @@
+.portfolio-about { height: 100dvh; overflow-y: auto; background: #f7faf9; user-select: text; }
+.portfolio-about { max-width: 860px; margin: 0 auto; padding: 40px 24px 72px; color: #1a2931; font: 17px/1.7 system-ui, sans-serif; }
+.portfolio-about nav { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 64px; flex-wrap: wrap; }
+.portfolio-about a { color: #08796c; text-decoration: underline; text-underline-offset: 4px; }
+.portfolio-about h1 { font-size: clamp(40px, 7vw, 72px); line-height: 1.1; letter-spacing: -.04em; margin: 16px 0; }
+.portfolio-about h2 { font-size: 25px; margin: 48px 0 12px; }
+.portfolio-about p { margin: 16px 0; }
+.portfolio-about .portfolio-eyebrow { font-size: 13px; color: #52686f; }
+.portfolio-about .portfolio-lead { font-size: 25px; line-height: 1.4; }
+.portfolio-about .portfolio-launch { display: inline-block; background: #08796c; color: white; padding: 12px 24px; border-radius: 9px; margin-top: 12px; text-decoration: none; }
+.portfolio-about footer { margin-top: 64px; border-top: 1px solid #d5e1df; padding-top: 24px; font-size: 13px; color: #52686f; }
